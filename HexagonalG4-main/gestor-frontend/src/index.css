@@ -200,3 +200,16 @@ button.ant-btn-text:hover {
   font-weight: bold;
 }
 
+/* de kambans */
+.circle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 25px; /* Ajusta el tamaño del círculo según tus necesidades */
+  height: 25px; /* Ajusta el tamaño del círculo según tus necesidades */
+  border-radius: 50%;
+  background-color: #f0f0f0; /* Cambia el color según tus necesidades */
+  margin-left: 10px; /* Margen izquierdo para separación */
+  font-size: 14px; /* Ajusta el tamaño de la fuente según tus necesidades */
+}

@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Button } from 'antd';
  // Importa el componente de lista de proyectos
-import KanbanBoard from './components/KanbanBoard';  // Importa el tablero Kanban
+import KanbanBoard from './components/KanbanBoard';
+import KanbanBoardsub from './components/KanbanBoardSubtarea'; // Importa el tablero Kanban
 
 import ProyectoList from './components/proyectoList.jsx';
 import Otro from './components/otro';  // Importa el tablero Kanban
@@ -81,9 +82,7 @@ function App() {
 
                 {/* Contenido principal */}
                 <Layout style={{ marginLeft: 220 }}>  {/* Ajusta el margen para la barra lateral */}
-                    <Header style={{ background: '#fff', padding: '16px', textAlign: 'center', borderBottom: '1px solid #e8e8e8' }}>
-                        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', color: '#001529' }}>Gestión de Proyectos</h1>
-                    </Header>
+
 
                     {/* Botones de navegación <NavigationButtons /> */}
 
@@ -99,6 +98,7 @@ function App() {
                             <Route path="/proyectoList" element={<ProyectoList />} />
                             <Route path="/modulos/:proyectoId/tareas" element={<KanbanBoard />} />
                             <Route path="/proyectos/:proyectoId/modulos/:moduloId" element={<KanbanBoard />} />
+                            <Route path="proyectos/:proyectoId/modulos/:moduloId/tarea/:tareaId" element={<KanbanBoardsub />} />
 
 
                         </Routes>

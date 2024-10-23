@@ -90,5 +90,22 @@ public class TareaController {
             return ResponseEntity.notFound().build(); // Si no encuentra la tarea, devolver 404
         }
     }
+    @GetMapping("/{tareaId}")
+    public ResponseEntity<?> obtenerTareaPorId(@PathVariable Long moduloId, @PathVariable Long tareaId) {
+        try {
+
+            Optional<Tarea> tareaOpt = tareaService.obtenerTareaPorId(tareaId);
+            if (!tareaOpt.isPresent()) {
+                log.error("Tarea no encontrada con ID: " + tareaId);
+                return ResponseEntity.notFound().build(); // Si no encuentra la tarea, devolver 404
+            }
+
+            return ResponseEntity.ok(tareaOpt.get());
+        } catch (Exception e) {
+            log.error("Error al obtener la tarea", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
+        }
+    }
+
 
 }

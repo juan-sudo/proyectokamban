@@ -13,8 +13,8 @@ import {
     CloseOutlined,
     CaretDownOutlined,
     CaretUpOutlined,
-    MenuOutlined,
     GatewayOutlined,
+    CheckCircleOutlined,
     ClockCircleOutlined,
     EllipsisOutlined,
     UserAddOutlined,
@@ -61,9 +61,10 @@ const KanbanBoard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [createType, setCreateType] = useState(null);
     const navigate = useNavigate();
-    const { proyectoId, moduloId } = useParams(); // Obtener IDs de proyecto y módulo desde la URL
+    const { proyectoId, moduloId,tareaId } = useParams(); // Obtener IDs de proyecto y módulo desde la URL
     const [projectData, setProjectData] = useState(null); // Estado para projectData
     const [moduleData, setModuleData] = useState(null); // Estado para el módulo
+    const [tareaData, setTareaData] = useState(null); // Estado para el módulo
 
     useEffect(() => {
 
@@ -71,31 +72,31 @@ const KanbanBoard = () => {
         const fetchTasks = async () => {
             try {
                 // Obtener datos del proyecto
-                const projectResponse = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}`);
-                const projectData = projectResponse.data;
-                console.log("proyecto...........::",projectData);
+                const projectResponse = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}`);
+                const moduleData = projectResponse.data;
+                console.log("modulos aqui...........::",moduleData);
 
                 // Actualiza el estado de projectData
-                setProjectData(projectData);
-                const response = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}`);
-                const moduleData = response.data;
-                setModuleData(moduleData); // Actualiza el estado del módulo
-                console.log("modulo............::",moduleData);
+                setModuleData(moduleData);
+                const response = await axios.get(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}`);
+                const tareaData = response.data;
+                setTareaData(tareaData); // Actualiza el estado del módulo
+                console.log("tareas aquii::",tareaData);
                 // Actualiza el estado de projectData
 
 
                 // Formatea los datos para ajustarse a la estructura del kanban
                 const formattedData = {
                     projects: {
-                        'project-1': { id: 'project-1', title: 'Proyecto 1', modules: [moduleData] },
+                        'project-1': { id: 'project-1', title: 'Proyecto 1', modules: [tareaData] },
                     },
-                    tasks: moduleData.tareas.reduce((acc, tarea) => ({
+                    tasks: tareaData.subtareas.reduce((acc, subtarea) => ({
                         ...acc,
-                        [tarea.id]: {
-                            id: tarea.id.toString(),
-                            title: tarea.nombre || 'Sin título',
-                            description: tarea.descripcion,
-                            estado: tarea.estado, // Agrega el estado de la tarea
+                        [subtarea.id]: {
+                            id: subtarea.id.toString(),
+                            title: subtarea.nombre || 'Sin título',
+                            description: subtarea.descripcion,
+                            estado: subtarea.estado, // Agrega el estado de la tarea
                         }
                     }), {}),
                     columns: {
@@ -119,12 +120,12 @@ const KanbanBoard = () => {
                 };
 
                 // Asigna las tareas a las columnas correspondientes
-                moduleData.tareas.forEach(tarea => {
-                    const columnId = tarea.estado === 'PENDIENTE' ? 'column-1' :
-                        tarea.estado === 'EN_PROGRESO' ? 'column-2' :
-                            tarea.estado === 'COMPLETADA' ? 'column-3' : null;
+                tareaData.subtareas.forEach(subtarea => {
+                    const columnId = subtarea.estado === 'PENDIENTE' ? 'column-1' :
+                        subtarea.estado === 'EN_PROGRESO' ? 'column-2' :
+                            subtarea.estado === 'COMPLETADA' ? 'column-3' : null;
                     if (columnId) {
-                        formattedData.columns[columnId].taskIds.push(tarea.id.toString());
+                        formattedData.columns[columnId].taskIds.push(subtarea.id.toString());
                         console.log("parav ver error::"+formattedData);
                     }
                 });
@@ -328,30 +329,31 @@ const KanbanBoard = () => {
                 </Button>
                 < span style={{ color: '#555', fontSize: 13, cursor: 'pointer'}}>
                     <MergeOutlined />
-                   Tareas
+                   Subtareas
                 </span>
-                <Tooltip title={projectData ? projectData.nombre : 'Cargando nombre del proyecto...'} placement="top">
+                <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del proyecto...'} placement="top">
             <span style={{ fontWeight: 'bold', color: '#555', fontSize: 18, marginLeft: 18, cursor: 'pointer' }}>
 
-                 <FolderOutlined style={{
+                 <FileTextOutlined style={{
 
                      color: 'black',
 
                      // Espacio entre el icono y el texto
                  }} />
-                <span> {truncateTextP( projectData.nombre , 16)} </span>
+                <span> {truncateTextP( moduleData.nombre , 16)} </span>
             </span>
                 </Tooltip>
-                <span style={{margin: '0 8px', fontWeight: 'bold', color: '#555', fontSize:19}}>/</span>
+                <span style={{margin: '0 8px', fontWeight: 'bold', color: '#555'}}>/</span>
 
-                <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del proyecto...'} placement="top">
+                <Tooltip title={setTareaData ? setTareaData.nombre : 'Cargando nombre del proyecto...'} placement="top">
         <span style={{ color: '#555', fontSize: 18, cursor: 'pointer'}}>
-            <MenuOutlined style={{
+            <CheckCircleOutlined style={{
 
                 color: 'black',
                  // Espacio entre el icono y el texto
             }} />
-            <span> {truncateTextM(moduleData.nombre, 16)} </span>
+
+            <span> {truncateTextM(tareaData.nombre, 16)} </span>
         </span>
                 </Tooltip>
 

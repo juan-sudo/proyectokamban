@@ -136,6 +136,15 @@ function ProyectoList() {
 navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
     };
+
+
+
+    const  handleButtonClickSub = (proyectoId,moduloId,tareaId) => {
+        console.log(`Navegando a /modulos/${proyectoId}/tareas`);
+        // navigate(`/modulos/${proyecto7Id}/tareas`); // Elimina '/api' si es innecesario
+        navigate(`/proyectos/${proyectoId}/modulos/${moduloId}/tarea/${tareaId}`)
+
+    };
     const options = [
         {
             label: 'juan',
@@ -1062,6 +1071,15 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                             {tarea.nombre}
                                                         </a>
                                                     </Tooltip>
+                                                    <Tooltip title="kamban">
+                                                        <Button
+                                                            icon={<InsertRowBelowOutlined />}
+                                                            size="small"
+                                                            type="link"
+                                                            onClick={() => handleButtonClickSub(row.id,modulo.id,tarea.id)}  // Redirige al hacer clic
+                                                            style={{ marginLeft: 'auto' }}
+                                                        />
+                                                    </Tooltip>
                                                     <Tooltip title="Añadir subtarea">
                                                         <Button
                                                             icon={<PlusOutlined/>}
@@ -1071,6 +1089,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                             //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
                                                         />
                                                     </Tooltip>
+
                                                 </Col>
 
                                                 <Col span={3}> <Avatar icon={<UserAddOutlined />} /></Col>
@@ -1279,7 +1298,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                                 modalType === 'verSubtarea' ? (
                                                                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px'  }}>
                                 <FileOutlined />
-                                Detalle tarea
+                                Detalle subtarea
                             </span>
                                                                     ):
 

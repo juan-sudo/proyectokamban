@@ -3,9 +3,7 @@ package com.codigo.msregistro.application.controller;
 import com.codigo.msregistro.application.services.ModuloService;
 import com.codigo.msregistro.application.services.SubTareaService;
 import com.codigo.msregistro.application.services.TareaService;
-import com.codigo.msregistro.domain.aggregates.Modulo;
-import com.codigo.msregistro.domain.aggregates.Subtarea;
-import com.codigo.msregistro.domain.aggregates.Tarea;
+import com.codigo.msregistro.domain.aggregates.*;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +69,26 @@ public class SubTareaController {
             return ResponseEntity.ok(tareas);
         } else {
             return ResponseEntity.notFound().build(); // Si no encuentra el módulo, devolver 404
+        }
+    }
+
+    @PutMapping("/{subtareaId}/estado")
+    public ResponseEntity<?> actualizarEstadoTarea(@PathVariable Long tareaId, @PathVariable Long subtareaId, @RequestParam EstadoSubtarea nuevoEstado) {
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<Tarea> moduloOpt = tareaService.obtenerTareaPorId(tareaId);
+        if (!moduloOpt.isPresent()) {
+            return ResponseEntity.notFound().build(); // Si no encuentra el módulo, devolver 404
+        }
+
+        Optional<Subtarea> tareaOpt = subTareaService.obtenerTareaPorId(subtareaId);
+        if (tareaOpt.isPresent()) {
+            Subtarea tarea = tareaOpt.get();
+            tarea.setEstado(nuevoEstado); // Actualizar el estado de la tarea
+            Subtarea tareaActualizada = subTareaService.actualizarTarea(tarea);
+            return ResponseEntity.ok(tareaActualizada);
+        } else {
+            return ResponseEntity.notFound().build(); // Si no encuentra la tarea, devolver 404
         }
     }
 }
