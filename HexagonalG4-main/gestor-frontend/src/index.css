@@ -1,0 +1,202 @@
+/* Reducir el espacio entre los proyectos y la barra lateral */
+.main-content {
+  margin-left: 180px; /* Reduce el margen izquierdo para acercar el contenido */
+  padding-right: 20px; /* Asegura que haya algo de espacio en el lado derecho */
+}
+
+/* Alineación correcta de los proyectos */
+.ant-tree .ant-tree-node-content-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem; /* Reduce el padding para que los proyectos no se vean tan separados */
+}
+
+.ant-tree .ant-tree-title {
+  margin-left: 5px; /* Reduce el espacio entre el ícono y el texto */
+  display: inline-block;
+  flex: 1; /* Asegura que el texto ocupe el espacio disponible */
+  white-space: nowrap; /* Evita que el texto se envuelva */
+  overflow: hidden; /* Oculta el texto que desborde */
+  text-overflow: ellipsis; /* Añade '...' si el texto es demasiado largo */
+}
+
+.ant-tree .ant-tree-iconEle {
+  display: inline-block;
+}
+
+.ant-tree .ant-tree-switcher {
+  margin-right: 5px; /* Ajuste del margen entre el ícono de flecha y el ícono de carpeta */
+}
+
+.ant-tree .ant-tree-node-content-wrapper:hover {
+  background-color: transparent; /* Elimina el fondo al hacer hover */
+}
+.task-card {
+  margin-bottom: 16px;
+  border-radius: 5px;
+  background-color: #fefefe;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,border 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 0.5px solid #1890ff; /* Cambiar el color del borde al hacer hover */
+}
+
+
+ CSS para prueba
+
+body {
+  font-family: sans-serif;
+  margin: 0;
+  background-color: #fd6e6e;
+}
+
+.app {
+  text-align: center;
+}
+
+h1 {
+  font-size: 3rem;
+  color: #2d3233;
+}
+
+.task-container {
+   border: 1px dotted pink;
+  margin: 0;
+  list-style: none;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 3rem;
+
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.task-item {
+  color: rgb(250, 82, 52);
+  box-shadow: 0px 2px 4px #4a4c4e;
+  border-radius: 5px;
+  padding: 0.3em 0.5em;
+  background-color: whitesmoke;
+  text-align: center;
+  margin: 5px;
+  border: 2px solid transparent;
+}
+
+.task-item:focus {
+  outline: none;
+  border: 2px solid #4a9af5;
+}
+
+/* hoevr para cada div */
+.hover-effect {
+  transition: background-color 0.3s; /* Transición suave */
+}
+
+.hover-effect:hover {
+  background-color: #f0f0f0; /* Cambia esto al color deseado */
+}
+
+
+.cu-task-list-header__row {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #d9d9d9;
+  justify-content: space-between;
+}
+
+.cu-task-list-header__row-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cu-task-list-header__item-label-body-inner {
+  display: flex;
+  align-items: center;
+}
+
+.cu-status-group-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.cu-status-group-header__icon {
+  margin-right: 5px;
+}
+
+.cu-status-group-header__label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.cu-group-header__task-count {
+  background-color: #ffffff;
+  color: #1890ff;
+  padding: 0 5px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.cu-task-list-header__hover-options {
+  margin-left: auto;
+}
+
+button.ant-btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+button.ant-btn-text:hover {
+  background-color: #e6f7ff;
+}
+
+.cu-task-list-header__hover-options .ant-dropdown-trigger {
+  display: flex;
+  align-items: center;
+}
+
+/* Diceño de filas */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Espacio entre las filas de tareas */
+  padding: 10px;
+  background-color: #ffffff; /* Fondo claro para la lista */
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between; /* Distribuir los elementos en la fila */
+  align-items: center;
+
+  background-color: #ffffff; /* Fondo blanco para cada tarea */
+  border-radius: 5px;
+  border: 1px solid #d9d9d9; /* Bordes sutiles */
+}
+
+.task-item__name, .task-item__assignee, .task-item__due-date, .task-item__priority {
+  flex: 1; /* Cada elemento ocupará el mismo espacio */
+}
+
+.task-item__name {
+  font-weight: bold;
+}
+
+.task-item__priority {
+  color: #ff4d4f; /* Color rojo para indicar alta prioridad */
+  font-weight: bold;
+}
+
