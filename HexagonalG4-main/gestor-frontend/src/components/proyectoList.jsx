@@ -1500,35 +1500,14 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         <Form.Item
                             name="fechaInicio"
                             label="Fecha de Inicio"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha de inicio' }]}
+                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
                         >
                             <DatePicker />
                         </Form.Item>
-
                         <Form.Item
                             name="fechaFin"
                             label="Fecha de Fin"
-                            dependencies={['fechaInicio']} // Dependencia para validar cuando fechaInicio cambia
-                            rules={[
-                                { required: true, message: 'Por favor, selecciona una fecha de fin' },
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        const fechaInicio = getFieldValue('fechaInicio');
-
-                                        // Verificar que ambas fechas estén definidas
-                                        if (!value || !fechaInicio) {
-                                            return Promise.resolve(); // No validamos si falta alguna fecha
-                                        }
-
-                                        // Validar si la fecha de fin es estrictamente mayor que la fecha de inicio
-                                        if (moment(value).isAfter(fechaInicio)) {
-                                            return Promise.resolve(); // Validación correcta
-                                        }
-
-                                        return Promise.reject(new Error('La fecha de fin debe ser mayor que la fecha de inicio'));
-                                    },
-                                }),
-                            ]}
+                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
                         >
                             <DatePicker />
                         </Form.Item>
