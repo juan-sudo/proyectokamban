@@ -2,6 +2,7 @@ package com.codigo.msregistro.domain.aggregates;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;  // Import necesario para evitar la recursión
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;  // Importar solo jakarta.persistence
 import jakarta.validation.constraints.NotNull;
@@ -36,19 +37,25 @@ public class Modulo {
     @NotNull
     @Enumerated(EnumType.STRING)
     private EstadoModulo estado;
+
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_inicio")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaInicio;
+
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_fin")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaFin;
+
 
 
     private String prioridad;
 
+    // Relación unidireccional muchos a muchos con Usuario
     @ManyToMany
     @JoinTable(
-            name = "modulo_usuarios",
+            name = "modulo_usuario",
             joinColumns = @JoinColumn(name = "modulo_id"),
             inverseJoinColumns = @JoinColumn(name = "usuario_id")
     )

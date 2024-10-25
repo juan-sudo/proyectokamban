@@ -17,7 +17,8 @@ import {
     Modal,
     Form,
     Select,
-    Space
+    Space,
+
 } from 'antd';
 import {
     EditOutlined,
@@ -46,7 +47,9 @@ import {
     GroupOutlined,
     RobotOutlined,
     FileOutlined,
-    FlagOutlined
+    FlagOutlined,
+    AudioOutlined,
+    FolderOpenOutlined
 
 } from '@ant-design/icons';
 
@@ -55,7 +58,8 @@ const pearlescentColors = [
     '#d3d3d3', '#e6e6fa', '#faf0e6', '#dcdcdc', '#ffebcd'
 ];
 
-
+const { Search } = Input;
+const onSearch = (value) => console.log('Buscar:', value);
 
 function ProyectoList() {
     const [proyectos, setProyectos] = useState([]);
@@ -75,6 +79,8 @@ function ProyectoList() {
     const [personas, setPersonas] = useState([]);
     const [selectedValues, setSelectedValues] = useState([]);
     const navigate = useNavigate();
+
+
     useEffect(() => {
 
         fetchProyectos();
@@ -82,43 +88,85 @@ function ProyectoList() {
         console.log("aqui"+proyectos)
     }, []);
 
-//AXIOS ARCHIVAR PROYECTO
-    const archivarProyecto = async (id, nombreProyecto) => {
-        // Muestra una alerta de confirmación con el nombre del proyecto
+
+
+// Componente Dropdown reutilizable
+    const CustomDropdown = ({ proyecto, placement, buttonLabel }) => {
+        const items = [
+            {
+                key: `${proyecto.id}-pendiente`,
+                label: (
+                    <a
+                        onClick={() => actualizarEstadoProyecto(proyecto.id, 'PENDIENTE', proyecto.nombre)} // Cambia 1 por el id correcto
+                        style={{ cursor: 'pointer' }}
+                    >
+                        PENDIENTE
+                    </a>
+                ),
+            },
+            {
+                key: `${proyecto.id}-en-proceso`,
+                label: (
+                    <a
+                        onClick={() => actualizarEstadoProyecto(proyecto.id, 'EN_PROGRESO', proyecto.nombre)} // Cambia 1 por el id correcto
+                        style={{ cursor: 'pointer' }}
+                    >
+                        EN PROCESO
+                    </a>
+                ),
+            },
+            {
+                key: `${proyecto.id}-completada`,
+                label: (
+                    <a
+                        onClick={() => actualizarEstadoProyecto(proyecto.id, 'COMPLETADO', proyecto.nombre)} // Cambia 1 por el id correcto
+                        style={{ cursor: 'pointer' }}
+                    >
+                        COMPLETADA
+                    </a>
+                ),
+            },
+        ];
+
+        return (
+            <Dropdown menu={{ items }} placement={placement} arrow>
+                <Button
+                    style={{ border: 'none', boxShadow: 'none', outline: 'none' }} // Sin borde
+                >
+                    {buttonLabel}
+                </Button>
+            </Dropdown>
+        );
+    };
+
+
+    const actualizarEstadoProyecto = async (id, nuevoEstado,nombreProyecto) => {
+        // Muestra una alerta de confirmación
         const result = await Swal.fire({
-            title: `¿Está seguro de archivar el proyecto "${nombreProyecto}"?`,
-            text: 'Una vez archivado, no podrá recuperarlo fácilmente.',
+            title: '¿Desea restaurar este proyecto?',
+            text: `Está a punto de cambiar el estado de "${nombreProyecto}" a ${nuevoEstado}.`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Sí, archivar',
+            confirmButtonText: 'Sí, restaurar',
             cancelButtonText: 'Cancelar'
         });
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.put(`http://localhost:8080/api/proyectos/${id}/estado`, null, {
-                    params: { nuevoEstado: 'ARCHIVADO' }
+                const response = await axios.put(`${backendUrl}/api/proyectos/${id}/estado`, null, {
+                    params: { nuevoEstado }
                 });
-                console.log('Proyecto archivado:', response.data);
-
-                // Actualiza el estado de tus proyectos si es necesario
+                console.log('Estado actualizado:', response.data);
+                // Aquí eliminamos el proyecto de la lista
                 setProyectos((prevProyectos) => prevProyectos.filter(proyecto => proyecto.id !== id));
-
-                // Muestra un mensaje de éxito
-                Swal.fire('Archivado', 'El proyecto ha sido archivado.', 'success');
-
             } catch (error) {
-                console.error('Error al archivar el proyecto:', error);
-                // Muestra un mensaje de error
-                Swal.fire('Error', 'Hubo un problema al archivar el proyecto.', 'error');
+                console.error('Error al actualizar el estado del proyecto:', error);
             }
         }
     };
-
-
     const fetchProyectos = async () => {
         try {
-            const response = await axios.get(`${backendUrl}/api/proyectos/no-archivados`);
+            const response = await axios.get(`${backendUrl}/api/proyectos/archivados`);
             console.log("Respuesta de la API:", response.data);
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
@@ -627,32 +675,24 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
     return (
         <>
 
-            <div className="cu-task-list-header__row">
-                <div className="cu-task-list-header__row-inner">
-                    {/* Botón para colapsar todas las tareas */}
+            <Row gutter={[16, 16]}
+                 style={{
 
 
-                    {/* Estado de la tarea */}
+                     minWidth: '600px',
+                     transition: 'background-color 0.3s ease',
 
+                     color:'#656f7d',
+                     fontSize:'12px'
 
-                    {/* Opciones de hover */}
+                 }}>
+                <Col span={24} style={{ padding: '16px', fontSize:23 }}>
+                    <FolderOutlined style={{paddingRight:5,paddingLeft:5}} />
+                    <FolderOpenOutlined style={{paddingRight:5,paddingLeft:10}} />
+                    <apan>Proyectos archivados</apan>
+                </Col>
+            </Row>
 
-
-                    {/* Botón para añadir una nueva tarea */}
-
-                    <Button
-                        type="primary"
-
-                        icon={<PlusOutlined/>}
-                        onClick={() => showModal('Añadirproyecto')}
-                        // onClick={() => showModal('proyecto')}
-                        style={{}}
-                    >
-                        Crear Proyecto
-                    </Button>
-
-                </div>
-            </div>
 
             {/* Lista de tareas (sin tabla) */}
             <div className="task-list">
@@ -692,7 +732,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                             <div className="task-item__due-date">Fecha Fin</div>
                         </Col>
                         <Col span={4}>
-                            <div className="task-item__due-date">Prioridad</div>
+                            <div className="task-item__due-date">Accion</div>
                         </Col>
                     </Row>
 
@@ -710,8 +750,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     color:'#2a2e34'
                                 }}
 
-                                onMouseEnter={() => handleMouseEnter(row.id)}
-                                onMouseLeave={handleMouseLeave}
+
 
                             >
                                 <Col span={11}>
@@ -746,17 +785,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                 {row.nombre}
                                             </a>
                                         </Tooltip>
-                                        {expandedRows[row.id] && (
-                                            <Tooltip title="Añadir módulo">
-                                                <Button
-                                                    icon={<PlusOutlined/>}
-                                                    size="small"
-                                                    type="link"
-                                                    onClick={() => showModal('AñadirModulo', row.id)}
-                                                    //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                />
-                                            </Tooltip>
-                                        )}
+
                                     </div>
                                 </Col>
 
@@ -794,30 +823,16 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                     </span>
                                 </Col>
-                                <Col span={4}>
-                                    <Avatar icon={<FlagOutlined/>}/>
-                                    {hoveredRow === row.id && (
-                                        <>
-                                            <Tooltip title="Editar proyecto">
-                                                <a onClick={() => setModalVisible(true)}
-                                                   style={{cursor: 'pointer'}}>
-                                                    <Avatar
-                                                        icon={<EditOutlined />}
-                                                        style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                    />
-                                                </a>
-                                            </Tooltip>
-                                            <Tooltip title="Archivar proyecto">
-                                                <a onClick={() => archivarProyecto(row.id,row.nombre)} style={{ cursor: 'pointer' }}> {/* Cambia 1 por el id correcto */}
-                                                    <Avatar
-                                                        icon={<SaveOutlined />}
-                                                        style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                    />
-                                                </a>
-                                            </Tooltip>
-
-                                        </>
-                                    )}
+                                <Col key={row.id} span={4}>
+                                    <Space direction="vertical" style={{ border: 'none' }}>
+                                        <Space wrap style={{ border: 'none', fontSize: 17 }}>
+                                            <CustomDropdown
+                                                proyecto={row} // Pasa el proyecto actual
+                                                placement="bottomRight"
+                                                buttonLabel="..."
+                                            />
+                                        </Space>
+                                    </Space>
                                 </Col>
                             </Row>
 
@@ -832,8 +847,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                             minWidth: '600px',
                                             backgroundColor: hoveredRowmodulo === modulo.id ? '#e0e0e0' : '',
                                         }}
-                                        onMouseEnter={() => handleMouseEntermodulo(modulo.id)}
-                                        onMouseLeave={handleMouseLeavemodulo}
+
 
                                     >
                                         <Col span={11}>
@@ -873,27 +887,9 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                         {modulo.nombre}
                                                     </a>
                                                 </Tooltip>
-                                                <Tooltip title="kamban">
-                                                    <Button
-                                                        icon={<InsertRowBelowOutlined />}
-                                                        size="small"
-                                                        type="link"
-                                                        onClick={() => handleButtonClick(row.id,modulo.id)}  // Redirige al hacer clic
-                                                        style={{ marginLeft: 'auto', paddingRight:20 }}
-                                                    />
-                                                </Tooltip>
+
                                                 {/* Mostrar el botón solo si el módulo está expandido */}
-                                                {!expandedModules[modulo.id] && (
-                                                    <Tooltip title="Añadir tarea">
-                                                        <Button
-                                                            style={{paddingRight:20}}
-                                                            icon={<PlusOutlined/>}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => showModal('AñadirTarea', row.id, modulo.id)}
-                                                        />
-                                                    </Tooltip>
-                                                )}
+
                                             </div>
                                         </Col>
 
@@ -932,29 +928,9 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </span>
                                         </Col>
                                         <Col span={4}>
-                                            <Avatar icon={<FlagOutlined/>}/>
 
-                                            {hoveredRowmodulo === modulo.id && (
-                                                <>
-                                                    <Tooltip title="Editar proyecto">
-                                                        <a onClick={() => setModalVisible(true)}
-                                                           style={{cursor: 'pointer'}}>
-                                                            <Avatar
-                                                                icon={<EditOutlined />}
-                                                                style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                            />
-                                                        </a>
-                                                    </Tooltip>
-                                                    <Tooltip title="Archivar proyecto">
-                                                        <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                            <Avatar
-                                                                icon={<SaveOutlined />}
-                                                                style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                            />
-                                                        </a>
-                                                    </Tooltip>
-                                                </>
-                                            )}
+
+
                                         </Col>
                                     </Row>
                                     {expandedModules[`${row.id}-${modulo.id}`] && modulo.tareas?.map((tarea) => (
@@ -970,8 +946,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                                 }}
 
-                                                onMouseEnter={() => handleMouseEntertarea(tarea.id)}
-                                                onMouseLeave={handleMouseLeavetarea}
+
                                             >
                                                 <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
                                                     <Button
@@ -1007,25 +982,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                             {tarea.nombre}
                                                         </a>
                                                     </Tooltip>
-                                                    <Tooltip title="kamban">
-                                                        <Button
-                                                            icon={<InsertRowBelowOutlined />}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => handleButtonClickSub(row.id,modulo.id,tarea.id)}  // Redirige al hacer clic
-                                                            style={{ marginLeft: 'auto', paddingRight:20 }}
-                                                        />
-                                                    </Tooltip>
-                                                    <Tooltip title="Añadir subtarea">
-                                                        <Button
-                                                            style={{paddingRight:20}}
-                                                            icon={<PlusOutlined/>}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
-                                                            //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                        />
-                                                    </Tooltip>
+
+
 
                                                 </Col>
 
@@ -1060,28 +1018,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </span></Col>
                                                 <Col span={4}>
 
-                                                    <Avatar icon={<FlagOutlined/>}/>
-                                                    {hoveredRowtarea === tarea.id && (
-                                                        <>
-                                                            <Tooltip title="Editar proyecto">
-                                                                <a onClick={() => setModalVisible(true)}
-                                                                   style={{cursor: 'pointer'}}>
-                                                                    <Avatar
-                                                                        icon={<EditOutlined />}
-                                                                        style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                    />
-                                                                </a>
-                                                            </Tooltip>
-                                                            <Tooltip title="Archivar proyecto">
-                                                                <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                    <Avatar
-                                                                        icon={<SaveOutlined />}
-                                                                        style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                    />
-                                                                </a>
-                                                            </Tooltip>
-                                                        </>
-                                                    )}
+
+
                                                 </Col>
                                             </Row>
 
@@ -1098,8 +1036,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                          boxSizing: 'border-box', // Para incluir padding y border en el tamaño
                                                      }}
 
-                                                     onMouseEnter={() => handleMouseEntersubtarea(subtarea.id)}
-                                                     onMouseLeave={handleMouseLeavesubtarea}
+
 
                                                 >
 
@@ -1164,29 +1101,9 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </span>
                                                     </Col>
                                                     <Col>
-                                                        <Avatar icon={<FlagOutlined/>}/>
 
-                                                        {hoveredRowsubtarea === subtarea.id && (
-                                                            <>
-                                                                <Tooltip title="Editar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                        <Avatar
-                                                                            icon={<EditOutlined />}
-                                                                            style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                                <Tooltip title="Archivar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                        <Avatar
-                                                                            icon={<SaveOutlined />}
-                                                                            style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
+
+
                                                     </Col>
 
                                                 </Row>

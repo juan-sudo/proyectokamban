@@ -46,7 +46,9 @@ import {
     GroupOutlined,
     RobotOutlined,
     FileOutlined,
-    FlagOutlined
+    FlagOutlined,
+    FolderOpenOutlined,
+    UsergroupAddOutlined
 
 } from '@ant-design/icons';
 
@@ -57,7 +59,7 @@ const pearlescentColors = [
 
 
 
-function ProyectoList() {
+function UsuariosList() {
     const [proyectos, setProyectos] = useState([]);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [assignedColors, setAssignedColors] = useState({});
@@ -627,32 +629,23 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
     return (
         <>
 
-            <div className="cu-task-list-header__row">
-                <div className="cu-task-list-header__row-inner">
-                    {/* Botón para colapsar todas las tareas */}
+            <Row gutter={[16, 16]}
+                 style={{
 
 
-                    {/* Estado de la tarea */}
+                     minWidth: '600px',
+                     transition: 'background-color 0.3s ease',
 
+                     color:'#656f7d',
+                     fontSize:'12px'
 
-                    {/* Opciones de hover */}
-
-
-                    {/* Botón para añadir una nueva tarea */}
-
-                    <Button
-                        type="primary"
-
-                        icon={<PlusOutlined/>}
-                        onClick={() => showModal('Añadirproyecto')}
-                        // onClick={() => showModal('proyecto')}
-                        style={{}}
-                    >
-                        Crear Proyecto
-                    </Button>
-
-                </div>
-            </div>
+                 }}>
+                <Col span={24} style={{ padding: '16px', fontSize:23 }}>
+                    <FolderOutlined style={{paddingRight:5,paddingLeft:5}} />
+                    <UsergroupAddOutlined style={{paddingRight:5,paddingLeft:10}} />
+                    <apan>Usuarios</apan>
+                </Col>
+            </Row>
 
             {/* Lista de tareas (sin tabla) */}
             <div className="task-list">
@@ -2054,4 +2047,4 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
 }
 
-export default ProyectoList;
+export default UsuariosList;

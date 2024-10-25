@@ -1,63 +1,69 @@
-package com.codigo.msregistro.domain.aggregates;
+    package com.codigo.msregistro.domain.aggregates;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+    import com.fasterxml.jackson.annotation.JsonBackReference;
+    import com.fasterxml.jackson.annotation.JsonFormat;
+    import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+    import jakarta.persistence.*;
+    import jakarta.validation.constraints.NotNull;
+    import lombok.AllArgsConstructor;
+    import lombok.Builder;
+    import lombok.Getter;
+    import lombok.NoArgsConstructor;
+    import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+    import java.time.LocalDate;
+    import java.time.ZonedDateTime;
+    import java.util.ArrayList;
+    import java.util.Date;
+    import java.util.List;
 
-@Getter
-@Setter
-@Builder
+    @Getter
+    @Setter
+    @Builder
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Table(name = "subtareas")
-public class Subtarea {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Entity
+    @Table(name = "subtareas")
+    public class Subtarea {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @NotNull
-    private String nombre;
+        @NotNull
+        private String nombre;
 
-    @NotNull
-    private String descripcion;
+        @NotNull
+        private String descripcion;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private EstadoSubtarea estado;
+        @NotNull
+        @Enumerated(EnumType.STRING)
+        private EstadoSubtarea estado;
 
-    @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date fechaInicio;
+        @NotNull
+        @Column(name = "fecha_inicio")
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private Date fechaInicio;
 
-    @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date fechaFin;
+        @NotNull
+        @Column(name = "fecha_fin")
+        @JsonFormat(pattern = "yyyy-MM-dd")
+        private Date fechaFin;
+
+        private String prioridad;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "tarea_id")
+        @JsonIgnoreProperties("subtareas")// evita recursividad
+        private Tarea tarea;  // Cada subtarea pertenece a una tarea
 
 
-    private String prioridad;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tarea_id")
-    @JsonIgnoreProperties("subtareas")// Relación ManyToOne con Tarea
-    private Tarea tarea;  // Cada subtarea pertenece a una tarea
-
-    @ManyToMany
-    @JoinTable(
-            name = "subtarea_usuarios",
-            joinColumns = @JoinColumn(name = "subtarea_id"),
-            inverseJoinColumns = @JoinColumn(name = "usuario_id")
-    )
-    private List<Usuario> usuarios = new ArrayList<>();
-}
+        // Relación unidireccional muchos a muchos con Usuario
+        @ManyToMany
+        @JoinTable(
+                name = "subtarea_usuario", // Nombre actualizado para reflejar la entidad "subtarea"
+                joinColumns = @JoinColumn(name = "subtarea_id"),
+                inverseJoinColumns = @JoinColumn(name = "usuario_id")
+        )
+        private List<Usuario> usuarios = new ArrayList<>();
+    }

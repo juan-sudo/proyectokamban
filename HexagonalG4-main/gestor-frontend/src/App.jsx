@@ -6,8 +6,11 @@ import KanbanBoard from './components/KanbanBoard';
 import KanbanBoardsub from './components/KanbanBoardSubtarea'; // Importa el tablero Kanban
 
 import ProyectoList from './components/proyectoList.jsx';
+import ProyectoListArchivados from './components/ProyectoListArchivados.jsx';
+
 import Otro from './components/otro';  // Importa el tablero Kanban
 import Otra from './components/otra';  // Importa el tablero Kanban
+import UsuariosList from "./components/usuariosLista.jsx";  // Asegúrate de tener este archivo para estilos globales
 
 import {
     HomeOutlined,
@@ -17,8 +20,10 @@ import {
     DashboardOutlined,
     TeamOutlined,
     FileOutlined,
+    UserOutlined
 } from '@ant-design/icons';
-import './App.txt';  // Asegúrate de tener este archivo para estilos globales
+import './App.txt';
+import RegistrarUsuario from "./components/registrarUsuario.jsx";
 
 const { Header, Sider, Content } = Layout;
 
@@ -37,26 +42,32 @@ function App() {
         {
             key: '2',
             icon: <MailOutlined />,
-            label: 'proyectos archivados'
+            label: <Link to="/proyectoListArchivados">Proyectos archivados</Link>
         },
         {
             key: '3',
-            icon: <FolderOpenOutlined />,
-            label: 'Usuarios'
+            icon: <UserOutlined />,
+
+            label: <Link to="/usuarioslista">Usuarios lista</Link>
         },
         {
             key: '4',
+            icon: <UserOutlined />,
+            label: <Link to="/registrarusuario">Registrar Usuarios</Link>
+        },
+        {
+            key: '5',
             icon: <ClockCircleOutlined />,
             label: 'Hojas de horas'
         },
         {
-            key: '5',
+            key: '6',
 
             icon: <TeamOutlined />,
             label: 'Paneles'
         },
         {
-            key: '6',
+            key: '7',
             icon: <FileOutlined />,
             label: 'Clips'
         },
@@ -96,6 +107,9 @@ function App() {
                             <Route path="/otro" element={<Otro />} />
                             <Route path="/otra" element={<Otra />} />
                             <Route path="/proyectoList" element={<ProyectoList />} />
+                            <Route path="/proyectoListArchivados" element={<ProyectoListArchivados />} />
+                            <Route path="/usuarioslista" element={<UsuariosList />} />
+                            <Route path="/registrarusuario" element={<RegistrarUsuario />} />
                             <Route path="/modulos/:proyectoId/tareas" element={<KanbanBoard />} />
                             <Route path="/proyectos/:proyectoId/modulos/:moduloId" element={<KanbanBoard />} />
                             <Route path="proyectos/:proyectoId/modulos/:moduloId/tarea/:tareaId" element={<KanbanBoardsub />} />

@@ -36,11 +36,15 @@ public class Tarea {
     @NotNull
     @Enumerated(EnumType.STRING)
     private EstadoTarea estado;
+
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_inicio")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaInicio;
+
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "fecha_fin")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaFin;
 
 
@@ -51,16 +55,17 @@ public class Tarea {
     @JsonBackReference  // Evitar la recursión al serializar
     private Modulo modulo;  // Este campo representa la relación con el Módulo
 
-
-    @OneToMany(mappedBy = "tarea", cascade = CascadeType.ALL, orphanRemoval = true)
-    // Evitar la recursión al serializar las subtareas
-    private List<Subtarea> subtareas;
-
+    // Relación unidireccional muchos a muchos con Usuario
     @ManyToMany
     @JoinTable(
-            name = "tarea_usuarios",
+            name = "tarea_usuario",
             joinColumns = @JoinColumn(name = "tarea_id"),
             inverseJoinColumns = @JoinColumn(name = "usuario_id")
     )
     private List<Usuario> usuarios = new ArrayList<>();
+
+    @OneToMany(mappedBy = "tarea", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Subtarea> subtareas;
+
+
 }

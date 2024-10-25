@@ -46,7 +46,7 @@ import {
     GroupOutlined,
     RobotOutlined,
     FileOutlined,
-    FlagOutlined
+    FlagOutlined, FolderOpenOutlined
 
 } from '@ant-design/icons';
 
@@ -166,8 +166,8 @@ function ProyectoList() {
 
     const handleButtonClick = (proyectoId,moduloId) => {
         console.log(`Navegando a /modulos/${proyectoId}/tareas`);
-       // navigate(`/modulos/${proyectoId}/tareas`); // Elimina '/api' si es innecesario
-navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
+        // navigate(`/modulos/${proyectoId}/tareas`); // Elimina '/api' si es innecesario
+        navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
     };
 // Cargar el estado inicial desde localStorage
@@ -623,39 +623,189 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         });
     };
 
+    const handleGuardar = () => {
+        form.validateFields()
+            .then(values => {
+                // Procesar los valores del formulario
+                console.log('Formulario guardado:', values);
+            })
+            .catch(errorInfo => {
+                console.log('Validación fallida:', errorInfo);
+            });
+    };
 
     return (
         <>
 
-            <div className="cu-task-list-header__row">
-                <div className="cu-task-list-header__row-inner">
-                    {/* Botón para colapsar todas las tareas */}
+            <Row gutter={[16, 16]}
+                 style={{
 
 
-                    {/* Estado de la tarea */}
+                     minWidth: '600px',
+                     transition: 'background-color 0.3s ease',
 
+                     color:'#656f7d',
+                     fontSize:'12px'
 
-                    {/* Opciones de hover */}
-
-
-                    {/* Botón para añadir una nueva tarea */}
-
-                    <Button
-                        type="primary"
-
-                        icon={<PlusOutlined/>}
-                        onClick={() => showModal('Añadirproyecto')}
-                        // onClick={() => showModal('proyecto')}
-                        style={{}}
-                    >
-                        Crear Proyecto
-                    </Button>
-
-                </div>
-            </div>
+                 }}>
+                <Col span={24} style={{ padding: '16px', fontSize:23 }}>
+                    <FolderOutlined style={{paddingRight:5,paddingLeft:5}} />
+                    <UserOutlined  style={{paddingRight:5,paddingLeft:10}} />
+                    <apan>Registrar usuario</apan>
+                </Col>
+            </Row>
 
             {/* Lista de tareas (sin tabla) */}
             <div className="task-list">
+
+                <Row gutter={[16, 16]}
+                     style={{
+                         borderBottom: '1px solid #d9d9d9',
+                         cursor:"pointer",
+                         minWidth: '600px',
+                         transition: 'background-color 0.3s ease',
+                         paddingBottom:'13px',
+                         color:'#656f7d',
+                         fontSize:'12px'
+
+                     }}
+
+                >
+                    <Col span={10}
+                    >
+                        <Form form={form} layout="vertical">
+
+                            <Row gutter={[16, 16]}>
+                                <Col span={8}>
+                                    <Form.Item
+                                        name="nombres"
+                                        label="Nombres"
+                                        rules={[{ required: true, message: 'Ingrese nombres' }]}
+                                    >
+                                        <Input placeholder="nombres"  />
+
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item
+                                        name="apellidoPaterno"
+                                        label="apellidoPaterno"
+                                        rules={[{ required: true, message: 'Por favor, ingresa el Apellido paterno' }]}
+                                    >
+                                        <Input placeholder="Paterno" />
+
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item
+
+                                        name="apellidoMaterno"
+                                        label="apellidoMaterno"
+                                        rules={[{ required: true, message: ' Materno' }]}
+
+                                    >
+                                        <Input  placeholder="Materno" />
+
+                                    </Form.Item>
+                                </Col>
+
+
+                            </Row>
+
+                            <Row gutter={[16, 16]}>
+                                <Col span={8}>
+                                    <Form.Item
+                                        name="fechaNacimiento"
+                                        label="Fe. Nacimiento"
+                                        rules={[{ required: true, message: 'Por favor, selecciona una fecha de nacimiento' }]}
+                                    >
+                                        <DatePicker />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item
+
+                                        name="telefono"
+                                        label="Telefono"
+                                        rules={[{ required: true, message: ' Telefono' }]}
+
+                                    >
+                                        <Input  placeholder="celular" />
+
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item
+                                        name="genero"
+                                        label="Genero"
+                                        rules={[{ required: true, message: 'Por favor selecciona un genero' }]}
+                                    >
+                                        <Select>
+                                            <Select.Option value="mujer">Mujer</Select.Option>
+                                            <Select.Option value="varon">Varon</Select.Option>
+
+
+
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+
+                            <Form.Item
+                                name="email"
+                                label="Email"
+                                rules={[{ required: true, message: 'Ingrese correo electronico' }]}
+                            >
+                                <Input placeholder="Correo electrocnio"  />
+
+                            </Form.Item>
+
+                            <Form.Item
+                                name="contraseña"
+                                label="Contraseña"
+                                rules={[{ required: true, message: 'Ingrese correo cpntraseña' }]}
+                            >
+                                <Input placeholder="Correo electrocnio"  />
+
+                            </Form.Item>
+
+                            <Form.Item
+                                name="cotraseñaRepite"
+                                label="Repite contraseña"
+                                rules={[{ required: true, message: 'Volver a ingersar la contraseña' }]}
+                            >
+                                <Input placeholder="Repite la contraseña"  />
+
+                            </Form.Item>
+                            <Row gutter={[16, 16]}>
+                                <Col span={8}>
+
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item>
+                                        <Button type="primary" onClick={handleGuardar}>
+                                            Registrarte
+                                        </Button>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+
+                                </Col>
+                            </Row>
+
+                        </Form>
+                    </Col>
+                    <Col span={14}>
+                        <div className="task-item__assignee"></div>
+                    </Col>
+
+
+
+
+
+
+                </Row>
+
                 {/* Aquí puedes agregar los encabezados de las columnas si es necesario */}
 
 
@@ -664,542 +814,6 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                 {/* Si no está colapsado, renderiza el contenido adicional */}
 
-                <>
-                    <Row gutter={[16, 16]}
-                         style={{
-                             borderBottom: '1px solid #d9d9d9',
-                             cursor:"pointer",
-                             minWidth: '600px',
-                             transition: 'background-color 0.3s ease',
-                             paddingBottom:'13px',
-                             color:'#656f7d',
-                             fontSize:'12px'
-
-                         }}
-
-                    >
-                        <Col span={11}
-                        >
-                            <div>Nombre de proyecto</div>
-                        </Col>
-                        <Col span={3}>
-                            <div className="task-item__assignee">Persona asignado</div>
-                        </Col>
-                        <Col span={3}>
-                            <div className="task-item__due-date">Fecha Inicio</div>
-                        </Col>
-                        <Col span={3}>
-                            <div className="task-item__due-date">Fecha Fin</div>
-                        </Col>
-                        <Col span={4}>
-                            <div className="task-item__due-date">Prioridad</div>
-                        </Col>
-                    </Row>
-
-
-                    {proyectos.map((row) => (
-                        <React.Fragment key={row.id}>
-                            <Row
-                                gutter={[16, 16]}
-                                style={{
-                                    borderBottom: '1px solid rgba(217, 217, 217, 0.4)',
-                                    cursor:"pointer",
-                                    minWidth: '600px',
-                                    transition: 'background-color 0.3s ease',
-                                    backgroundColor: hoveredRow === row.id ? '#e0e0e0' : '',
-                                    color:'#2a2e34'
-                                }}
-
-                                onMouseEnter={() => handleMouseEnter(row.id)}
-                                onMouseLeave={handleMouseLeave}
-
-                            >
-                                <Col span={11}>
-                                    <div style={{display: 'flex', alignItems: 'center'}}>
-
-                                        <Button
-                                            type="text"
-                                            size="small"
-                                            onClick={() => toggleCollapseProyecto(row.id)}
-                                            icon={expandedRows[row.id] ? <CaretUpOutlined/> : <CaretDownOutlined/>}
-                                        />
-                                        <FolderOutlined style={{
-                                            backgroundColor: row.color,
-                                            color: 'black',
-                                            padding: '5px',
-                                            borderRadius: '50%',
-                                            border: '2px solid black'
-                                        }}/>
-                                        <Tooltip title="Ver proyecto">
-
-                                            <a
-
-                                                style={{
-
-                                                    marginLeft: 5,
-
-                                                    textDecoration: 'none',
-                                                    color: 'inherit'
-                                                }}
-                                                onClick={() => showModal('verProyecto', row.id)}
-                                            >
-                                                {row.nombre}
-                                            </a>
-                                        </Tooltip>
-                                        {expandedRows[row.id] && (
-                                            <Tooltip title="Añadir módulo">
-                                                <Button
-                                                    icon={<PlusOutlined/>}
-                                                    size="small"
-                                                    type="link"
-                                                    onClick={() => showModal('AñadirModulo', row.id)}
-                                                    //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                />
-                                            </Tooltip>
-                                        )}
-                                    </div>
-                                </Col>
-
-                                <Col span={3}>
-                                    <Avatar icon={<UserAddOutlined/>}/>
-                                </Col>
-                                <Col style={{ paddingTop: '8px' }} span={3}>
-                                        <span style={{
-                                            fontSize: '14px',
-                                            paddingLeft: 5,
-                                            margin: 0,
-                                            fontWeight: '400'
-                                        }}>
-                                       {new Date(row.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-
-                                </Col>
-                                <Col style={{ paddingTop: '8px' }} span={3}>
-                                             <span style={{
-                                                 fontSize: '14px',
-                                                 paddingLeft: 5,
-                                                 margin: 0,
-                                                 fontWeight: '400'
-                                             }}>
-                                       {new Date(row.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                </Col>
-                                <Col span={4}>
-                                    <Avatar icon={<FlagOutlined/>}/>
-                                    {hoveredRow === row.id && (
-                                        <>
-                                            <Tooltip title="Editar proyecto">
-                                                <a onClick={() => setModalVisible(true)}
-                                                   style={{cursor: 'pointer'}}>
-                                                    <Avatar
-                                                        icon={<EditOutlined />}
-                                                        style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                    />
-                                                </a>
-                                            </Tooltip>
-                                            <Tooltip title="Archivar proyecto">
-                                                <a onClick={() => archivarProyecto(row.id,row.nombre)} style={{ cursor: 'pointer' }}> {/* Cambia 1 por el id correcto */}
-                                                    <Avatar
-                                                        icon={<SaveOutlined />}
-                                                        style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                    />
-                                                </a>
-                                            </Tooltip>
-
-                                        </>
-                                    )}
-                                </Col>
-                            </Row>
-
-                            {/* Mostrar los módulos debajo del proyecto */}
-                            {expandedRows[row.id] && row.modulos?.map((modulo) => (
-                                <React.Fragment key={modulo.id}>
-                                    <Row
-                                        style={{
-                                            borderBottom: '1px solid rgba(217, 217, 217, 0.3)' ,
-                                            marginLeft: '20px',
-                                            cursor: 'pointer',
-                                            minWidth: '600px',
-                                            backgroundColor: hoveredRowmodulo === modulo.id ? '#e0e0e0' : '',
-                                        }}
-                                        onMouseEnter={() => handleMouseEntermodulo(modulo.id)}
-                                        onMouseLeave={handleMouseLeavemodulo}
-
-                                    >
-                                        <Col span={11}>
-                                            <div style={{display: 'flex', alignItems: 'center'}}>
-                                                <Button
-                                                    type="text"
-                                                    size="small"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Evita que el clic se propague al Row
-                                                        toggleCollapseModulo(row.id, modulo.id);
-                                                    }}
-                                                    icon={expandedModules[modulo.id] ? <CaretUpOutlined/> :
-                                                        <CaretDownOutlined/>}
-                                                />
-                                                <FolderOutlined
-                                                    style={{
-                                                        backgroundColor: row.color,
-                                                        color: 'black',
-                                                        padding: '5px',
-                                                        borderRadius: '50%',
-                                                        border: '2px solid black',
-                                                    }}
-                                                />
-                                                <Tooltip title="Ver modulo">
-                                                    <a
-
-                                                        style={{
-
-                                                            marginLeft: 5,
-
-                                                            textDecoration: 'none',
-                                                            color: 'inherit'
-                                                        }}
-                                                        onClick={() => showModal('verModulo', row.id, modulo.id)}
-                                                    >
-
-                                                        {modulo.nombre}
-                                                    </a>
-                                                </Tooltip>
-                                                <Tooltip title="kamban">
-                                                    <Button
-                                                        icon={<InsertRowBelowOutlined />}
-                                                        size="small"
-                                                        type="link"
-                                                        onClick={() => handleButtonClick(row.id,modulo.id)}  // Redirige al hacer clic
-                                                        style={{ marginLeft: 'auto', paddingRight:20 }}
-                                                    />
-                                                </Tooltip>
-                                                {/* Mostrar el botón solo si el módulo está expandido */}
-                                                {!expandedModules[modulo.id] && (
-                                                    <Tooltip title="Añadir tarea">
-                                                        <Button
-                                                            style={{paddingRight:20}}
-                                                            icon={<PlusOutlined/>}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => showModal('AñadirTarea', row.id, modulo.id)}
-                                                        />
-                                                    </Tooltip>
-                                                )}
-                                            </div>
-                                        </Col>
-
-                                        <Col span={3}>
-                                            <Avatar icon={<UserAddOutlined/>}/>
-                                            <Avatar icon={<UserAddOutlined/>}/>
-                                        </Col>
-                                        <Col style={{ paddingTop: '8px' }} span={3}>
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-                                       {new Date(modulo.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                        </Col>
-                                        <Col style={{ paddingTop: '8px' }} span={3}>
-                                                   <span style={{
-                                                       fontSize: '14px',
-                                                       paddingLeft: 5,
-                                                       margin: 0,
-                                                       fontWeight: '400'
-                                                   }}>
-                                       {new Date(modulo.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                        </Col>
-                                        <Col span={4}>
-                                            <Avatar icon={<FlagOutlined/>}/>
-
-                                            {hoveredRowmodulo === modulo.id && (
-                                                <>
-                                                    <Tooltip title="Editar proyecto">
-                                                        <a onClick={() => setModalVisible(true)}
-                                                           style={{cursor: 'pointer'}}>
-                                                            <Avatar
-                                                                icon={<EditOutlined />}
-                                                                style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                            />
-                                                        </a>
-                                                    </Tooltip>
-                                                    <Tooltip title="Archivar proyecto">
-                                                        <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                            <Avatar
-                                                                icon={<SaveOutlined />}
-                                                                style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                            />
-                                                        </a>
-                                                    </Tooltip>
-                                                </>
-                                            )}
-                                        </Col>
-                                    </Row>
-                                    {expandedModules[`${row.id}-${modulo.id}`] && modulo.tareas?.map((tarea) => (
-                                        <React.Fragment key={tarea.id}>
-                                            <Row
-                                                style={{
-                                                    marginLeft: '20px',
-                                                    padding:0,
-                                                    borderBottom: '1px solid rgba(217, 217, 217, 0.3)' ,
-                                                    cursor: 'pointer',
-                                                    backgroundColor: hoveredRowtarea === tarea.id ? '#e0e0e0' : '',
-                                                    boxSizing: 'border-box', // Para incluir padding y border en el tamaño
-
-                                                }}
-
-                                                onMouseEnter={() => handleMouseEntertarea(tarea.id)}
-                                                onMouseLeave={handleMouseLeavetarea}
-                                            >
-                                                <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
-                                                    <Button
-                                                        type="text"
-                                                        size="small"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation(); // Evita que el click propague al Row
-                                                            toggleCollapseTarea(row.id, modulo.id, tarea.id);
-                                                        }}
-                                                        icon={expandedModules[`${row.id}-${modulo.id}-${tarea.id}`] ? <CaretUpOutlined /> : <CaretDownOutlined />}
-                                                    />
-                                                    <FileTextOutlined style={{
-                                                        backgroundColor: row.color,
-                                                        color: 'black',
-                                                        padding: '5px',
-                                                        marginRight: '4px' // Espacio entre el icono y el texto
-                                                    }} />
-
-
-                                                    <Tooltip title="Ver tarea">
-                                                        <a
-
-                                                            style={{
-
-                                                                marginLeft: 5,
-
-                                                                textDecoration: 'none',
-                                                                color: 'inherit'
-                                                            }}
-                                                            onClick={() => showModal('verTarea', row.id, modulo.id, tarea.id)}
-                                                        >
-
-                                                            {tarea.nombre}
-                                                        </a>
-                                                    </Tooltip>
-                                                    <Tooltip title="kamban">
-                                                        <Button
-                                                            icon={<InsertRowBelowOutlined />}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => handleButtonClickSub(row.id,modulo.id,tarea.id)}  // Redirige al hacer clic
-                                                            style={{ marginLeft: 'auto', paddingRight:20 }}
-                                                        />
-                                                    </Tooltip>
-                                                    <Tooltip title="Añadir subtarea">
-                                                        <Button
-                                                            style={{paddingRight:20}}
-                                                            icon={<PlusOutlined/>}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
-                                                            //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                        />
-                                                    </Tooltip>
-
-                                                </Col>
-
-                                                <Col span={3}> <Avatar icon={<UserAddOutlined />} /></Col>
-                                                <Col style={{ paddingTop: '8px' }} span={3}>
-                                                          <span style={{
-                                                              fontSize: '14px',
-                                                              paddingLeft: 5,
-                                                              margin: 0,
-                                                              fontWeight: '400'
-                                                          }}>
-                                       {new Date(tarea.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                                </Col>
-                                                <Col style={{ paddingTop: '8px' }} span={3}><span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-                                       {new Date(tarea.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span></Col>
-                                                <Col span={4}>
-
-                                                    <Avatar icon={<FlagOutlined/>}/>
-                                                    {hoveredRowtarea === tarea.id && (
-                                                        <>
-                                                            <Tooltip title="Editar proyecto">
-                                                                <a onClick={() => setModalVisible(true)}
-                                                                   style={{cursor: 'pointer'}}>
-                                                                    <Avatar
-                                                                        icon={<EditOutlined />}
-                                                                        style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                    />
-                                                                </a>
-                                                            </Tooltip>
-                                                            <Tooltip title="Archivar proyecto">
-                                                                <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                    <Avatar
-                                                                        icon={<SaveOutlined />}
-                                                                        style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                    />
-                                                                </a>
-                                                            </Tooltip>
-                                                        </>
-                                                    )}
-                                                </Col>
-                                            </Row>
-
-
-                                            {expandedTasks[`${row.id}-${modulo.id}-${tarea.id}`] && tarea.subtareas?.map((subtarea) => (
-                                                <Row key={subtarea.id}
-                                                     style={{
-                                                         marginLeft: '20px',
-                                                         padding:0,
-
-                                                         borderBottom: '1px solid rgba(217, 217, 217, 0.3)' ,
-                                                         cursor: 'pointer',
-                                                         backgroundColor: hoveredRowsubtarea === subtarea.id ? '#e0e0e0' : '',
-                                                         boxSizing: 'border-box', // Para incluir padding y border en el tamaño
-                                                     }}
-
-                                                     onMouseEnter={() => handleMouseEntersubtarea(subtarea.id)}
-                                                     onMouseLeave={handleMouseLeavesubtarea}
-
-                                                >
-
-                                                    <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft:50 }}>
-                                                        <div style={{
-                                                            width: '20px', // Ajusta el tamaño del círculo
-                                                            height: '20px',
-                                                            borderRadius: '50%',
-                                                            backgroundColor: row.color, // Cambia el color según tus necesidades
-                                                            marginRight: '8px' // Espacio entre el círculo y el texto
-                                                        }}></div>
-                                                        <Tooltip title="Ver subTarea">
-                                                            <a
-
-                                                                style={{
-
-                                                                    marginLeft: 5,
-
-                                                                    textDecoration: 'none',
-                                                                    color: 'inherit'
-                                                                }}
-                                                                onClick={() => showModal('verSubtarea', row.id, modulo.id, tarea.id, subtarea.id)}
-                                                            >
-
-                                                                {subtarea.nombre}
-                                                            </a>
-                                                        </Tooltip>
-                                                        {/* Elimina el margen superior e inferior del párrafo */}
-                                                    </Col>
-
-                                                    <Col span={3}>
-                                                        <Avatar icon={<UserAddOutlined />} />
-                                                    </Col>
-                                                    <Col style={{ paddingTop: '8px' }} span={3}>
-                                                        <span style={{
-                                                            fontSize: '14px',
-                                                            paddingLeft: 5,
-                                                            // Ajusta este valor según lo que necesites
-                                                            margin: 0,
-                                                            fontWeight: '400'
-                                                        }}>
-                                                            {new Date(subtarea.fechaInicio).toLocaleDateString('es-ES', {
-                                                                day: '2-digit',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </span>
-                                                    </Col>
-                                                    <Col style={{ paddingTop: '8px' }} span={3}>
-                                                            <span style={{
-                                                                fontSize: '14px',
-                                                                paddingLeft: 5,
-                                                                margin: 0,
-                                                                fontWeight: '400'
-                                                            }}>
-                                       {new Date(subtarea.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                                    </Col>
-                                                    <Col>
-                                                        <Avatar icon={<FlagOutlined/>}/>
-
-                                                        {hoveredRowsubtarea === subtarea.id && (
-                                                            <>
-                                                                <Tooltip title="Editar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                        <Avatar
-                                                                            icon={<EditOutlined />}
-                                                                            style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                                <Tooltip title="Archivar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                        <Avatar
-                                                                            icon={<SaveOutlined />}
-                                                                            style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
-                                                    </Col>
-
-                                                </Row>
-                                            ))}
-                                        </React.Fragment>
-                                    ))}
-                                </React.Fragment>
-                            ))}
-                        </React.Fragment>
-                    ))}
-
-
-                </>
 
             </div>
 
@@ -1347,7 +961,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
-                (new Date(selectedProject.fechaFin) - new Date(selectedProject.fechaInicio)) / (1000 * 60 * 60 * 24)
+                    (new Date(selectedProject.fechaFin) - new Date(selectedProject.fechaInicio)) / (1000 * 60 * 60 * 24)
                 )
             } días
         </span>
@@ -1555,7 +1169,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
-                (new Date(selectedModule.fechaFin) - new Date(selectedModule.fechaInicio)) / (1000 * 60 * 60 * 24)
+                    (new Date(selectedModule.fechaFin) - new Date(selectedModule.fechaInicio)) / (1000 * 60 * 60 * 24)
                 )
             } días
         </span>
@@ -1722,7 +1336,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
-                (new Date(selectedTarea.fechaFin) - new Date(selectedTarea.fechaInicio)) / (1000 * 60 * 60 * 24)
+                    (new Date(selectedTarea.fechaFin) - new Date(selectedTarea.fechaInicio)) / (1000 * 60 * 60 * 24)
                 )
             } días
         </span>

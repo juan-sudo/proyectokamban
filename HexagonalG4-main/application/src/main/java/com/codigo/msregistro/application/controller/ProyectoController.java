@@ -1,5 +1,6 @@
 package com.codigo.msregistro.application.controller;
 
+import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -94,4 +95,28 @@ public class ProyectoController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+
+    @GetMapping("/no-archivados")
+    public List<Proyecto> obtenerProyectosNoArchivados() {
+        return proyectoService.listarProyectosNoArchivados();
+    }
+
+    @GetMapping("/archivados")
+    public List<Proyecto> obtenerProyectosArchivados() {
+        return proyectoService.listarProyectosArchivados();
+    }
+    // Endpoint para cambiar el estado de un proyecto
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<String> cambiarEstadoProyecto(@PathVariable Long id, @RequestParam EstadoProyecto nuevoEstado) {
+        boolean actualizado = proyectoService.cambiarEstadoProyecto(id, nuevoEstado);
+
+        if (actualizado) {
+            return ResponseEntity.ok("Estado del proyecto actualizado correctamente.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado.");
+        }
+    }
+
+
 }

@@ -5,7 +5,7 @@ import com.codigo.msregistro.domain.ports.out.ConsultarSaldoOut;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ConsultarSaldoTCAdapter implements ConsultarSaldoOut {
+public class    ConsultarSaldoTCAdapter implements ConsultarSaldoOut {
     @Override
     public ConsultarSaldoDTO consultarSaldoOut(Long idCliente) {
         ConsultarSaldoDTO consultarSaldoDTO = new ConsultarSaldoDTO();

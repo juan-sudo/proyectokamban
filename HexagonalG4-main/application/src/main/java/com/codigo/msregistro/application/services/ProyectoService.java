@@ -64,4 +64,27 @@ public class ProyectoService {
         }
         return false;
     }
+
+
+    public List<Proyecto> listarProyectosNoArchivados() {
+        return proyectoRepository.findByEstadoNot(EstadoProyecto.ARCHIVADO);
+    }
+
+    public List<Proyecto> listarProyectosArchivados() {
+        return proyectoRepository.findByEstado(EstadoProyecto.ARCHIVADO);
+    }
+
+    // Método para cambiar el estado de un proyecto
+    public boolean cambiarEstadoProyecto(Long id, EstadoProyecto nuevoEstado) {
+        Optional<Proyecto> proyectoOpt = proyectoRepository.findById(id);
+
+        if (proyectoOpt.isPresent()) {
+            Proyecto proyecto = proyectoOpt.get();
+            proyecto.setEstado(nuevoEstado);  // Actualizar el estado del proyecto
+            proyectoRepository.save(proyecto);  // Guardar los cambios
+            return true;
+        }
+
+        return false;  // Si el proyecto no existe, devolver false
+    }
 }

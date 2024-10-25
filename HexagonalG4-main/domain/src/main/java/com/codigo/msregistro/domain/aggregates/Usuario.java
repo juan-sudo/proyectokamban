@@ -1,10 +1,15 @@
 package com.codigo.msregistro.domain.aggregates;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;  // Importación correcta de JPA
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 @Data
 @Builder
@@ -18,9 +23,58 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Genera automáticamente el ID
     private Long id;
 
-    private String nombre;
+    @NotNull
+    @NotBlank
+    private String nombres;
 
+    @NotNull
+    @NotBlank
+    @Column(name = "apellido_parterno", nullable = false, length = 255)
+    private String apellidoPaterno;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "apellido_materno", nullable = false, length = 255)
+    private String apellidoMaterno;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "telefono", length = 20)
+    private String telefono;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "direccion", length = 255)
+    private String direccion;
+
+    @NotNull
+    @Column(name = "nacimiento")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date fechaNacimiento;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "genero", length = 1)
+    private String genero;
+
+    @NotNull
+    @NotBlank
+    @Column(name = "fecha_registro", nullable = false, updatable = false)
+    private Date fechaRegistro;
+
+    @NotNull
+    @NotBlank
+    private Boolean activo;
 
     @Enumerated(EnumType.STRING) // Almacenar el enum como un string en la base de datos
     private RolUsuario rol; // Enum para roles (definirlo por separado)
