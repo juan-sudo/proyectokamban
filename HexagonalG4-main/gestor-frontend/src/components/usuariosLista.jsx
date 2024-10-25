@@ -60,7 +60,7 @@ const pearlescentColors = [
 
 
 function UsuariosList() {
-    const [proyectos, setProyectos] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [assignedColors, setAssignedColors] = useState({});
     const [modalType, setModalType] = useState('');
@@ -79,9 +79,9 @@ function UsuariosList() {
     const navigate = useNavigate();
     useEffect(() => {
 
-        fetchProyectos();
-        fetchPersonas();
-        console.log("aqui"+proyectos)
+        fetchUsuarios();
+        fetchPersona();
+        console.log("aqui"+usuarios)
     }, []);
 
 //AXIOS ARCHIVAR PROYECTO
@@ -104,7 +104,7 @@ function UsuariosList() {
                 console.log('Proyecto archivado:', response.data);
 
                 // Actualiza el estado de tus proyectos si es necesario
-                setProyectos((prevProyectos) => prevProyectos.filter(proyecto => proyecto.id !== id));
+                setUsuarios((prevProyectos) => prevProyectos.filter(proyecto => proyecto.id !== id));
 
                 // Muestra un mensaje de éxito
                 Swal.fire('Archivado', 'El proyecto ha sido archivado.', 'success');
@@ -118,23 +118,23 @@ function UsuariosList() {
     };
 
 
-    const fetchProyectos = async () => {
+    const fetchUsuarios = async () => {
         try {
-            const response = await axios.get(`${backendUrl}/api/proyectos/no-archivados`);
+            const response = await axios.get(`${backendUrl}/api/usuarios`);
             console.log("Respuesta de la API:", response.data);
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
                     const color = getUniqueColor(proyecto.id);
                     return { ...proyecto, color };
                 });
-                setProyectos(proyectosConColor);
+                setUsuarios(proyectosConColor);
             }
         } catch (error) {
             console.error("Error al obtener proyectos:", error);
         }
     };
 
-    const fetchPersonas = async () => {
+    const fetchPersona = async () => {
         try {
             const response = await axios.get(`${backendUrl}/ms-registro/v1/persona`);
             console.log("Respuesta de la API personas:", response.data);
@@ -229,7 +229,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
         // Lógica para ver proyecto
         if (typeModal === 'verProyecto' && id) {
-            const proyecto = proyectos.find(p => p.id === id);
+            const proyecto = usuarios.find(p => p.id === id);
             setSelectedProject(proyecto);
         }
 
@@ -241,7 +241,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
         // Lógica para editar proyecto
         if (typeModal === 'editarProyecto' && id) {
-            const proyecto2 = proyectos.find(p => p.id === id);
+            const proyecto2 = usuarios.find(p => p.id === id);
             setSelectedProject(proyecto2);
 
             // Precargar el formulario con los datos del proyecto
@@ -266,7 +266,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         // Lógica para ver módulo
         if (typeModal === 'verModulo' && id && moduloId) {
             // Encuentra el proyecto por su ID
-            const proyecto = proyectos.find(p => p.id === id);
+            const proyecto = usuarios.find(p => p.id === id);
 
             // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
             if (proyecto) {
@@ -306,7 +306,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
         if (typeModal === 'verTarea' && id&& moduloId && tareaId) {
             // Encuentra el proyecto por su ID
-            const proyecto = proyectos.find(p => p.id === id);
+            const proyecto = usuarios.find(p => p.id === id);
             console.log("psaste por qui");
             // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
             if (proyecto) {
@@ -333,7 +333,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         if (typeModal === 'verSubtarea' && id && moduloId && tareaId && subtareaId) {
             console.log("Entró correctamente en 'verSubtarea'");
             // Encuentra el proyecto por su ID
-            const proyecto = proyectos.find(p => p.id === id);
+            const proyecto = usuarios.find(p => p.id === id);
 
 
             if (proyecto) {
@@ -521,7 +521,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         'Content-Type': 'application/json'
                     }
                 });
-                fetchProyectos();
+                fetchUsuarios();
             } catch (error) {
                 console.error("Error creando tarea:", error);
             }
@@ -676,7 +676,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                             <div>Nombre de proyecto</div>
                         </Col>
                         <Col span={3}>
-                            <div className="task-item__assignee">Persona asignado</div>
+                            <div className="task-item__assignee">nombres</div>
                         </Col>
                         <Col span={3}>
                             <div className="task-item__due-date">Fecha Inicio</div>
@@ -690,7 +690,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                     </Row>
 
 
-                    {proyectos.map((row) => (
+                    {usuarios.map((row) => (
                         <React.Fragment key={row.id}>
                             <Row
                                 gutter={[16, 16]}
@@ -710,19 +710,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                 <Col span={11}>
                                     <div style={{display: 'flex', alignItems: 'center'}}>
 
-                                        <Button
-                                            type="text"
-                                            size="small"
-                                            onClick={() => toggleCollapseProyecto(row.id)}
-                                            icon={expandedRows[row.id] ? <CaretUpOutlined/> : <CaretDownOutlined/>}
-                                        />
-                                        <FolderOutlined style={{
-                                            backgroundColor: row.color,
-                                            color: 'black',
-                                            padding: '5px',
-                                            borderRadius: '50%',
-                                            border: '2px solid black'
-                                        }}/>
+
+
                                         <Tooltip title="Ver proyecto">
 
                                             <a
@@ -736,20 +725,10 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                 }}
                                                 onClick={() => showModal('verProyecto', row.id)}
                                             >
-                                                {row.nombre}
+                                                {row.nombres}
                                             </a>
                                         </Tooltip>
-                                        {expandedRows[row.id] && (
-                                            <Tooltip title="Añadir módulo">
-                                                <Button
-                                                    icon={<PlusOutlined/>}
-                                                    size="small"
-                                                    type="link"
-                                                    onClick={() => showModal('AñadirModulo', row.id)}
-                                                    //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                />
-                                            </Tooltip>
-                                        )}
+                                        
                                     </div>
                                 </Col>
 
