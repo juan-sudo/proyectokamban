@@ -1,6 +1,10 @@
 package com.codigo.msregistro.application.services;
 
+import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
+import com.codigo.msregistro.domain.aggregates.Usuario;
+import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
@@ -10,14 +14,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class ProyectoService {
 
     private final ProyectoRepository proyectoRepository;
 
-    @Autowired
-    public ProyectoService(ProyectoRepository proyectoRepository) {
-        this.proyectoRepository = proyectoRepository;
-    }
+    private final UsuarioRepository usuarioRepository;
+
+
 
     // Obtener todos los proyectos no eliminados
     public List<Proyecto> getAllProyectos() {
@@ -87,4 +91,52 @@ public class ProyectoService {
 
         return false;  // Si el proyecto no existe, devolver false
     }
+
+
+
+
+
+    public Proyecto actualizarUsuarios(Long proyectoId, List<Long> nuevosUsuarioIds) {
+        // Buscar el proyecto por ID, lanzando una excepción si no se encuentra
+        Proyecto proyecto = proyectoRepository.findById(proyectoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proyecto no encontrado"));
+
+        // Limpiar la lista de usuarios existente (opcional)
+        proyecto.getUsuarios().clear();
+
+        // Obtener los usuarios a partir de los IDs
+        List<Usuario> nuevosUsuarios = usuarioRepository.findAllById(nuevosUsuarioIds);
+
+        // Comprobar si se encontraron usuarios válidos
+        if (nuevosUsuarios.isEmpty()) {
+            throw new ResourceNotFoundException("No se encontraron usuarios con los IDs proporcionados");
+        }
+
+        // Agregar los nuevos usuarios al proyecto
+        proyecto.getUsuarios().addAll(nuevosUsuarios);
+
+        // Guardar el proyecto actualizado
+        return proyectoRepository.save(proyecto);
+    }
+
+    public Proyecto eliminarUsuarioDeProyecto(Long proyectoId, Long usuarioId) {
+        // Buscar el proyecto por su ID, lanzando una excepción si no se encuentra
+        Proyecto proyecto = proyectoRepository.findById(proyectoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proyecto con ID " + proyectoId + " no encontrado"));
+
+        // Filtrar la lista de usuarios para eliminar el usuario con el ID especificado
+        boolean usuarioEliminado = proyecto.getUsuarios().removeIf(usuario -> usuario.getId().equals(usuarioId));
+
+        // Verificar si el usuario estaba en la lista del proyecto
+        if (!usuarioEliminado) {
+            throw new ResourceNotFoundException("Usuario con ID " + usuarioId + " no encontrado en el proyecto");
+        }
+
+        // Guardar el proyecto actualizado
+        return proyectoRepository.save(proyecto);
+    }
+
+
+
 }
+

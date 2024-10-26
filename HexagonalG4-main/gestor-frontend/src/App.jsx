@@ -35,39 +35,39 @@ function App() {
             label: <Link to="/">Inicio</Link>
         },
         {
-            key: '7',
+            key: '2',
             icon: <FolderOpenOutlined />,
             label: <Link to="/proyectoList">Gestionar y Crear Proyectos</Link>
         },
         {
-            key: '2',
+            key: '3',
             icon: <MailOutlined />,
             label: <Link to="/proyectoListArchivados">Proyectos archivados</Link>
         },
         {
-            key: '3',
+            key: '4',
             icon: <UserOutlined />,
 
             label: <Link to="/usuarioslista">Usuarios lista</Link>
         },
         {
-            key: '4',
+            key: '5',
             icon: <UserOutlined />,
             label: <Link to="/registrarusuario">Registrar Usuarios</Link>
         },
         {
-            key: '5',
+            key: '6',
             icon: <ClockCircleOutlined />,
             label: 'Hojas de horas'
         },
         {
-            key: '6',
+            key: '7',
 
             icon: <TeamOutlined />,
             label: 'Paneles'
         },
         {
-            key: '7',
+            key: '8',
             icon: <FileOutlined />,
             label: 'Clips'
         },

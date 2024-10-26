@@ -1,5 +1,6 @@
 package com.codigo.msregistro.application.controller;
 
+import com.codigo.msregistro.application.exceptions.EmailAlreadyExistsException;
 import com.codigo.msregistro.application.services.UsuarioService;
 import com.codigo.msregistro.domain.aggregates.Usuario;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -21,9 +23,14 @@ public class UsuarioController {
     // Crear un nuevo usuario
     @PostMapping
     public ResponseEntity<Usuario> crearUsuario(@RequestBody Usuario usuario) {
+        // Verifica si el email ya existe
+        if (usuarioService.emailExists(usuario.getEmail())) {
+            throw new EmailAlreadyExistsException("El email ya está registrado.");
+        }
         Usuario nuevoUsuario = usuarioService.crearUsuario(usuario);
         return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED);
     }
+
 
     // Obtener un usuario por ID
     @GetMapping("/{id}")
@@ -57,5 +64,15 @@ public class UsuarioController {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    // Actualizar el estado activo de un usuario
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<Usuario> actualizarEstadoActivo(@PathVariable Long id, @RequestBody Map<String, Boolean> estado) {
+        Boolean nuevoEstado = estado.get("activo"); // Obtener el nuevo estado del cuerpo de la solicitud
+        Usuario usuarioActualizado = usuarioService.actualizarEstadoActivo(id, nuevoEstado);
+        return usuarioActualizado != null ?
+                new ResponseEntity<>(usuarioActualizado, HttpStatus.OK) :
+                new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 }

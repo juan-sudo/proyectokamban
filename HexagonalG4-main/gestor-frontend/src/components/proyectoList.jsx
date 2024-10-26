@@ -72,15 +72,34 @@ function ProyectoList() {
     const [selectedModule, setSelectedModule] = useState(null); // proyecto seleccionado
     const [selectedTarea, setSelectedTarea] = useState(null); // proyecto seleccionado
     const [selectedsubTarea, setSelectedsubTarea] = useState(null); // proyecto seleccionado
-    const [personas, setPersonas] = useState([]);
     const [selectedValues, setSelectedValues] = useState([]);
     const navigate = useNavigate();
+    const [usuarios, setUsuario] = useState([]);
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
+
+
     useEffect(() => {
 
         fetchProyectos();
-        fetchPersonas();
+        fetchUsuario();
         console.log("aqui"+proyectos)
     }, []);
+
+    //pPARA SEEÑCT
+
+    // Cargar usuarios del proyecto cuando cambia el proyecto seleccionado
+    useEffect(() => {
+        if (selectedProject && selectedProject.usuarios) {
+            const userIds = selectedProject.usuarios.map(user => user.id);
+            setSelectedUserIds(userIds);
+        } else {
+            setSelectedUserIds([]);
+        }
+    }, [selectedProject]);
+
+   // const handleUserChange = (newUserIds) => {
+      //  setSelectedUserIds(newUserIds);
+    //};
 
 //AXIOS ARCHIVAR PROYECTO
     const archivarProyecto = async (id, nombreProyecto) => {
@@ -115,6 +134,7 @@ function ProyectoList() {
         }
     };
 
+    //OBTENE PROYECTOS
 
     const fetchProyectos = async () => {
         try {
@@ -132,26 +152,70 @@ function ProyectoList() {
         }
     };
 
-    const fetchPersonas = async () => {
-        try {
-            const response = await axios.get(`${backendUrl}/ms-registro/v1/persona`);
-            console.log("Respuesta de la API personas:", response.data);
+// OBTENER  USUARIOS
 
+    const fetchUsuario = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/api/usuarios`);
             if (Array.isArray(response.data)) {
-                const personasConColor = response.data.map((persona) => {
-                    return {
-                        label: persona.nombres.toLowerCase(), // Usamos el nombre en minúsculas como etiqueta
-                        value: persona.idPersona, // Usamos el idPersona como valor
-                        emoji: "🇨🇳", // Emoji asignado
-                        desc: persona.apePat // Usamos el apellido paterno como descripción
-                    };
-                });
-                setPersonas(personasConColor); // Guardar las personas en el estado correspondiente
+                const usuarioValor = response.data.map(usuario => ({
+                    label: usuario.nombres,
+                    value: usuario.id,
+                    emoji: "🇨🇳",
+                    desc: usuario.nombres,
+                }));
+                setUsuario(usuarioValor);
             }
         } catch (error) {
-            console.error("Error al obtener personas:", error);
+            console.error("Error al obtener usuarios:", error);
+            //message.error('No se pudieron cargar las personas.');
         }
     };
+
+
+//CAMBIAR USUARIO
+    const handleUserChange = (newUserIds) => {
+        const removedUserIds = selectedUserIds.filter(id => !newUserIds.includes(id));
+
+        // Eliminar usuarios desasignados del proyecto
+        removedUserIds.forEach(async (userId) => {
+            try {
+                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios/${userId}`);
+               // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
+                await fetchProyectos();
+
+            } catch (error) {
+                message.error(`Error al eliminar el usuario ${userId} del proyecto`);
+                console.error('Error:', error);
+            }
+        });
+
+        setSelectedUserIds(newUserIds);
+    };
+
+//ACTUALIZAR USUARIO
+    const handleUpdateUsers = async () => {
+        try {
+            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios`, selectedUserIds);
+            //message.success('Usuarios actualizados correctamente');
+            // Actualizar el estado del proyecto para reflejar los usuarios asignados
+            // Vuelve a obtener todos los proyectos para reflejar los cambios
+            await fetchProyectos();
+
+            const updatedUsuarios = usuarios
+                .filter(persona => selectedUserIds.includes(persona.value))
+                .map(persona => ({ id: persona.value, nombres: persona.label }));
+
+            setSelectedProject(prevProject => ({
+                ...prevProject,
+                usuarios: updatedUsuarios
+            }));
+        } catch (error) {
+            message.error('Error al actualizar los usuarios');
+            console.error('Error:', error);
+        }
+    };
+
 
     const getUniqueColor = (projectId) => {
         if (!assignedColors[projectId]) {
@@ -388,6 +452,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
     };
 
     const handleOk = () => {
+
         form.validateFields().then(async (values) => {
             if (values.fechaInicio) {
                 values.fechaInicio = values.fechaInicio.format('YYYY-MM-DD');
@@ -760,8 +825,19 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </div>
                                 </Col>
 
+
+
                                 <Col span={3}>
-                                    <Avatar icon={<UserAddOutlined/>}/>
+                                    {/* Generar avatares de los usuarios del proyecto */}
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        {row.usuarios.map((usuario) => (
+                                            <Tooltip key={usuario.id} title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}>
+                                                <Avatar>
+                                                    {usuario.nombres.charAt(0)}
+                                                </Avatar>
+                                            </Tooltip>
+                                        ))}
+                                    </div>
                                 </Col>
                                 <Col style={{ paddingTop: '8px' }} span={3}>
                                         <span style={{
@@ -1253,7 +1329,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             >
                 {/* Contenido según el modalType */}
 
-                {modalType === 'verProyecto' && selectedProject && (
+                {
+                    modalType === 'verProyecto' && selectedProject && (
 
                     <div style={{paddingLeft: 10}}>
 
@@ -1368,23 +1445,26 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </span>
 
                                     <div style={{width: 300}}>
+
                                         <Select
                                             mode="multiple"
-                                            style={{
-                                                width: '100%',
-                                            }}
+                                            style={{ width: '100%' }}
                                             placeholder="Seleccionar una opción"
-                                            defaultValue={['jjnio']}
-                                            options={options}
-                                            optionRender={(option) => (
-                                                <Space>
-                                                <span role="img" aria-label={option.data.label}>
-                                                    {option.data.emoji}
-                                                </span>
-                                                    {option.data.desc}
-                                                </Space>
-                                            )}
-                                        />
+                                            value={selectedUserIds}
+                                            onChange={handleUserChange}
+                                            onBlur={handleUpdateUsers}
+                                        >
+                                            {usuarios.map(({ value, label, emoji, desc }) => (
+                                                <Option key={value} value={value}>
+                                                    <Space>
+                                                        <span role="img" aria-label={label}>{emoji}</span>
+                                                        {desc}
+                                                    </Space>
+                                                </Option>
+                                            ))}
+                                        </Select>
+
+
                                     </div>
                                 </div>
                             </div>
@@ -1395,7 +1475,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                     </div>
 
 
-                )}
+                )
+                }
 
                 {modalType === 'editarProyecto' && (
                     <Form form={form} layout="vertical">
@@ -1581,7 +1662,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                             placeholder="Seleccionar una opción" // Placeholder del Select
                                             value={selectedValues} // Estado de los valores seleccionados
                                             onChange={(values) => setSelectedValues(values)} // Actualiza el estado al seleccionar/deseleccionar opciones
-                                            options={personas.map((persona) => ({
+                                            options={usuarios.map((persona) => ({
                                                 label: (
                                                     <Space>
                             <span role="img">

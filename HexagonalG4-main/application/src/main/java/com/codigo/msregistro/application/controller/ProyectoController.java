@@ -1,6 +1,7 @@
 package com.codigo.msregistro.application.controller;
 
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
+import com.codigo.msregistro.domain.aggregates.Usuario;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -117,6 +118,26 @@ public class ProyectoController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado.");
         }
     }
+
+
+    @PutMapping("/{id}/usuarios")
+    public ResponseEntity<Proyecto> actualizarUsuarios(
+            @PathVariable("id") Long proyectoId,
+            @RequestBody List<Long> nuevosUsuarioIds) {  // Cambiar de List<Usuario> a List<Long>
+        Proyecto proyectoActualizado = proyectoService.actualizarUsuarios(proyectoId, nuevosUsuarioIds);
+        return ResponseEntity.ok(proyectoActualizado);
+    }
+
+    @DeleteMapping("/{proyectoId}/usuarios/{usuarioId}")
+    public ResponseEntity<Proyecto> eliminarUsuarioDeProyecto(
+            @PathVariable Long proyectoId,
+            @PathVariable Long usuarioId) {
+        Proyecto proyectoActualizado = proyectoService.eliminarUsuarioDeProyecto(proyectoId, usuarioId);
+        return ResponseEntity.ok(proyectoActualizado);
+    }
+
+
+
 
 
 }
