@@ -2,6 +2,7 @@
 
     import com.fasterxml.jackson.annotation.JsonBackReference;
     import com.fasterxml.jackson.annotation.JsonFormat;
+    import com.fasterxml.jackson.annotation.JsonIgnore;
     import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.NotNull;
@@ -55,6 +56,7 @@
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "tarea_id")
         @JsonIgnoreProperties("subtareas")// evita recursividad
+        @JsonIgnore // Omitir tarea en la serialización
         private Tarea tarea;  // Cada subtarea pertenece a una tarea
 
 

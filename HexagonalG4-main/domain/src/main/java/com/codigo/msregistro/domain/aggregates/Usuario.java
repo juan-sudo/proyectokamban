@@ -74,6 +74,11 @@ public class Usuario {
 
     @NotNull
     @NotBlank
+    @Column(name = "background_user", length = 7)
+    private String backgroundUser;
+
+    @NotNull
+    @NotBlank
     private Boolean activo;
 
     @Enumerated(EnumType.STRING) // Almacenar el enum como un string en la base de datos

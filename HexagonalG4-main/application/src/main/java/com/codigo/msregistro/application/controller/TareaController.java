@@ -108,4 +108,21 @@ public class TareaController {
     }
 
 
+    @PutMapping("/{id}/usuarios")
+    public ResponseEntity<Tarea> actualizarUsuarios(
+            @PathVariable("id") Long moduloId,
+            @RequestBody List<Long> nuevosUsuarioIds) {  // Cambiar de List<Usuario> a List<Long>
+        Tarea moduloActualizado = tareaService.actualizarUsuarios(moduloId, nuevosUsuarioIds);
+        return ResponseEntity.ok(moduloActualizado);
+    }
+
+    @DeleteMapping("/{tareaId}/usuarios/{usuarioId}")
+    public ResponseEntity<Tarea> eliminarUsuarioDeModulo(
+            @PathVariable Long tareaId,
+            @PathVariable Long usuarioId) {
+        Tarea moduloActuzalizado = tareaService.eliminarUsuarioDeModulo(tareaId, usuarioId);
+        return ResponseEntity.ok(moduloActuzalizado);
+    }
+
+
 }

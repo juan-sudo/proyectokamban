@@ -1,8 +1,11 @@
 package com.codigo.msregistro.application.services;
 
+import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.Tarea;
 import com.codigo.msregistro.domain.aggregates.Modulo;
+import com.codigo.msregistro.domain.aggregates.Usuario;
 import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
+import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +17,7 @@ import java.util.Optional;
 public class TareaService {
 
     private final TareaRepository tareaRepository;
-
+    private final UsuarioRepository usuarioRepository;
     // Crear una nueva tarea
     public Tarea crearTarea(Tarea tarea) {
         return tareaRepository.save(tarea);
@@ -39,4 +42,45 @@ public class TareaService {
     public void eliminarTarea(Long id) {
         tareaRepository.deleteById(id);
     }
+
+    public Tarea actualizarUsuarios(Long moduloId, List<Long> nuevosUsuarioIds) {
+        // Buscar el proyecto por ID, lanzando una excepción si no se encuentra
+        Tarea modulo = tareaRepository.findById(moduloId)
+                .orElseThrow(() -> new ResourceNotFoundException("tarea no encontrado"));
+
+        // Limpiar la lista de usuarios existente (opcional)
+        modulo.getUsuarios().clear();
+
+        // Obtener los usuarios a partir de los IDs
+        List<Usuario> nuevosUsuarios = usuarioRepository.findAllById(nuevosUsuarioIds);
+
+        // Comprobar si se encontraron usuarios válidos
+        if (nuevosUsuarios.isEmpty()) {
+            throw new ResourceNotFoundException("No se encontraron usuarios con los IDs proporcionados");
+        }
+
+        // Agregar los nuevos usuarios al proyecto
+        modulo.getUsuarios().addAll(nuevosUsuarios);
+
+        // Guardar el proyecto actualizado
+        return tareaRepository.save(modulo);
+    }
+
+    public  Tarea eliminarUsuarioDeModulo(Long proyectoId, Long usuarioId) {
+        // Buscar el proyecto por su ID, lanzando una excepción si no se encuentra
+        Tarea tarea = tareaRepository.findById(proyectoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proyecto con ID " + proyectoId + " no encontrado"));
+
+        // Filtrar la lista de usuarios para eliminar el usuario con el ID especificado
+        boolean usuarioEliminado = tarea.getUsuarios().removeIf(usuario -> usuario.getId().equals(usuarioId));
+
+        // Verificar si el usuario estaba en la lista del proyecto
+        if (!usuarioEliminado) {
+            throw new ResourceNotFoundException("Usuario con ID " + usuarioId + " no encontrado en el proyecto");
+        }
+
+        // Guardar el proyecto actualizado
+        return tareaRepository.save(tarea);
+    }
+
 }

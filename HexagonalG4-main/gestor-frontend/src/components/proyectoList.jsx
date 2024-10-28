@@ -46,7 +46,8 @@ import {
     GroupOutlined,
     RobotOutlined,
     FileOutlined,
-    FlagOutlined
+    FlagOutlined,
+
 
 } from '@ant-design/icons';
 
@@ -75,14 +76,18 @@ function ProyectoList() {
     const [selectedValues, setSelectedValues] = useState([]);
     const navigate = useNavigate();
     const [usuarios, setUsuario] = useState([]);
+    //const [usuariosModulo, setUsuario] = useState([]);
     const [selectedUserIds, setSelectedUserIds] = useState([]);
+    const [selectedModuloUserIds, setSelectedModuloUserIds] = useState([]);
+    const [selectedTareaUserIds, setSelectedTareaUserIds] = useState([]);
+    const [selectedSubTareaUserIds, setSelectedSubTareaUserIds] = useState([]);
 
 
     useEffect(() => {
 
         fetchProyectos();
         fetchUsuario();
-        console.log("aqui"+proyectos)
+
     }, []);
 
     //pPARA SEEÑCT
@@ -97,9 +102,50 @@ function ProyectoList() {
         }
     }, [selectedProject]);
 
-   // const handleUserChange = (newUserIds) => {
-      //  setSelectedUserIds(newUserIds);
-    //};
+    // Cargar usuarios del proyecto cuando cambia el proyecto seleccionado
+    useEffect(() => {
+        if (selectedModule && selectedModule.usuarios) {
+            const userIds = selectedModule.usuarios.map(user => user.id);
+            console.log("usuariros de tarea:: "+userIds);
+            setSelectedModuloUserIds(userIds);
+        } else {
+            setSelectedModuloUserIds([]);
+        }
+    }, [selectedModule]);
+
+    // FILTRAR USUARIOS DE TAREA
+    useEffect(() => {
+        if (selectedTarea && selectedTarea.usuarios) {
+            const userIds = selectedTarea.usuarios.map(user => user.id);
+            console.log("usuariros de tarea:::: "+userIds);
+            setSelectedTareaUserIds(userIds);
+
+
+        } else {
+            console.log("entro aqui------------")
+            setSelectedTareaUserIds([]);
+
+        }
+    }, [selectedTarea]);
+
+
+    // FILTRAR USUARIO de SUBTAREA
+    useEffect(() => {
+        if (selectedsubTarea && selectedsubTarea.usuarios) {
+            const userIds = selectedsubTarea.usuarios.map(user => user.id);
+            console.log("usuariros de tarea:::: "+userIds);
+            setSelectedSubTareaUserIds(userIds);
+
+
+        } else {
+            console.log("entro aqui------------")
+            setSelectedSubTareaUserIds([]);
+
+        }
+    }, [selectedsubTarea]);
+
+
+
 
 //AXIOS ARCHIVAR PROYECTO
     const archivarProyecto = async (id, nombreProyecto) => {
@@ -173,7 +219,7 @@ function ProyectoList() {
     };
 
 
-//CAMBIAR USUARIO
+//USUARIO PROYECTO
     const handleUserChange = (newUserIds) => {
         const removedUserIds = selectedUserIds.filter(id => !newUserIds.includes(id));
 
@@ -193,7 +239,7 @@ function ProyectoList() {
         setSelectedUserIds(newUserIds);
     };
 
-//ACTUALIZAR USUARIO
+//ACTUALIZAR USUARIO PROYECTO
     const handleUpdateUsers = async () => {
         try {
             await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios`, selectedUserIds);
@@ -212,6 +258,159 @@ function ProyectoList() {
             }));
         } catch (error) {
             message.error('Error al actualizar los usuarios');
+            console.error('Error:', error);
+        }
+    };
+
+
+
+
+//eliminar USUARIO de MODULO
+    const handleUserModuloChange = (newUserIds) => {
+        const removedUserIds = selectedModuloUserIds.filter(id => !newUserIds.includes(id));
+
+        removedUserIds.forEach(async (userId) => {
+            try {
+                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios/${userId}`);
+                //http://localhost:8080/api/proyectos/1/modulos/2/usuarios/5
+                // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
+
+                await fetchProyectos();
+
+            } catch (error) {
+             //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
+                console.error('Error:', error);
+            }
+        });
+
+        setSelectedModuloUserIds(newUserIds);
+    };
+
+//ACTUALIZAR USUARIO MODULO
+    const handleUpdateModuloUsers = async () => {
+
+        try {
+
+            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios`, selectedModuloUserIds);
+
+            await fetchProyectos();
+
+            const updatedUsuarios = usuarios
+                .filter(persona => selectedUserIds.includes(persona.value))
+                .map(persona => ({ id: persona.value, nombres: persona.label }));
+
+            setSelectedProject(prevProject => ({
+                ...prevProject,
+                usuarios: updatedUsuarios
+            }));
+        } catch (error) {
+           // message.error('Error al actualizar los usuarios');
+            console.error('Error:', error);
+        }
+    };
+
+
+
+//Eliminar USUARIO TAREA
+    const handleUserTareaChange = (newUserIds) => {
+        const removedUserIds = selectedTareaUserIds.filter(id => !newUserIds.includes(id));
+
+        removedUserIds.forEach(async (userId) => {
+            try {
+                await axios.delete(`http://localhost:8080/api/modulos/${selectedModule.id}/tareas/${selectedTarea.id}/usuarios/${userId}`);
+
+                //http://localhost:8080/api/modulos/2/tareas/1/usuarios/4
+                // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
+
+                await fetchProyectos();
+
+            } catch (error) {
+                //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
+                console.error('Error:', error);
+            }
+        });
+setSelectedTareaUserIds(newUserIds)
+
+    };
+
+//ACTUALIZAR USUARIO TAREA
+    const handleUpdateTareaUsers = async () => {
+
+        try {
+
+                console.log("Usuarios seleccionados:", selectedTareaUserIds);
+            await axios.put(`http://localhost:8080/api/modulos/${selectedModule.id}/tareas/${selectedTarea.id}/usuarios`, selectedTareaUserIds);
+
+            ////http://localhost:8080/api/modulos/2/tareas/1/usuarios
+
+            // /api/proyectos/{proyectoId}/modulos/{id}/usuarios
+            //message.success('Usuarios actualizados correctamente');
+            // Actualizar el estado del proyecto para reflejar los usuarios asignados
+            // Vuelve a obtener todos los proyectos para reflejar los cambios
+            await fetchProyectos();
+
+            const updatedUsuarios = usuarios
+                .filter(persona => selectedUserIds.includes(persona.value))
+                .map(persona => ({ id: persona.value, nombres: persona.label }));
+
+            setSelectedProject(prevProject => ({
+                ...prevProject,
+                usuarios: updatedUsuarios
+            }));
+        } catch (error) {
+            // message.error('Error al actualizar los usuarios');
+            console.error('Error:', error);
+        }
+    };
+
+
+
+//Eliminar USUARIO SUBTAREA
+    const handleUserSubTareaChange = (newUserIds) => {
+        const removedUserIds = selectedSubTareaUserIds.filter(id => !newUserIds.includes(id));
+
+            removedUserIds.forEach(async (userId) => {
+            console.log("select tarea: ")
+            try {
+                await axios.delete(`http://localhost:8080/api/tareas/${selectedTarea.id}/subTareas/${selectedsubTarea.id}/usuarios/${userId}`);
+
+                //http://localhost:8080/api/tareas/4/subTareas/4/usuarios/4
+
+
+                await fetchProyectos();
+
+            } catch (error) {
+                //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
+                console.error('Error:', error);
+            }
+        });
+        setSelectedSubTareaUserIds(newUserIds)
+
+    };
+
+//ACTUALIZAR USUARIO SUBTAREA
+    const handleUpdateSubTareaUsers = async () => {
+
+        try {
+
+            console.log("Usuarios seleccionados:", selectedTareaUserIds);
+            await axios.put(`http://localhost:8080/api/tareas/${selectedTarea.id}/subTareas/${selectedsubTarea.id}/usuarios`, selectedSubTareaUserIds);
+
+            //http://localhost:8080/api/tareas/4/subTareas/4/usuarios
+
+
+            await fetchProyectos();
+
+            const updatedUsuarios = usuarios
+                .filter(persona => selectedUserIds.includes(persona.value))
+                .map(persona => ({ id: persona.value, nombres: persona.label }));
+
+            setSelectedProject(prevProject => ({
+                ...prevProject,
+                usuarios: updatedUsuarios
+            }));
+        } catch (error) {
+            // message.error('Error al actualizar los usuarios');
             console.error('Error:', error);
         }
     };
@@ -324,14 +523,16 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             form.resetFields();
         }
 
-
-        // Lógica para ver módulo
+// Lógica para ver módulo
         if (typeModal === 'verModulo' && id && moduloId) {
             // Encuentra el proyecto por su ID
             const proyecto = proyectos.find(p => p.id === id);
 
             // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
             if (proyecto) {
+                // Actualiza el estado con el proyecto seleccionado
+                setSelectedProject(proyecto);
+
                 const modulo = proyecto.modulos.find(m => m.id === moduloId);
 
                 // Si se encuentra el módulo, actualiza el estado con ese módulo
@@ -344,6 +545,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                 console.error("Proyecto no encontrado");
             }
         }
+
 
 
 
@@ -369,15 +571,17 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         if (typeModal === 'verTarea' && id&& moduloId && tareaId) {
             // Encuentra el proyecto por su ID
             const proyecto = proyectos.find(p => p.id === id);
-            console.log("psaste por qui");
+
             // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
             if (proyecto) {
                 const modulo = proyecto.modulos.find(m => m.id === moduloId);
 
                 // Si se encuentra el módulo, actualiza el estado con ese módulo
                 if (modulo) {
+                        setSelectedModule(modulo)
                     const  tarea=modulo.tareas.find(t=>t.id===tareaId);
                     if(tarea){
+
                         setSelectedTarea(tarea);
                     }else {
                         console.error("tarea no encontrado");
@@ -403,9 +607,14 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                 if (modulo) {
                     const tarea = modulo.tareas.find(t => t.id === tareaId);
                     if (tarea) {
+                        setSelectedTarea(tarea);
                         const subtarea = tarea.subtareas.find(st => st.id === subtareaId);
-                        setSelectedsubTarea(subtarea);
-                        console.log("Subtarea seleccionada:", subtarea);
+
+                        if(subtarea){
+                            setSelectedsubTarea(subtarea);
+                            console.log("Subtarea seleccionada:", subtarea);
+                        }
+
                     } else {
                         console.error("Tarea no encontrada");
                     }
@@ -452,7 +661,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
     };
 
     const handleOk = () => {
-
+console.log("entro aqui---------------")
         form.validateFields().then(async (values) => {
             if (values.fechaInicio) {
                 values.fechaInicio = values.fechaInicio.format('YYYY-MM-DD');
@@ -572,7 +781,9 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             }
             else if (modalType === 'tarea') {
                 url = `${backendUrl}/api/modulos/${selectedModuloId}/tareas`;
-            } else if (modalType === 'subtarea') {
+            }
+
+            else if (modalType === 'subtarea') {
                 url = `${backendUrl}/api/tareas/${selectedTareaId}/subTareas`;
             }
 
@@ -688,6 +899,36 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         });
     };
 
+    const items = [
+        {
+            key: '1',
+            label: (
+                <a onClick={() => setModalVisible(true)}
+                   style={{cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
+                    <Avatar
+                        icon={<EditOutlined/>}
+                        style={{marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30'}}
+                    />
+                    <span style={{marginLeft: 5, color: '#2c2c30', fontSize: 14}}>Editar</span> {/* Texto agregado */}
+                </a>
+
+            ),
+        },
+        {
+            key: '2',
+            label: (
+                <a onClick={() => archivarProyecto(row.id, row.nombre)}
+                   style={{cursor: 'pointer'}}> {/* Cambia 1 por el id correcto */}
+                    <Avatar
+                        icon={<SaveOutlined/>}
+                        style={{backgroundColor: 'transparent', color: '#2c2c30'}}
+                    />
+                    <span style={{marginLeft: 5, color: '#2c2c30', fontSize: 14}}>Archivar</span>
+                </a>
+            ),
+        }
+    ];
+
 
     return (
         <>
@@ -747,7 +988,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         >
                             <div>Nombre de proyecto</div>
                         </Col>
-                        <Col span={3}>
+                        <Col span={5}>
                             <div className="task-item__assignee">Persona asignado</div>
                         </Col>
                         <Col span={3}>
@@ -756,7 +997,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         <Col span={3}>
                             <div className="task-item__due-date">Fecha Fin</div>
                         </Col>
-                        <Col span={4}>
+                        <Col span={2}>
                             <div className="task-item__due-date">Prioridad</div>
                         </Col>
                     </Row>
@@ -771,7 +1012,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     cursor:"pointer",
                                     minWidth: '600px',
                                     transition: 'background-color 0.3s ease',
-                                    backgroundColor: hoveredRow === row.id ? '#e0e0e0' : '',
+                                    backgroundColor: hoveredRow === row.id ? '#f7f2f2' : '',
                                     color:'#2a2e34'
                                 }}
 
@@ -780,46 +1021,132 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                             >
                                 <Col span={11}>
-                                    <div style={{display: 'flex', alignItems: 'center'}}>
-
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
                                         <Button
                                             type="text"
                                             size="small"
                                             onClick={() => toggleCollapseProyecto(row.id)}
-                                            icon={expandedRows[row.id] ? <CaretUpOutlined/> : <CaretDownOutlined/>}
+                                            icon={expandedRows[row.id] ? <CaretUpOutlined /> : <CaretDownOutlined />}
                                         />
-                                        <FolderOutlined style={{
-                                            backgroundColor: row.color,
-                                            color: 'black',
-                                            padding: '5px',
-                                            borderRadius: '50%',
-                                            border: '2px solid black'
-                                        }}/>
+                                        <FolderOutlined
+                                            style={{
+                                                backgroundColor: row.color,
+                                                color: 'black',
+                                                padding: '5px',
+                                                borderRadius: '50%',
+                                                border: '2px solid black',
+                                            }}
+                                        />
                                         <Tooltip title="Ver proyecto">
-
                                             <a
-
                                                 style={{
-
                                                     marginLeft: 5,
-
+                                                    fontWeight: 500,
                                                     textDecoration: 'none',
-                                                    color: 'inherit'
+                                                    color: 'inherit',
+                                                    fontSize: 14,
+                                                    transition: 'color 0.3s', // Añade una transición suave
                                                 }}
                                                 onClick={() => showModal('verProyecto', row.id)}
+                                                onMouseEnter={(e) => (e.currentTarget.style.color = '#534dc9')} // Cambia el color al pasar el mouse
+                                                onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')} // Restaura el color al salir
                                             >
                                                 {row.nombre}
                                             </a>
                                         </Tooltip>
                                         {expandedRows[row.id] && (
-                                            <Tooltip title="Añadir módulo">
-                                                <Button
-                                                    icon={<PlusOutlined/>}
-                                                    size="small"
-                                                    type="link"
-                                                    onClick={() => showModal('AñadirModulo', row.id)}
-                                                    //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                />
+                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight:5 }}>
+                                                <Dropdown
+                                                    menu={{
+                                                        items,
+                                                    }}
+                                                    placement="topLeft"
+                                                    arrow
+                                                >
+                                                    <Button
+                                                        type="link"
+                                                        icon={<EllipsisOutlined style={{ marginLeft: 5, fontSize: 17, fontWeight: 800 }} />}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
+                                                            e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
+                                                            e.currentTarget.style.color = '656f7d'; // Restaura el color del texto al salir
+                                                        }}
+                                                    />
+                                                </Dropdown>
+
+
+                                                    <Button
+                                                        style={{
+                                                            color: '#656f7d',
+                                                            backgroundColor: 'transparent', // Color de fondo predeterminado
+                                                            transition: 'background-color 0.3s',
+                                                            paddingLeft:20
+                                                            // Suave transición
+                                                        }}
+                                                        icon={<PlusOutlined />}
+                                                        size="small"
+                                                        type="link"
+                                                        onClick={() => showModal('AñadirModulo', row.id)}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
+                                                            e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
+                                                            e.currentTarget.style.color = '#656f7d'; // Restaura el color del texto
+                                                        }}
+                                                    >
+
+                                                    </Button>
+
+
+
+                                            </div>
+                                        )}
+                                    </div>
+                                </Col>
+
+
+
+
+                                <Col span={5}>
+                                    {/* Generar avatares de los usuarios del proyecto */}
+                                    <div style={{ display: 'flex', alignItems: 'center', position: 'relative', height: '22px', width: '30px', paddingTop:10 }}> {/* Reduce la altura aquí */}
+                                        {row.usuarios.length > 0 ? (
+                                            row.usuarios.map((usuario, index) => {
+                                                // Utilizar el color de fondo asignado en backgroundUser
+                                                const backgroundColor = usuario.backgroundUser || '#000000'; // Color predeterminado si backgroundUser es null o undefined
+
+                                                return (
+                                                    <Tooltip
+                                                        key={usuario.id}
+                                                        title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}
+                                                    >
+                                                        <Avatar
+                                                            size={27} // Ajusta el tamaño aquí
+                                                            style={{
+                                                                backgroundColor,
+                                                                border: '1px solid white',
+                                                                position: 'absolute',
+                                                                left: `${index * 20}px`, // Ajusta el desplazamiento horizontal
+                                                                zIndex: 10 - index, // Controla la superposición (el último estará encima)
+                                                                lineHeight: '0px', // Ajusta la altura de la línea si es necesario
+                                                                fontSize: '12px', // Ajusta el tamaño de la fuente si es necesario
+                                                            }}
+                                                        >
+                                                            {usuario.nombres.charAt(0).toUpperCase()}
+                                                        </Avatar>
+                                                    </Tooltip>
+                                                );
+                                            })
+                                        ) : (
+                                            <Tooltip title="Agregar persona">
+                                                <Avatar
+                                                    size={27}
+                                                    icon={<UserAddOutlined />} />
                                             </Tooltip>
                                         )}
                                     </div>
@@ -827,19 +1154,10 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
 
 
-                                <Col span={3}>
-                                    {/* Generar avatares de los usuarios del proyecto */}
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        {row.usuarios.map((usuario) => (
-                                            <Tooltip key={usuario.id} title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}>
-                                                <Avatar>
-                                                    {usuario.nombres.charAt(0)}
-                                                </Avatar>
-                                            </Tooltip>
-                                        ))}
-                                    </div>
-                                </Col>
-                                <Col style={{ paddingTop: '8px' }} span={3}>
+
+
+
+                                <Col style={{ paddingTop: '8px',color:'#055706' }} span={3}>
                                         <span style={{
                                             fontSize: '14px',
                                             paddingLeft: 5,
@@ -855,7 +1173,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </span>
 
                                 </Col>
-                                <Col style={{ paddingTop: '8px' }} span={3}>
+                                <Col style={{ paddingTop: '8px',color:'#055706' }} span={3}>
                                              <span style={{
                                                  fontSize: '14px',
                                                  paddingLeft: 5,
@@ -870,31 +1188,10 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                     </span>
                                 </Col>
-                                <Col span={4}>
-                                    <Avatar icon={<FlagOutlined/>}/>
-                                    {hoveredRow === row.id && (
-                                        <>
-                                            <Tooltip title="Editar proyecto">
-                                                <a onClick={() => setModalVisible(true)}
-                                                   style={{cursor: 'pointer'}}>
-                                                    <Avatar
-                                                        icon={<EditOutlined />}
-                                                        style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                    />
-                                                </a>
-                                            </Tooltip>
-                                            <Tooltip title="Archivar proyecto">
-                                                <a onClick={() => archivarProyecto(row.id,row.nombre)} style={{ cursor: 'pointer' }}> {/* Cambia 1 por el id correcto */}
-                                                    <Avatar
-                                                        icon={<SaveOutlined />}
-                                                        style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                    />
-                                                </a>
-                                            </Tooltip>
-
-                                        </>
-                                    )}
+                                <Col span={2} style={{ display: 'flex', alignItems: 'center' }}>
+                                    <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
                                 </Col>
+
                             </Row>
 
                             {/* Mostrar los módulos debajo del proyecto */}
@@ -906,7 +1203,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                             marginLeft: '20px',
                                             cursor: 'pointer',
                                             minWidth: '600px',
-                                            backgroundColor: hoveredRowmodulo === modulo.id ? '#e0e0e0' : '',
+                                            backgroundColor: hoveredRowmodulo === modulo.id ? '#f7f2f2' : '',
                                         }}
                                         onMouseEnter={() => handleMouseEntermodulo(modulo.id)}
                                         onMouseLeave={handleMouseLeavemodulo}
@@ -943,41 +1240,131 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                             textDecoration: 'none',
                                                             color: 'inherit'
                                                         }}
+
                                                         onClick={() => showModal('verModulo', row.id, modulo.id)}
                                                     >
 
                                                         {modulo.nombre}
                                                     </a>
                                                 </Tooltip>
-                                                <Tooltip title="kamban">
-                                                    <Button
-                                                        icon={<InsertRowBelowOutlined />}
-                                                        size="small"
-                                                        type="link"
-                                                        onClick={() => handleButtonClick(row.id,modulo.id)}  // Redirige al hacer clic
-                                                        style={{ marginLeft: 'auto', paddingRight:20 }}
-                                                    />
-                                                </Tooltip>
-                                                {/* Mostrar el botón solo si el módulo está expandido */}
-                                                {!expandedModules[modulo.id] && (
-                                                    <Tooltip title="Añadir tarea">
+
+                                                <div
+                                                    style={{display: 'flex', alignItems: 'center', marginLeft: 'auto'}}>
+                                                    <Dropdown
+                                                        menu={{
+                                                            items,
+                                                        }}
+                                                        placement="topLeft"
+                                                        arrow
+                                                    >
+                                                        <Button style={{paddingRight:20}}
+                                                            type="link"
+                                                            icon={<EllipsisOutlined style={{
+                                                                marginLeft: 5,
+                                                                fontSize: 17,
+                                                                fontWeight: 800
+                                                            }}/>}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
+                                                                e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
+                                                                e.currentTarget.style.color = '656f7d'; // Restaura el color del texto al salir
+                                                            }}
+                                                        />
+                                                    </Dropdown>
+                                                    <Tooltip title="kamban">
                                                         <Button
-                                                            style={{paddingRight:20}}
-                                                            icon={<PlusOutlined/>}
+                                                            icon={<InsertRowBelowOutlined/>}
                                                             size="small"
                                                             type="link"
-                                                            onClick={() => showModal('AñadirTarea', row.id, modulo.id)}
+                                                            onClick={() => handleButtonClick(row.id, modulo.id)}  // Redirige al hacer clic
+                                                            style={{marginLeft: 'auto'}}
                                                         />
+                                                    </Tooltip>
+                                                    {/* Mostrar el botón solo si el módulo está expandido */}
+                                                    {!expandedModules[modulo.id] && (
+                                                        <Button
+                                                            style={{
+                                                                color: '#656f7d',
+                                                                backgroundColor: 'transparent', // Color de fondo predeterminado
+                                                                transition: 'background-color 0.3s' // Suave transición
+                                                                ,marginRight:15,
+
+                                                            }}
+                                                            icon={<PlusOutlined />}
+                                                            size="small"
+                                                            type="link"
+                                                            onClick={() => showModal('AñadirTarea',row.id, modulo.id)}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
+                                                                e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
+                                                                e.currentTarget.style.color = '#656f7d'; // Restaura el color del texto
+                                                            }}
+                                                        >
+
+                                                        </Button>
+
+                                                    )}
+
+
+                                                </div>
+
+                                            </div>
+                                        </Col>
+
+
+                                        <Col span={5}>
+                                            {/* Generar avatares de los usuarios del proyecto */}
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                position: 'relative',
+                                                height: '22px',
+                                                width: '30px',
+                                                paddingTop: 10
+                                            }}> {/* Reduce la altura aquí */}
+                                                {modulo.usuarios.length > 0 ? (
+                                                    modulo.usuarios.map((usuario, index) => {
+                                                        // Utilizar el color de fondo asignado en backgroundUser
+                                                        const backgroundColor = usuario.backgroundUser || '#000000'; // Color predeterminado si backgroundUser es null o undefined
+
+                                                        return (
+                                                            <Tooltip
+                                                                key={usuario.id}
+                                                                title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}
+                                                            >
+                                                                <Avatar
+                                                                    size={27} // Ajusta el tamaño aquí
+                                                                    style={{
+                                                                        backgroundColor,
+                                                                        border: '1px solid white',
+                                                                        position: 'absolute',
+                                                                        left: `${index * 20}px`, // Ajusta el desplazamiento horizontal
+                                                                        zIndex: 10 - index, // Controla la superposición (el último estará encima)
+                                                                        lineHeight: '0px', // Ajusta la altura de la línea si es necesario
+                                                                        fontSize: '12px', // Ajusta el tamaño de la fuente si es necesario
+                                                                    }}
+                                                                >
+                                                                    {usuario.nombres.charAt(0).toUpperCase()}
+                                                                </Avatar>
+                                                            </Tooltip>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <Tooltip title="Agregar persona">
+                                                        <Avatar
+                                                            size={27}
+                                                            icon={<UserAddOutlined/>}/>
                                                     </Tooltip>
                                                 )}
                                             </div>
                                         </Col>
-
-                                        <Col span={3}>
-                                            <Avatar icon={<UserAddOutlined/>}/>
-                                            <Avatar icon={<UserAddOutlined/>}/>
-                                        </Col>
-                                        <Col style={{ paddingTop: '8px' }} span={3}>
+                                        <Col style={{paddingTop: '8px', paddingLeft: 6,color:'#055706'}} span={3}>
                                                 <span style={{
                                                     fontSize: '14px',
                                                     paddingLeft: 5,
@@ -992,7 +1379,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                     </span>
                                         </Col>
-                                        <Col style={{ paddingTop: '8px' }} span={3}>
+                                        <Col style={{ paddingTop: '8px', paddingLeft:6,color:'#055706' }} span={3}>
                                                    <span style={{
                                                        fontSize: '14px',
                                                        paddingLeft: 5,
@@ -1007,30 +1394,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                     </span>
                                         </Col>
-                                        <Col span={4}>
-                                            <Avatar icon={<FlagOutlined/>}/>
-
-                                            {hoveredRowmodulo === modulo.id && (
-                                                <>
-                                                    <Tooltip title="Editar proyecto">
-                                                        <a onClick={() => setModalVisible(true)}
-                                                           style={{cursor: 'pointer'}}>
-                                                            <Avatar
-                                                                icon={<EditOutlined />}
-                                                                style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                            />
-                                                        </a>
-                                                    </Tooltip>
-                                                    <Tooltip title="Archivar proyecto">
-                                                        <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                            <Avatar
-                                                                icon={<SaveOutlined />}
-                                                                style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                            />
-                                                        </a>
-                                                    </Tooltip>
-                                                </>
-                                            )}
+                                        <Col span={2} style={{ display: 'flex', alignItems: 'center' , paddingLeft:15,  marginTop:3}}>
+                                            <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
                                         </Col>
                                     </Row>
                                     {expandedModules[`${row.id}-${modulo.id}`] && modulo.tareas?.map((tarea) => (
@@ -1039,9 +1404,10 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                 style={{
                                                     marginLeft: '20px',
                                                     padding:0,
+                                                    paddingBottom:6 ,
                                                     borderBottom: '1px solid rgba(217, 217, 217, 0.3)' ,
                                                     cursor: 'pointer',
-                                                    backgroundColor: hoveredRowtarea === tarea.id ? '#e0e0e0' : '',
+                                                    backgroundColor: hoveredRowtarea === tarea.id ? '#f7f2f2' : '',
                                                     boxSizing: 'border-box', // Para incluir padding y border en el tamaño
 
                                                 }}
@@ -1062,7 +1428,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                     <FileTextOutlined style={{
                                                         backgroundColor: row.color,
                                                         color: 'black',
-                                                        padding: '5px',
+                                                        marginTop: '7px',
+                                                        fontSize:19,
                                                         marginRight: '4px' // Espacio entre el icono y el texto
                                                     }} />
 
@@ -1075,7 +1442,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                                 marginLeft: 5,
 
                                                                 textDecoration: 'none',
-                                                                color: 'inherit'
+                                                                color: 'inherit',
+                                                                paddingTop:6
                                                             }}
                                                             onClick={() => showModal('verTarea', row.id, modulo.id, tarea.id)}
                                                         >
@@ -1089,24 +1457,84 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                             size="small"
                                                             type="link"
                                                             onClick={() => handleButtonClickSub(row.id,modulo.id,tarea.id)}  // Redirige al hacer clic
-                                                            style={{ marginLeft: 'auto', paddingRight:20 }}
+                                                            style={{ marginLeft: 'auto', paddingRight:10 , paddingTop:6}}
                                                         />
                                                     </Tooltip>
-                                                    <Tooltip title="Añadir subtarea">
-                                                        <Button
-                                                            style={{paddingRight:20}}
-                                                            icon={<PlusOutlined/>}
-                                                            size="small"
-                                                            type="link"
-                                                            onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
-                                                            //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                        />
-                                                    </Tooltip>
+
+                                                    <Button
+                                                        style={{
+                                                            color: '#656f7d',
+                                                            backgroundColor: 'transparent', // Color de fondo predeterminado
+                                                            transition: 'background-color 0.3s' // Suave transición
+                                                            ,marginRight:15,
+
+                                                        }}
+                                                        icon={<PlusOutlined />}
+                                                        size="small"
+                                                        type="link"
+                                                        onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
+                                                            e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
+                                                            e.currentTarget.style.color = '#656f7d'; // Restaura el color del texto
+                                                        }}
+                                                    >
+                                                    </Button>
+
 
                                                 </Col>
 
-                                                <Col span={3}> <Avatar icon={<UserAddOutlined />} /></Col>
-                                                <Col style={{ paddingTop: '8px' }} span={3}>
+
+                                                <Col span={5}>
+                                                    {/* Generar avatares de los usuarios del proyecto */}
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        position: 'relative',
+                                                        height: '22px',
+                                                        width: '30px',
+                                                        paddingTop: 10
+                                                    }}> {/* Reduce la altura aquí */}
+                                                        {tarea.usuarios.length > 0 ? (
+                                                            tarea.usuarios.map((usuario, index) => {
+                                                                // Utilizar el color de fondo asignado en backgroundUser
+                                                                const backgroundColor = usuario.backgroundUser || '#000000'; // Color predeterminado si backgroundUser es null o undefined
+
+                                                                return (
+                                                                    <Tooltip
+                                                                        key={usuario.id}
+                                                                        title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}
+                                                                    >
+                                                                        <Avatar
+                                                                            size={27} // Ajusta el tamaño aquí
+                                                                            style={{
+                                                                                backgroundColor,
+                                                                                border: '1px solid white',
+                                                                                position: 'absolute',
+                                                                                left: `${index * 20}px`, // Ajusta el desplazamiento horizontal
+                                                                                zIndex: 10 - index, // Controla la superposición (el último estará encima)
+                                                                                lineHeight: '0px', // Ajusta la altura de la línea si es necesario
+                                                                                fontSize: '12px', // Ajusta el tamaño de la fuente si es necesario
+                                                                            }}
+                                                                        >
+                                                                            {usuario.nombres.charAt(0).toUpperCase()}
+                                                                        </Avatar>
+                                                                    </Tooltip>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            <Tooltip title="Agregar persona">
+                                                                <Avatar
+                                                                    size={27}
+                                                                    icon={<UserAddOutlined/>}/>
+                                                            </Tooltip>
+                                                        )}
+                                                    </div>
+                                                </Col>
+                                                <Col style={{ paddingTop: '8px' ,paddingLeft: 4,color:'#055706'}} span={3}>
                                                           <span style={{
                                                               fontSize: '14px',
                                                               paddingLeft: 5,
@@ -1121,7 +1549,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                     </span>
                                                 </Col>
-                                                <Col style={{ paddingTop: '8px' }} span={3}><span style={{
+                                                <Col style={{ paddingTop: '8px',paddingLeft: 8 ,color:'#055706'}} span={3}><span style={{
                                                     fontSize: '14px',
                                                     paddingLeft: 5,
                                                     margin: 0,
@@ -1134,30 +1562,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                        })}
 
                                     </span></Col>
-                                                <Col span={4}>
-
-                                                    <Avatar icon={<FlagOutlined/>}/>
-                                                    {hoveredRowtarea === tarea.id && (
-                                                        <>
-                                                            <Tooltip title="Editar proyecto">
-                                                                <a onClick={() => setModalVisible(true)}
-                                                                   style={{cursor: 'pointer'}}>
-                                                                    <Avatar
-                                                                        icon={<EditOutlined />}
-                                                                        style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                    />
-                                                                </a>
-                                                            </Tooltip>
-                                                            <Tooltip title="Archivar proyecto">
-                                                                <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                    <Avatar
-                                                                        icon={<SaveOutlined />}
-                                                                        style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                    />
-                                                                </a>
-                                                            </Tooltip>
-                                                        </>
-                                                    )}
+                                                <Col span={2} style={{ display: 'flex', alignItems: 'center' , paddingLeft:15,  marginTop:8}}>
+                                                    <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
                                                 </Col>
                                             </Row>
 
@@ -1167,10 +1573,10 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                      style={{
                                                          marginLeft: '20px',
                                                          padding:0,
-
+                                                         paddingBottom:6 ,
                                                          borderBottom: '1px solid rgba(217, 217, 217, 0.3)' ,
                                                          cursor: 'pointer',
-                                                         backgroundColor: hoveredRowsubtarea === subtarea.id ? '#e0e0e0' : '',
+                                                         backgroundColor: hoveredRowsubtarea === subtarea.id ? '#f7f2f2' : '',
                                                          boxSizing: 'border-box', // Para incluir padding y border en el tamaño
                                                      }}
 
@@ -1181,17 +1587,20 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                                     <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft:50 }}>
                                                         <div style={{
+                                                            marginTop:6,
                                                             width: '20px', // Ajusta el tamaño del círculo
                                                             height: '20px',
                                                             borderRadius: '50%',
                                                             backgroundColor: row.color, // Cambia el color según tus necesidades
                                                             marginRight: '8px' // Espacio entre el círculo y el texto
-                                                        }}></div>
+                                                        }}>
+
+                                                        </div>
                                                         <Tooltip title="Ver subTarea">
                                                             <a
 
                                                                 style={{
-
+                                                                    paddingTop:6,
                                                                     marginLeft: 5,
 
                                                                     textDecoration: 'none',
@@ -1206,13 +1615,57 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                         {/* Elimina el margen superior e inferior del párrafo */}
                                                     </Col>
 
-                                                    <Col span={3}>
-                                                        <Avatar icon={<UserAddOutlined />} />
+
+                                                    <Col span={5}>
+                                                        {/* Generar avatares de los usuarios del proyecto */}
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            position: 'relative',
+                                                            height: '22px',
+                                                            width: '30px',
+                                                            paddingTop: 10
+                                                        }}> {/* Reduce la altura aquí */}
+                                                            {subtarea.usuarios.length > 0 ? (
+                                                                subtarea.usuarios.map((usuario, index) => {
+                                                                    // Utilizar el color de fondo asignado en backgroundUser
+                                                                    const backgroundColor = usuario.backgroundUser || '#000000'; // Color predeterminado si backgroundUser es null o undefined
+
+                                                                    return (
+                                                                        <Tooltip
+                                                                            key={usuario.id}
+                                                                            title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}
+                                                                        >
+                                                                            <Avatar
+                                                                                size={27} // Ajusta el tamaño aquí
+                                                                                style={{
+                                                                                    backgroundColor,
+                                                                                    border: '1px solid white',
+                                                                                    position: 'absolute',
+                                                                                    left: `${index * 20}px`, // Ajusta el desplazamiento horizontal
+                                                                                    zIndex: 10 - index, // Controla la superposición (el último estará encima)
+                                                                                    lineHeight: '0px', // Ajusta la altura de la línea si es necesario
+                                                                                    fontSize: '12px', // Ajusta el tamaño de la fuente si es necesario
+                                                                                }}
+                                                                            >
+                                                                                {usuario.nombres.charAt(0).toUpperCase()}
+                                                                            </Avatar>
+                                                                        </Tooltip>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <Tooltip title="Agregar persona">
+                                                                    <Avatar
+                                                                        size={27}
+                                                                        icon={<UserAddOutlined/>}/>
+                                                                </Tooltip>
+                                                            )}
+                                                        </div>
                                                     </Col>
-                                                    <Col style={{ paddingTop: '8px' }} span={3}>
+                                                    <Col style={{ paddingTop: '8px',color:'#055706' }} span={3}>
                                                         <span style={{
                                                             fontSize: '14px',
-                                                            paddingLeft: 5,
+                                                            paddingLeft: 8,
                                                             // Ajusta este valor según lo que necesites
                                                             margin: 0,
                                                             fontWeight: '400'
@@ -1224,10 +1677,10 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                             })}
                                                         </span>
                                                     </Col>
-                                                    <Col style={{ paddingTop: '8px' }} span={3}>
+                                                    <Col style={{ paddingTop: '8px' ,color:'#055706'}} span={3}>
                                                             <span style={{
                                                                 fontSize: '14px',
-                                                                paddingLeft: 5,
+                                                                paddingLeft: 10,
                                                                 margin: 0,
                                                                 fontWeight: '400'
                                                             }}>
@@ -1239,30 +1692,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                                     </span>
                                                     </Col>
-                                                    <Col>
-                                                        <Avatar icon={<FlagOutlined/>}/>
-
-                                                        {hoveredRowsubtarea === subtarea.id && (
-                                                            <>
-                                                                <Tooltip title="Editar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                        <Avatar
-                                                                            icon={<EditOutlined />}
-                                                                            style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                                <Tooltip title="Archivar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                        <Avatar
-                                                                            icon={<SaveOutlined />}
-                                                                            style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
+                                                    <Col span={2} style={{ display: 'flex', alignItems: 'center' , paddingLeft:15, marginTop:8}}>
+                                                        <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
                                                     </Col>
 
                                                 </Row>
@@ -1656,28 +2087,24 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </span>
 
                                     <div style={{width: 300}}>
-                                        <Select
-                                            mode="multiple" // Permitir selección múltiple
-                                            style={{ width: '100%' }} // Estilo del Select
-                                            placeholder="Seleccionar una opción" // Placeholder del Select
-                                            value={selectedValues} // Estado de los valores seleccionados
-                                            onChange={(values) => setSelectedValues(values)} // Actualiza el estado al seleccionar/deseleccionar opciones
-                                            options={usuarios.map((persona) => ({
-                                                label: (
-                                                    <Space>
-                            <span role="img">
 
-                                  <Avatar
-                                      icon={<UserAddOutlined />}
-                                      style={{ width: '16px', height: '16px', fontSize: '12px' }} // Tamaño pequeño
-                                  />
-                            </span>
-                                                        {persona.label} {/* Mostramos el nombre en minúsculas */}
+                                        <Select
+                                            mode="multiple"
+                                            style={{ width: '100%' }}
+                                            placeholder="Seleccionar una opción"
+                                            value={selectedModuloUserIds}
+                                            onChange={handleUserModuloChange}
+                                            onBlur={handleUpdateModuloUsers}
+                                        >
+                                            {usuarios.map(({ value, label, emoji, desc }) => (
+                                                <Option key={value} value={value}>
+                                                    <Space>
+                                                        <span role="img" aria-label={label}>{emoji}</span>
+                                                        {desc}
                                                     </Space>
-                                                ),
-                                                value: persona.value // Asegúrate de que el value sea idPersona
-                                            }))}
-                                        />
+                                                </Option>
+                                            ))}
+                                        </Select>
 
                                     </div>
                                 </div>
@@ -1825,21 +2252,21 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     <div style={{width: 300}}>
                                         <Select
                                             mode="multiple"
-                                            style={{
-                                                width: '100%',
-                                            }}
+                                            style={{ width: '100%' }}
                                             placeholder="Seleccionar una opción"
-                                            defaultValue={['jjnio']}
-                                            options={options}
-                                            optionRender={(option) => (
-                                                <Space>
-                                                <span role="img" aria-label={option.data.label}>
-                                                    {option.data.emoji}
-                                                </span>
-                                                    {option.data.desc}
-                                                </Space>
-                                            )}
-                                        />
+                                            value={selectedTareaUserIds}
+                                            onChange={handleUserTareaChange}
+                                            onBlur={handleUpdateTareaUsers}
+                                        >
+                                            {usuarios.map(({ value, label, emoji, desc }) => (
+                                                <Option key={value} value={value}>
+                                                    <Space>
+                                                        <span role="img" aria-label={label}>{emoji}</span>
+                                                        {desc}
+                                                    </Space>
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     </div>
                                 </div>
                             </div>
@@ -2031,24 +2458,25 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                       </p>
                                     </span>
 
+
                                     <div style={{width: 300}}>
                                         <Select
                                             mode="multiple"
-                                            style={{
-                                                width: '100%',
-                                            }}
+                                            style={{width: '100%'}}
                                             placeholder="Seleccionar una opción"
-                                            defaultValue={['jjnio']}
-                                            options={options}
-                                            optionRender={(option) => (
-                                                <Space>
-                                                <span role="img" aria-label={option.data.label}>
-                                                    {option.data.emoji}
-                                                </span>
-                                                    {option.data.desc}
-                                                </Space>
-                                            )}
-                                        />
+                                            value={selectedSubTareaUserIds}
+                                            onChange={handleUserSubTareaChange}
+                                            onBlur={handleUpdateSubTareaUsers}
+                                        >
+                                            {usuarios.map(({value, label, emoji, desc}) => (
+                                                <Option key={value} value={value}>
+                                                    <Space>
+                                                        <span role="img" aria-label={label}>{emoji}</span>
+                                                        {desc}
+                                                    </Space>
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     </div>
                                 </div>
                             </div>
@@ -2064,16 +2492,16 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input />
+                            <Input/>
                         </Form.Item>
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
@@ -2083,7 +2511,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre' }]}
                         >
                             <Input />
                         </Form.Item>

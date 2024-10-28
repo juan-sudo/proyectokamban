@@ -29,8 +29,17 @@ public class UsuarioService {
         usuario.setFechaRegistro(new Date());
         usuario.setActivo(true);
         usuario.setRol(RolUsuario.DESARROLLADOR);
+        // Asignar color de fondo aleatorio
+        usuario.setBackgroundUser(generarColorAleatorio());
+
         return usuarioRepository.save(usuario);
     }
+
+    private String generarColorAleatorio() {
+        int color = (int) (Math.random() * 0xFFFFFF);
+        return String.format("#%06X", color);
+    }
+
 
 
     // Obtener una tarea por ID

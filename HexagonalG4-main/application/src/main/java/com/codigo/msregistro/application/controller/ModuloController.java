@@ -3,6 +3,8 @@ package com.codigo.msregistro.application.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Optional;
 import com.codigo.msregistro.domain.aggregates.Modulo;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
@@ -42,6 +44,22 @@ public class ModuloController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Retorna 404 si no encuentra el módulo
         }
+    }
+
+    @PutMapping("/{id}/usuarios")
+    public ResponseEntity<Modulo> actualizarUsuarios(
+            @PathVariable("id") Long moduloId,
+            @RequestBody List<Long> nuevosUsuarioIds) {  // Cambiar de List<Usuario> a List<Long>
+        Modulo moduloActualizado = moduloService.actualizarUsuarios(moduloId, nuevosUsuarioIds);
+        return ResponseEntity.ok(moduloActualizado);
+    }
+
+    @DeleteMapping("/{moduloId}/usuarios/{usuarioId}")
+    public ResponseEntity<Modulo> eliminarUsuarioDeModulo(
+            @PathVariable Long moduloId,
+            @PathVariable Long usuarioId) {
+        Modulo moduloActuzalizado = moduloService.eliminarUsuarioDeModulo(moduloId, usuarioId);
+        return ResponseEntity.ok(moduloActuzalizado);
     }
 
 

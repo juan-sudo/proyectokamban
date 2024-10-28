@@ -91,4 +91,20 @@ public class SubTareaController {
             return ResponseEntity.notFound().build(); // Si no encuentra la tarea, devolver 404
         }
     }
+
+    @PutMapping("/{subtareaid}/usuarios")
+    public ResponseEntity<Subtarea> actualizarUsuarios(
+            @PathVariable("subtareaid") Long moduloId,
+            @RequestBody List<Long> nuevosUsuarioIds) {
+        Subtarea subateraActializado = subTareaService.actualizarUsuarios(moduloId, nuevosUsuarioIds);
+        return ResponseEntity.ok(subateraActializado);
+    }
+
+    @DeleteMapping("/{subtareaId}/usuarios/{usuarioId}")
+    public ResponseEntity<Subtarea> eliminarUsuarioDeModulo(
+            @PathVariable Long subtareaId,
+            @PathVariable Long usuarioId) {
+        Subtarea subateraActializado = subTareaService.eliminarUsuarioDeModulo(subtareaId, usuarioId);
+        return ResponseEntity.ok(subateraActializado);
+    }
 }
