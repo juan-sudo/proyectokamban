@@ -136,6 +136,23 @@ public class ProyectoController {
         return ResponseEntity.ok(proyectoActualizado);
     }
 
+    @PutMapping("/{idProyecto}/prioridad/{idPrioridad}")
+    public ResponseEntity<Proyecto> actualizarPrioridadConId(
+            @PathVariable("idProyecto") Long proyectoId,
+            @PathVariable("idPrioridad") Long idPrioridad) {
+        Proyecto proyectoActualizado = proyectoService.actualizarPrioridad(proyectoId, idPrioridad);
+        return ResponseEntity.ok(proyectoActualizado);
+    }
+
+    @PutMapping("/{idProyecto}/prioridad")
+    public ResponseEntity<Proyecto> actualizarPrioridadSinId(
+            @PathVariable("idProyecto") Long proyectoId) { // Sin idPrioridad
+        Proyecto proyectoActualizado = proyectoService.actualizarPrioridad(proyectoId, null);
+        return ResponseEntity.ok(proyectoActualizado);
+    }
+
+
+
 
 
 

@@ -3,6 +3,7 @@ import axios from 'axios';
 import React,{ useEffect, useState } from 'react';
 import "../index.css";
 import { useNavigate } from 'react-router-dom'; // Asegúrate de importar useN
+import _ from 'lodash';
 import {
     DatePicker,
     Menu,
@@ -57,7 +58,6 @@ const pearlescentColors = [
 ];
 
 
-
 function ProyectoList() {
     const [proyectos, setProyectos] = useState([]);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -76,21 +76,61 @@ function ProyectoList() {
     const [selectedValues, setSelectedValues] = useState([]);
     const navigate = useNavigate();
     const [usuarios, setUsuario] = useState([]);
+    const [prioridad, setPrioridad] = useState([]);
     //const [usuariosModulo, setUsuario] = useState([]);
     const [selectedUserIds, setSelectedUserIds] = useState([]);
+    const [selectedPrioridadIds, setSelectedPrioridadIds] = useState([]);
     const [selectedModuloUserIds, setSelectedModuloUserIds] = useState([]);
     const [selectedTareaUserIds, setSelectedTareaUserIds] = useState([]);
     const [selectedSubTareaUserIds, setSelectedSubTareaUserIds] = useState([]);
+    // Estado para el valor seleccionado
+    const [editing, setEditing] = useState(false); // Estado para controlar el modo de edición
+    const [selectedOption, setSelectedOption] = useState(null); // Estado para
+    const [editingId, setEditingId] = useState(null);
+
+    const [selectedOptionModulo, setSelectedOptionModulo] = useState(null);
+    const [selectedOptionTarea, setSelectedOptionTarea] = useState(null);
+    const [selectedOptionSubtarea, setSelectedOptionSubtarea] = useState(null);
+    const [editingModuloId, setEditingModuloId] = useState(null);
+    const [editingTareaId, setEditingTareaId] = useState(null);
+    const [editingSubtareaId, setEditingSubtareaId] = useState(null);
+
+
 
 
     useEffect(() => {
 
         fetchProyectos();
         fetchUsuario();
+        fetchPrioridad();
+        console.log((prioridad));
+
 
     }, []);
 
+    // Función para truncar el texto
+    const truncateText = (text) => {
+        return _.truncate(text, {
+            length: 55, // Longitud máxima (incluye los puntos suspensivos)
+            separator: ' '
+        });
+    };
+
+
     //pPARA SEEÑCT
+
+
+    // PRIORIDADA
+    useEffect(() => {
+        if (selectedProject && selectedProject.usuarios) {
+            const userIds = selectedProject.usuarios.map(user => user.id);
+            setSelectedUserIds(userIds);
+
+
+        } else {
+            setSelectedUserIds([]);
+        }
+    }, [selectedProject]);
 
     // Cargar usuarios del proyecto cuando cambia el proyecto seleccionado
     useEffect(() => {
@@ -147,6 +187,149 @@ function ProyectoList() {
 
 
 
+
+    const handleDoubleClick = (projectId) => {
+        setEditingId(projectId);
+    };
+
+    const handleDoubleClickModulo = (projectId) => {
+
+        setEditingModuloId(projectId);
+    };
+
+    const handleDoubleClickTarea = (tareaId) => {
+        setEditingTareaId(tareaId);
+    };
+
+    const handleDoubleClickSubtarea = (subtareaId) => {
+
+        setEditingSubtareaId(subtareaId);
+    };
+
+
+    const handleChange = async (value, projectId) => {
+        if (value === 'none') {
+            setSelectedOption(null);
+
+            // Aquí llamas a la API para establecer la prioridad a null
+            try {
+                const response = await axios.put(`http://localhost:8080/api/proyectos/${projectId}/prioridad`);
+                console.log("Prioridad actualizada a null:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad a null:", error);
+            }
+        } else {
+            const selected = prioridad.find(option => option.value === value);
+            setSelectedOption(selected);
+
+            try {
+                // Usa el ID del proyecto y el ID de prioridad
+                const response = await axios.put(`http://localhost:8080/api/proyectos/${projectId}/prioridad/${selected.value}`);
+                console.log("Prioridad actualizada:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad:", error);
+            }
+        }
+        setEditingId(null); // Cambiar aquí para finalizar la edición
+    };
+
+
+    const handleChangeModulo = async (value, moduloId, proyectoId) => {
+        if (value === 'none') {
+            setSelectedOptionModulo(null);
+
+            // Aquí llamas a la API para establecer la prioridad a null
+            try {
+                const response = await axios.put(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}/prioridad`);
+                console.log("Prioridad actualizada a null:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad a null:", error);
+            }
+        } else {
+            const selected = prioridad.find(option => option.value === value);
+            setSelectedOptionModulo(selected);
+
+            try {
+                const response = await axios.put(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}/prioridad/${selected.value}`);
+                console.log("Prioridad actualizada:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad:", error);
+            }
+        }
+        setEditingModuloId(null);
+    };
+
+
+
+    const handleChangeSubtarea = async (value, tareaId, subtareaId) => {
+        if (value === 'none') {
+            setSelectedOptionSubtarea(null);
+
+            // Aquí llamas a la API para establecer la prioridad a null
+            try {
+                const response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad`);
+                //http://localhost:8080/api/tareas/1/subTareas/1/prioridad
+                console.log("Prioridad actualizada a null:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad a null:", error);
+            }
+        } else {
+            const selected = prioridad.find(option => option.value === value);
+            setSelectedOptionSubtarea(selected);
+
+            try {
+                const response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad/${selected.value}`);
+                ////http://localhost:8080/api/tareas/1/subTareas/1/prioridad
+                console.log("Prioridad actualizada:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad:", error);
+            }
+        }
+        setEditingSubtareaId(null);
+    };
+
+    const handleChangeTarea = async (value, moduloId, tareaId) => {
+        if (value === 'none') {
+            setSelectedOptionTarea(null);
+
+            // Aquí llamas a la API para establecer la prioridad a null
+            try {
+                const response = await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}/prioridad`);
+                //http://localhost:8080/api/modulos/1/tareas/1/prioridad
+                console.log("Prioridad actualizada a null:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad a null:", error);
+            }
+        } else {
+            const selected = prioridad.find(option => option.value === value);
+            setSelectedOptionTarea(selected);
+
+            try {
+                const response = await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}/prioridad/${selected.value}`);
+                //http://localhost:8080/api/modulos/1/tareas/1/prioridad/1
+                console.log("Prioridad actualizada:", response.data);
+                await fetchProyectos();
+            } catch (error) {
+                console.error("Error al actualizar la prioridad:", error);
+            }
+        }
+        setEditingTareaId(null);
+    };
+
+
+
+    const handleBlur = () => {
+        setEditing(false); // Desactivar el modo de edición al perder el foco
+    };
+
+
 //AXIOS ARCHIVAR PROYECTO
     const archivarProyecto = async (id, nombreProyecto) => {
         // Muestra una alerta de confirmación con el nombre del proyecto
@@ -189,7 +372,15 @@ function ProyectoList() {
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
                     const color = getUniqueColor(proyecto.id);
-                    return { ...proyecto, color };
+                    // Asignar el selectedOption basado en la prioridad existente
+                    const selectedOption = proyecto.prioridad
+                        ? {
+                            value: proyecto.prioridad.id,
+                            label: proyecto.prioridad.nombre,
+                            color: proyecto.prioridad.backgroundPrioridad,
+                        }
+                        : null;
+                    return { ...proyecto, color, selectedOption }; // Incluir selectedOption en el objeto del proyecto
                 });
                 setProyectos(proyectosConColor);
             }
@@ -217,6 +408,25 @@ function ProyectoList() {
             //message.error('No se pudieron cargar las personas.');
         }
     };
+
+    const fetchPrioridad = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/api/prioridad`);
+            if (Array.isArray(response.data)) {
+                const usuarioValor = response.data.map(prioridad => ({
+                    label: prioridad.nombre,
+                    value: prioridad.id,
+                    color: prioridad.backgroundPrioridad,
+                    desc: prioridad.nombre,
+                }));
+                setPrioridad(usuarioValor);
+            }
+        } catch (error) {
+            console.error("Error al obtener prioridades:", error);
+            // Puedes mostrar un mensaje de error si es necesario
+        }
+    };
+
 
 
 //USUARIO PROYECTO
@@ -988,7 +1198,7 @@ console.log("entro aqui---------------")
                         >
                             <div>Nombre de proyecto</div>
                         </Col>
-                        <Col span={5}>
+                        <Col span={4}>
                             <div className="task-item__assignee">Persona asignado</div>
                         </Col>
                         <Col span={3}>
@@ -997,7 +1207,7 @@ console.log("entro aqui---------------")
                         <Col span={3}>
                             <div className="task-item__due-date">Fecha Fin</div>
                         </Col>
-                        <Col span={2}>
+                        <Col span={3}>
                             <div className="task-item__due-date">Prioridad</div>
                         </Col>
                     </Row>
@@ -1112,7 +1322,7 @@ console.log("entro aqui---------------")
 
 
 
-                                <Col span={5}>
+                                <Col span={4}>
                                     {/* Generar avatares de los usuarios del proyecto */}
                                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative', height: '22px', width: '30px', paddingTop:10 }}> {/* Reduce la altura aquí */}
                                         {row.usuarios.length > 0 ? (
@@ -1188,8 +1398,61 @@ console.log("entro aqui---------------")
 
                                     </span>
                                 </Col>
-                                <Col span={2} style={{ display: 'flex', alignItems: 'center' }}>
-                                    <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
+                                <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
+                                     onMouseEnter={() => handleMouseEnter(row.id)}
+                                     onMouseLeave={handleMouseLeave}
+                                     onDoubleClick={() => handleDoubleClick(row.id)}>
+
+                                    {editingId === row.id ? (
+                                        <Select
+                                            style={{
+                                                width: '100%',
+                                                boxShadow: 'none',
+                                                transition: 'background-color 0.3s ease, border 0.3s ease',
+                                            }}
+                                            className={`custom-select ${hoveredRow === row.id ? 'hovered-bg' : ''}`}
+                                            value={selectedOption ? selectedOption.value : 'none'}
+                                            onChange={(value) => handleChange(value, row.id)} // Pasar el ID del proyecto
+                                            onBlur={() => setEditingId(null)} // Cambiar aquí
+                                            suffixIcon={null}
+                                            showArrow={false}
+                                            showSearch={false}
+                                            size="small"
+                                        >
+                                            {prioridad.length > 0 ? (
+                                                prioridad.map(({ value, label, color }) => (
+                                                    <Option key={value} value={value}>
+                                                        <Space>
+                                                            <FlagOutlined style={{ fontSize: '16px', color }} />
+                                                            {label}
+                                                        </Space>
+                                                    </Option>
+                                                ))
+                                            ) : (
+                                                <Option value="none">Sin prioridades disponibles</Option>
+                                            )}
+
+                                            <Option key="none" value="none">
+                                                <Space>
+                                                    <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                                                    Ninguno
+                                                </Space>
+                                            </Option>
+                                        </Select>
+                                    ) : (
+                                        <span style={{ cursor: 'pointer' }} onDoubleClick={() => handleDoubleClick(row.id)}>
+            {row.prioridad ? (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: row.prioridad.backgroundPrioridad }} />
+                    {row.prioridad.nombre}
+                </Space>
+            ) : (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                </Space>
+            )}
+        </span>
+                                    )}
                                 </Col>
 
                             </Row>
@@ -1318,7 +1581,7 @@ console.log("entro aqui---------------")
                                         </Col>
 
 
-                                        <Col span={5}>
+                                        <Col span={4}>
                                             {/* Generar avatares de los usuarios del proyecto */}
                                             <div style={{
                                                 display: 'flex',
@@ -1394,8 +1657,64 @@ console.log("entro aqui---------------")
 
                                     </span>
                                         </Col>
-                                        <Col span={2} style={{ display: 'flex', alignItems: 'center' , paddingLeft:15,  marginTop:3}}>
-                                            <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
+                                        <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
+
+                                             onMouseLeave={handleMouseLeave}
+                                             onDoubleClick={(e) => {
+                                                 e.stopPropagation(); // Detener la propagación del evento
+                                                 handleDoubleClickModulo(modulo.id);
+                                             }}>
+                                            {editingModuloId === modulo.id ? (
+                                                <Select
+                                                    style={{
+                                                        width: '100%',
+                                                        boxShadow: 'none',
+                                                        transition: 'background-color 0.3s ease, border 0.3s ease',
+                                                        marginLeft:10
+                                                    }}
+                                                    //className={`custom-select ${hoveredRow === modulo.id ? 'hovered-bg' : ''}`}
+                                                    value={selectedOptionModulo ? selectedOptionModulo.value : 'none'}
+                                                    onChange={(value) => handleChangeModulo(value, modulo.id,row.id)} // Pasar el ID del proyecto
+                                                    onBlur={() => setEditingModuloId(null)} // Cambiar aquí
+                                                    suffixIcon={null}
+                                                    showArrow={false}
+                                                    showSearch={false}
+                                                    size="small"
+                                                >
+                                                    {prioridad.length > 0 ? (
+                                                        prioridad.map(({ value, label, color }) => (
+                                                            <Option key={value} value={value}>
+                                                                <Space>
+                                                                    <FlagOutlined style={{ fontSize: '16px', color }} />
+                                                                    {label}
+                                                                </Space>
+                                                            </Option>
+                                                        ))
+                                                    ) : (
+                                                        <Option value="none">Sin prioridades disponibles</Option>
+                                                    )}
+
+                                                    <Option key="none" value="none">
+                                                        <Space>
+                                                            <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                                                            Ninguno
+                                                        </Space>
+                                                    </Option>
+                                                </Select>
+                                            ) : (
+                                                <span style={{ cursor: 'pointer', marginLeft:10 }} onDoubleClick={() => handleDoubleClickModulo(modulo.id)}>
+            {modulo.prioridad ? (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: modulo.prioridad.backgroundPrioridad }} />
+                    {modulo.prioridad.nombre}
+                </Space>
+            ) : (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                </Space>
+            )}
+        </span>
+                                            )}
                                         </Col>
                                     </Row>
                                     {expandedModules[`${row.id}-${modulo.id}`] && modulo.tareas?.map((tarea) => (
@@ -1434,7 +1753,7 @@ console.log("entro aqui---------------")
                                                     }} />
 
 
-                                                    <Tooltip title="Ver tarea">
+                                                    <Tooltip title={tarea.nombre}>
                                                         <a
 
                                                             style={{
@@ -1448,7 +1767,7 @@ console.log("entro aqui---------------")
                                                             onClick={() => showModal('verTarea', row.id, modulo.id, tarea.id)}
                                                         >
 
-                                                            {tarea.nombre}
+                                                            {truncateText(tarea.nombre)} {/* Usa la función aquí */}
                                                         </a>
                                                     </Tooltip>
                                                     <Tooltip title="kamban">
@@ -1488,7 +1807,7 @@ console.log("entro aqui---------------")
                                                 </Col>
 
 
-                                                <Col span={5}>
+                                                <Col span={4}>
                                                     {/* Generar avatares de los usuarios del proyecto */}
                                                     <div style={{
                                                         display: 'flex',
@@ -1562,8 +1881,64 @@ console.log("entro aqui---------------")
                                        })}
 
                                     </span></Col>
-                                                <Col span={2} style={{ display: 'flex', alignItems: 'center' , paddingLeft:15,  marginTop:8}}>
-                                                    <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
+                                                <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
+
+                                                     onMouseLeave={handleMouseLeave}
+                                                     onDoubleClick={(e) => {
+                                                         e.stopPropagation(); // Detener la propagación del evento
+                                                         handleDoubleClickTarea(tarea.id);
+                                                     }}>
+                                                    {editingTareaId === tarea.id ? (
+                                                        <Select
+                                                            style={{
+                                                                width: '100%',
+                                                                boxShadow: 'none',
+                                                                transition: 'background-color 0.3s ease, border 0.3s ease',
+                                                                marginLeft:10
+                                                            }}
+                                                            //className={`custom-select ${hoveredRow === modulo.id ? 'hovered-bg' : ''}`}
+                                                            value={selectedOptionTarea ? selectedOptionTarea.value : 'none'}
+                                                            onChange={(value) => handleChangeTarea(value, modulo.id,tarea.id)} // Pasar el ID del proyecto
+                                                            onBlur={() => setEditingTareaId(null)} // Cambiar aquí
+                                                            suffixIcon={null}
+                                                            showArrow={false}
+                                                            showSearch={false}
+                                                            size="small"
+                                                        >
+                                                            {prioridad.length > 0 ? (
+                                                                prioridad.map(({ value, label, color }) => (
+                                                                    <Option key={value} value={value}>
+                                                                        <Space>
+                                                                            <FlagOutlined style={{ fontSize: '16px', color }} />
+                                                                            {label}
+                                                                        </Space>
+                                                                    </Option>
+                                                                ))
+                                                            ) : (
+                                                                <Option value="none">Sin prioridades disponibles</Option>
+                                                            )}
+
+                                                            <Option key="none" value="none">
+                                                                <Space>
+                                                                    <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                                                                    Ninguno
+                                                                </Space>
+                                                            </Option>
+                                                        </Select>
+                                                    ) : (
+                                                        <span style={{ cursor: 'pointer', marginLeft:10 }} onDoubleClick={() => handleDoubleClickTarea(tarea.id)}>
+            {tarea.prioridad ? (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: tarea.prioridad.backgroundPrioridad }} />
+                    {tarea.prioridad.nombre}
+                </Space>
+            ) : (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                </Space>
+            )}
+        </span>
+                                                    )}
                                                 </Col>
                                             </Row>
 
@@ -1596,7 +1971,7 @@ console.log("entro aqui---------------")
                                                         }}>
 
                                                         </div>
-                                                        <Tooltip title="Ver subTarea">
+                                                        <Tooltip title= {subtarea.nombre}>
                                                             <a
 
                                                                 style={{
@@ -1609,14 +1984,15 @@ console.log("entro aqui---------------")
                                                                 onClick={() => showModal('verSubtarea', row.id, modulo.id, tarea.id, subtarea.id)}
                                                             >
 
-                                                                {subtarea.nombre}
+
+                                                                {truncateText(subtarea.nombre)}
                                                             </a>
                                                         </Tooltip>
                                                         {/* Elimina el margen superior e inferior del párrafo */}
                                                     </Col>
 
 
-                                                    <Col span={5}>
+                                                    <Col span={4}>
                                                         {/* Generar avatares de los usuarios del proyecto */}
                                                         <div style={{
                                                             display: 'flex',
@@ -1692,10 +2068,65 @@ console.log("entro aqui---------------")
 
                                     </span>
                                                     </Col>
-                                                    <Col span={2} style={{ display: 'flex', alignItems: 'center' , paddingLeft:15, marginTop:8}}>
-                                                        <FlagOutlined style={{ fontSize: '16px', color: '#656f7d' }} />
-                                                    </Col>
+                                                    <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
 
+                                                         onMouseLeave={handleMouseLeave}
+                                                         onDoubleClick={(e) => {
+                                                             e.stopPropagation(); // Detener la propagación del evento
+                                                             handleDoubleClickSubtarea(subtarea.id);
+                                                         }}>
+                                                        {editingSubtareaId === subtarea.id ? (
+                                                            <Select
+                                                                style={{
+                                                                    width: '100%',
+                                                                    boxShadow: 'none',
+                                                                    transition: 'background-color 0.3s ease, border 0.3s ease',
+                                                                    marginLeft:10
+                                                                }}
+                                                                //className={`custom-select ${hoveredRow === modulo.id ? 'hovered-bg' : ''}`}
+                                                                value={selectedOptionSubtarea ? selectedOptionSubtarea.value : 'none'}
+                                                                onChange={(value) => handleChangeSubtarea(value, tarea.id,subtarea.id)} // Pasar el ID del proyecto
+                                                                onBlur={() => setEditingSubtareaId(null)} // Cambiar aquí
+                                                                suffixIcon={null}
+                                                                showArrow={false}
+                                                                showSearch={false}
+                                                                size="small"
+                                                            >
+                                                                {prioridad.length > 0 ? (
+                                                                    prioridad.map(({ value, label, color }) => (
+                                                                        <Option key={value} value={value}>
+                                                                            <Space>
+                                                                                <FlagOutlined style={{ fontSize: '16px', color }} />
+                                                                                {label}
+                                                                            </Space>
+                                                                        </Option>
+                                                                    ))
+                                                                ) : (
+                                                                    <Option value="none">Sin prioridades disponibles</Option>
+                                                                )}
+
+                                                                <Option key="none" value="none">
+                                                                    <Space>
+                                                                        <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                                                                        Ninguno
+                                                                    </Space>
+                                                                </Option>
+                                                            </Select>
+                                                        ) : (
+                                                            <span style={{ cursor: 'pointer', marginLeft:10 }} onDoubleClick={() => handleDoubleClickSubtarea(subtarea.id)}>
+            {subtarea.prioridad ? (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: subtarea.prioridad.backgroundPrioridad }} />
+                    {subtarea.prioridad.nombre}
+                </Space>
+            ) : (
+                <Space>
+                    <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+                </Space>
+            )}
+        </span>
+                                                        )}
+                                                    </Col>
                                                 </Row>
                                             ))}
                                         </React.Fragment>
@@ -1843,6 +2274,8 @@ console.log("entro aqui---------------")
                                             </p>
 
                                         </div>
+
+
                                         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                             <HourglassOutlined/>
                                             <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -1855,7 +2288,7 @@ console.log("entro aqui---------------")
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
-                (new Date(selectedProject.fechaFin) - new Date(selectedProject.fechaInicio)) / (1000 * 60 * 60 * 24)
+                    (new Date(selectedProject.fechaFin) - new Date(selectedProject.fechaInicio)) / (1000 * 60 * 60 * 24)
                 )
             } días
         </span>
@@ -1864,10 +2297,16 @@ console.log("entro aqui---------------")
                                             </p>
 
                                         </div>
+
+
                                     </div>
+
+
                                 </div>
 
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -1875,29 +2314,55 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                    <div style={{width: 300}}>
+                                        <div style={{width: 300}}>
 
-                                        <Select
-                                            mode="multiple"
-                                            style={{ width: '100%' }}
-                                            placeholder="Seleccionar una opción"
-                                            value={selectedUserIds}
-                                            onChange={handleUserChange}
-                                            onBlur={handleUpdateUsers}
-                                        >
-                                            {usuarios.map(({ value, label, emoji, desc }) => (
-                                                <Option key={value} value={value}>
-                                                    <Space>
-                                                        <span role="img" aria-label={label}>{emoji}</span>
-                                                        {desc}
-                                                    </Space>
-                                                </Option>
-                                            ))}
-                                        </Select>
+                                            <Select
+                                                mode="multiple"
+                                                style={{width: '100%'}}
+                                                placeholder="Seleccionar una opción"
+                                                value={selectedUserIds}
+                                                onChange={handleUserChange}
+                                                onBlur={handleUpdateUsers}
+                                            >
+                                                {usuarios.map(({value, label, emoji, desc}) => (
+                                                    <Option key={value} value={value}>
+                                                        <Space>
+                                                            <span role="img" aria-label={label}>{emoji}</span>
+                                                            {desc}
+                                                        </Space>
+                                                    </Option>
+                                                ))}
+                                            </Select>
 
+
+                                        </div>
 
                                     </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                        <FlagOutlined
+                                            style={{
+                                                fontSize: '16px',
+                                                color: 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                        <p style={{fontSize: '14px', margin: 0}}>
+        <span style={{fontWeight: 600,marginRight: 5}}>
+            Prioridad:
+        </span>
+                                            <FlagOutlined
+                                                style={{ marginRight: 5,
+                                                    fontSize: '16px',
+                                                    color: selectedProject?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                                }}
+                                            />
+                                            <span style={{color: selectedProject?.prioridad?.backgroundPrioridad || 'gray'}}
+                                            >{selectedProject?.prioridad?.nombre || "Sin prioridad"}</span>
+                                        </p>
+                                    </div>
+
                                 </div>
+
                             </div>
 
 
@@ -1906,7 +2371,7 @@ console.log("entro aqui---------------")
                     </div>
 
 
-                )
+                    )
                 }
 
                 {modalType === 'editarProyecto' && (
@@ -1916,7 +2381,7 @@ console.log("entro aqui---------------")
                             label="Nombre"
                             rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input/>
+                        <Input/>
                         </Form.Item>
                         <Form.Item
                             name="descripcion"
@@ -2067,7 +2532,7 @@ console.log("entro aqui---------------")
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
-                (new Date(selectedModule.fechaFin) - new Date(selectedModule.fechaInicio)) / (1000 * 60 * 60 * 24)
+                    (new Date(selectedModule.fechaFin) - new Date(selectedModule.fechaInicio)) / (1000 * 60 * 60 * 24)
                 )
             } días
         </span>
@@ -2078,7 +2543,10 @@ console.log("entro aqui---------------")
                                     </div>
                                 </div>
 
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -2086,28 +2554,55 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                    <div style={{width: 300}}>
+                                        <div style={{width: 300}}>
 
-                                        <Select
-                                            mode="multiple"
-                                            style={{ width: '100%' }}
-                                            placeholder="Seleccionar una opción"
-                                            value={selectedModuloUserIds}
-                                            onChange={handleUserModuloChange}
-                                            onBlur={handleUpdateModuloUsers}
-                                        >
-                                            {usuarios.map(({ value, label, emoji, desc }) => (
-                                                <Option key={value} value={value}>
-                                                    <Space>
-                                                        <span role="img" aria-label={label}>{emoji}</span>
-                                                        {desc}
-                                                    </Space>
-                                                </Option>
-                                            ))}
-                                        </Select>
+                                            <Select
+                                                mode="multiple"
+                                                style={{width: '100%'}}
+                                                placeholder="Seleccionar una opción"
+                                                value={selectedModuloUserIds}
+                                                onChange={handleUserModuloChange}
+                                                onBlur={handleUpdateModuloUsers}
+                                            >
+                                                {usuarios.map(({value, label, emoji, desc}) => (
+                                                    <Option key={value} value={value}>
+                                                        <Space>
+                                                            <span role="img" aria-label={label}>{emoji}</span>
+                                                            {desc}
+                                                        </Space>
+                                                    </Option>
+                                                ))}
+                                            </Select>
 
+                                        </div>
                                     </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+
+                                        <FlagOutlined
+                                            style={{
+                                                fontSize: '16px',
+                                                color: 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                        <p style={{fontSize: '14px', margin: 0}}>
+        <span style={{fontWeight: 600, marginRight: 5}}>
+            Prioridad:
+        </span> <FlagOutlined
+                                            style={{
+                                                fontSize: '16px', marginRight: 5,
+                                                color: selectedModule?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                            <span
+                                                style={{color: selectedModule?.prioridad?.backgroundPrioridad || 'gray'}}
+                                            >{selectedModule?.prioridad?.nombre || "Sin prioridad"}</span>
+                                        </p>
+                                    </div>
+
                                 </div>
+
+
                             </div>
 
 
@@ -2121,16 +2616,16 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input />
+                            <Input/>
                         </Form.Item>
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
@@ -2230,7 +2725,7 @@ console.log("entro aqui---------------")
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
-                (new Date(selectedTarea.fechaFin) - new Date(selectedTarea.fechaInicio)) / (1000 * 60 * 60 * 24)
+                    (new Date(selectedTarea.fechaFin) - new Date(selectedTarea.fechaInicio)) / (1000 * 60 * 60 * 24)
                 )
             } días
         </span>
@@ -2241,7 +2736,9 @@ console.log("entro aqui---------------")
                                     </div>
                                 </div>
 
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -2249,29 +2746,52 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                    <div style={{width: 300}}>
-                                        <Select
-                                            mode="multiple"
-                                            style={{ width: '100%' }}
-                                            placeholder="Seleccionar una opción"
-                                            value={selectedTareaUserIds}
-                                            onChange={handleUserTareaChange}
-                                            onBlur={handleUpdateTareaUsers}
-                                        >
-                                            {usuarios.map(({ value, label, emoji, desc }) => (
-                                                <Option key={value} value={value}>
-                                                    <Space>
-                                                        <span role="img" aria-label={label}>{emoji}</span>
-                                                        {desc}
-                                                    </Space>
-                                                </Option>
-                                            ))}
-                                        </Select>
+                                        <div style={{width: 300}}>
+                                            <Select
+                                                mode="multiple"
+                                                style={{width: '100%'}}
+                                                placeholder="Seleccionar una opción"
+                                                value={selectedTareaUserIds}
+                                                onChange={handleUserTareaChange}
+                                                onBlur={handleUpdateTareaUsers}
+                                            >
+                                                {usuarios.map(({value, label, emoji, desc}) => (
+                                                    <Option key={value} value={value}>
+                                                        <Space>
+                                                            <span role="img" aria-label={label}>{emoji}</span>
+                                                            {desc}
+                                                        </Space>
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </div>
                                     </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                        <FlagOutlined
+                                            style={{
+                                                fontSize: '16px',
+                                                color: 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                        <p style={{fontSize: '14px', margin: 0}}>
+        <span style={{fontWeight: 600, marginRight: 5}}>
+            Prioridad:
+        </span> <FlagOutlined
+                                            style={{
+                                                fontSize: '16px', marginRight: 5,
+                                                color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                            <span
+                                                style={{color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray'}}
+                                            >{selectedTarea?.prioridad?.nombre || "Sin prioridad"}</span>
+                                        </p>
+                                    </div>
+
                                 </div>
+
                             </div>
-
-
                         </div>
 
                     </div>
@@ -2282,16 +2802,16 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input />
+                            <Input/>
                         </Form.Item>
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
@@ -2450,7 +2970,9 @@ console.log("entro aqui---------------")
                                     </div>
                                 </div>
 
-                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -2459,24 +2981,48 @@ console.log("entro aqui---------------")
                                     </span>
 
 
-                                    <div style={{width: 300}}>
-                                        <Select
-                                            mode="multiple"
-                                            style={{width: '100%'}}
-                                            placeholder="Seleccionar una opción"
-                                            value={selectedSubTareaUserIds}
-                                            onChange={handleUserSubTareaChange}
-                                            onBlur={handleUpdateSubTareaUsers}
-                                        >
-                                            {usuarios.map(({value, label, emoji, desc}) => (
-                                                <Option key={value} value={value}>
-                                                    <Space>
-                                                        <span role="img" aria-label={label}>{emoji}</span>
-                                                        {desc}
-                                                    </Space>
-                                                </Option>
-                                            ))}
-                                        </Select>
+                                        <div style={{width: 300}}>
+                                            <Select
+                                                mode="multiple"
+                                                style={{width: '100%'}}
+                                                placeholder="Seleccionar una opción"
+                                                value={selectedSubTareaUserIds}
+                                                onChange={handleUserSubTareaChange}
+                                                onBlur={handleUpdateSubTareaUsers}
+                                            >
+                                                {usuarios.map(({value, label, emoji, desc}) => (
+                                                    <Option key={value} value={value}>
+                                                        <Space>
+                                                            <span role="img" aria-label={label}>{emoji}</span>
+                                                            {desc}
+                                                        </Space>
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </div>
+
+                                    </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                        <FlagOutlined
+                                            style={{
+                                                fontSize: '16px',
+                                                color: 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                        <p style={{fontSize: '14px', margin: 0}}>
+        <span style={{fontWeight: 600, marginRight: 5}}>
+            Prioridad:
+        </span> <FlagOutlined
+                                            style={{
+                                                fontSize: '16px', marginRight: 5,
+                                                color: selectedsubTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                            }}
+                                        />
+                                            <span
+                                                style={{color: selectedsubTarea?.prioridad?.backgroundPrioridad || 'gray'}}
+                                            >{selectedsubTarea?.prioridad?.nombre || "Sin prioridad"}</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>

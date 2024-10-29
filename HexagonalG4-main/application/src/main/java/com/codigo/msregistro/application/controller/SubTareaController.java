@@ -107,4 +107,22 @@ public class SubTareaController {
         Subtarea subateraActializado = subTareaService.eliminarUsuarioDeModulo(subtareaId, usuarioId);
         return ResponseEntity.ok(subateraActializado);
     }
+
+    @PutMapping("/{idSubtarea}/prioridad/{idPrioridad}")
+    public ResponseEntity<Subtarea> actualizarPrioridadConId(
+            @PathVariable("idSubtarea") Long idSubtarea,
+            @PathVariable("idPrioridad") Long idPrioridad,
+            @PathVariable("tareaId") Long tareaId) {
+        Subtarea subtareaactualizada = subTareaService.actualizarPrioridad(tareaId,idSubtarea, idPrioridad);
+        return ResponseEntity.ok(subtareaactualizada);
+    }
+
+    @PutMapping("/{idSubtarea}/prioridad")
+    public ResponseEntity<Subtarea> actualizarPrioridadSinId(
+            @PathVariable("idSubtarea") Long idSubtarea,
+            @PathVariable("tareaId") Long tareaId) { // Sin idPrioridad
+        Subtarea subtareaActualizado = subTareaService.actualizarPrioridad(tareaId,idSubtarea,null);
+        return ResponseEntity.ok(subtareaActualizado);
+    }
+
 }

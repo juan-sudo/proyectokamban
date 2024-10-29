@@ -57,7 +57,7 @@ public class Usuario {
     @Column(name = "direccion", length = 255)
     private String direccion;
 
-    @NotNull
+
     @Column(name = "nacimiento")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaNacimiento;

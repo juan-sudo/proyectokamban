@@ -212,3 +212,34 @@ button.ant-btn-text:hover {
   margin-left: 10px; /* Margen izquierdo para separación */
   font-size: 14px; /* Ajusta el tamaño de la fuente según tus necesidades */
 }
+
+/* BORDE DE SELECT */
+.custom-select .ant-select-selector {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Cambia el fondo del selector en hover */
+/* styles.css */
+.hovered-bg {
+  background-color: #f7f2f2 !important; /* Fondo en hover con !important */
+}
+
+
+/* Mantener estilos de selección */
+.custom-select .ant-select-selection-item {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.custom-select .ant-select-selection-item-remove {
+  display: none !important;
+}
+
+
+
+

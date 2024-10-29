@@ -201,7 +201,7 @@ function ProyectoList() {
                                                 name="fechaNacimiento"
                                                 label="Fecha de Nacimiento"
                                                 rules={[
-                                                    { required: true, message: 'Seleccione una fecha de nacimiento' },
+
                                                     {
                                                         validator: (_, value) =>
                                                             !value || dayjs(value).isBefore(dayjs(), 'day')

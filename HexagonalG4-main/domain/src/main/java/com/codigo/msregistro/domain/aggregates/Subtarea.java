@@ -51,7 +51,10 @@
         @JsonFormat(pattern = "yyyy-MM-dd")
         private Date fechaFin;
 
-        private String prioridad;
+        @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "prioridad_id") // Columna que almacena la relación
+        private Prioridad prioridad; // Relación con la clase Prioridad
 
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "tarea_id")

@@ -2,6 +2,7 @@ package com.codigo.msregistro.infraestructure.repositories;
 
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,8 +17,8 @@ public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
     // Encontrar proyectos que están en la papelera
     List<Proyecto> findByEliminadoTrue();
 
-    // Método para listar proyectos cuyo estado es diferente de ARCHIVADO
-    List<Proyecto> findByEstadoNot(EstadoProyecto estado);
+    // Método para listar proyectos cuyo estado es diferente de ARCHIVADO y ordenados
+    List<Proyecto> findByEstadoNot(EstadoProyecto estado, Sort sort);
 
     // Método para listar proyectos cuyo estado es ARCHIVADO
     List<Proyecto> findByEstado(EstadoProyecto estado);

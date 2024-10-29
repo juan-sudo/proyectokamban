@@ -1,8 +1,11 @@
 package com.codigo.msregistro.domain.aggregates;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference; // Importación necesaria para evitar la recursión
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,9 +55,15 @@ public class Proyecto {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaFin;
 
+    @NotNull
+    @NotBlank
+    @Column(name = "background_proyecto", length = 7)
+    private String backgroundProyecto;
 
-
-    private String prioridad;
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prioridad_id") // Columna que almacena la relación
+    private Prioridad prioridad; // Relación con la clase Prioridad
 
     // Relación unidireccional muchos a muchos con Usuario
     @ManyToMany

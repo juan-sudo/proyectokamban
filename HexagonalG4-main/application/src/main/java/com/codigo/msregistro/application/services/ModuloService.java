@@ -3,6 +3,8 @@ package com.codigo.msregistro.application.services;
 import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.*;
 import com.codigo.msregistro.infraestructure.repositories.ModuloRepository;
+import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
+import com.codigo.msregistro.infraestructure.repositories.ProyectoRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,8 @@ public class ModuloService {
 
     private final ModuloRepository moduloRepository;
     private final UsuarioRepository usuarioRepository;
-
+    private final PrioridadRepository prioridadRepository;
+    private final ProyectoRepository proyectoRepository;
 
     public Modulo crearModulo(Proyecto proyecto, Modulo modulo) {
         modulo.setProyecto(proyecto);
@@ -72,6 +75,30 @@ public class ModuloService {
         return moduloRepository.save(modulo);
     }
 
+    public Modulo actualizarPrioridad(Long proyectoId, Long moduloId, Long prioridadId) {
+        // Verificar que el proyecto exista
+        Proyecto proyecto = proyectoRepository.findById(proyectoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proyecto no encontrado"));
 
+        // Verificar que el módulo pertenezca al proyecto
+        Modulo modulo = moduloRepository.findById(moduloId)
+                .orElseThrow(() -> new ResourceNotFoundException("Módulo no encontrado"));
+
+        if (!modulo.getProyecto().getId().equals(proyecto.getId())) {
+            throw new IllegalArgumentException("El módulo no pertenece al proyecto especificado");
+        }
+
+        // Actualizar la prioridad del módulo
+        if (prioridadId == null) {
+            modulo.setPrioridad(null);
+        } else {
+            Prioridad nuevaPrioridad = prioridadRepository.findById(prioridadId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Prioridad no encontrada"));
+            modulo.setPrioridad(nuevaPrioridad);
+        }
+
+        // Guardar y retornar el módulo actualizado
+        return moduloRepository.save(modulo);
+    }
     // Otros métodos como actualizar, eliminar, etc.
 }

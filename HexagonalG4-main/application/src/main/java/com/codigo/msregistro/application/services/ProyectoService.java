@@ -2,10 +2,13 @@ package com.codigo.msregistro.application.services;
 
 import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
+import com.codigo.msregistro.domain.aggregates.Prioridad;
 import com.codigo.msregistro.domain.aggregates.Usuario;
+import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
 import com.codigo.msregistro.infraestructure.repositories.ProyectoRepository;
@@ -21,7 +24,7 @@ public class ProyectoService {
 
     private final UsuarioRepository usuarioRepository;
 
-
+    private final PrioridadRepository prioridadRepository;
 
     // Obtener todos los proyectos no eliminados
     public List<Proyecto> getAllProyectos() {
@@ -71,7 +74,8 @@ public class ProyectoService {
 
 
     public List<Proyecto> listarProyectosNoArchivados() {
-        return proyectoRepository.findByEstadoNot(EstadoProyecto.ARCHIVADO);
+        // Ordenar los proyectos no archivados en orden descendente
+        return proyectoRepository.findByEstadoNot(EstadoProyecto.ARCHIVADO, Sort.by(Sort.Direction.DESC, "id")); // Cambia "id" por el campo que desees
     }
 
     public List<Proyecto> listarProyectosArchivados() {
@@ -91,6 +95,7 @@ public class ProyectoService {
 
         return false;  // Si el proyecto no existe, devolver false
     }
+
 
 
 
@@ -135,6 +140,29 @@ public class ProyectoService {
         // Guardar el proyecto actualizado
         return proyectoRepository.save(proyecto);
     }
+
+    public Proyecto actualizarPrioridad(Long proyectoId, Long prioridadId) {
+        // Buscar el proyecto por ID, lanzando una excepción si no se encuentra
+        Proyecto proyecto = proyectoRepository.findById(proyectoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Proyecto no encontrado"));
+
+        if (prioridadId == null) {
+            // Si prioridadId es null, asignar null a la prioridad del proyecto
+            proyecto.setPrioridad(null);
+        } else {
+            // Obtener la nueva prioridad a partir del ID
+            Prioridad nuevaPrioridad = prioridadRepository.findById(prioridadId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Prioridad no encontrada"));
+
+            // Asignar la nueva prioridad
+            proyecto.setPrioridad(nuevaPrioridad);
+        }
+
+        // Guardar el proyecto actualizado
+        return proyectoRepository.save(proyecto);
+    }
+
+
 
 
 

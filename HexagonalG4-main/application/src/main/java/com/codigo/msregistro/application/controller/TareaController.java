@@ -2,6 +2,7 @@ package com.codigo.msregistro.application.controller;
 
 import com.codigo.msregistro.application.services.TareaService;
 import com.codigo.msregistro.domain.aggregates.EstadoTarea;
+import com.codigo.msregistro.domain.aggregates.Proyecto;
 import com.codigo.msregistro.domain.aggregates.Tarea;
 import com.codigo.msregistro.domain.aggregates.Modulo;
 import com.codigo.msregistro.application.services.ModuloService;
@@ -123,6 +124,24 @@ public class TareaController {
         Tarea moduloActuzalizado = tareaService.eliminarUsuarioDeModulo(tareaId, usuarioId);
         return ResponseEntity.ok(moduloActuzalizado);
     }
+
+    @PutMapping("/{idTarea}/prioridad/{idPrioridad}")
+    public ResponseEntity<Tarea> actualizarPrioridadConId(
+            @PathVariable("idTarea") Long idTarea,
+            @PathVariable("idPrioridad") Long idPrioridad,
+            @PathVariable("moduloId") Long moduloId) {
+        Tarea tareaactualizada = tareaService.actualizarPrioridad(moduloId,idTarea, idPrioridad);
+        return ResponseEntity.ok(tareaactualizada);
+    }
+
+    @PutMapping("/{tareaId}/prioridad")
+    public ResponseEntity<Tarea> actualizarPrioridadSinId(
+            @PathVariable("tareaId") Long idTarea,
+            @PathVariable("moduloId") Long moduloId) { // Sin idPrioridad
+        Tarea proyectoActualizado = tareaService.actualizarPrioridad(moduloId,idTarea,null);
+        return ResponseEntity.ok(proyectoActualizado);
+    }
+
 
 
 }

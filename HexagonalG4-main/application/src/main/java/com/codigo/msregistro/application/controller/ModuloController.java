@@ -63,6 +63,25 @@ public class ModuloController {
     }
 
 
+    @PutMapping("/{idModulo}/prioridad/{idPrioridad}")
+    public ResponseEntity<Modulo> actualizarPrioridadConId(
+            @PathVariable("proyectoId") Long proyectoId,  // Cambiado de "idProyecto" a "proyectoId"
+            @PathVariable("idModulo") Long idModulo,
+            @PathVariable("idPrioridad") Long idPrioridad) {
+        Modulo moduloActualizado = moduloService.actualizarPrioridad(proyectoId, idModulo, idPrioridad);
+        return ResponseEntity.ok(moduloActualizado);
+    }
+
+
+    @PutMapping("/{idModulo}/prioridad")
+    public ResponseEntity<Modulo> actualizarPrioridadSinId(
+            @PathVariable("idModulo") Long idModulo,
+            @PathVariable("proyectoId") Long proyectoId) { // Sin idPrioridad
+        Modulo moduloActualizado = moduloService.actualizarPrioridad(proyectoId, idModulo, null);
+        return ResponseEntity.ok(moduloActualizado);
+    }
+
+
 
     // Otros métodos para actualizar, eliminar módulos, etc.
 }

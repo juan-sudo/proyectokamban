@@ -1,10 +1,8 @@
 package com.codigo.msregistro.application.services;
 
 import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
-import com.codigo.msregistro.domain.aggregates.Modulo;
-import com.codigo.msregistro.domain.aggregates.Subtarea;
-import com.codigo.msregistro.domain.aggregates.Tarea;
-import com.codigo.msregistro.domain.aggregates.Usuario;
+import com.codigo.msregistro.domain.aggregates.*;
+import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.SubtareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
@@ -18,38 +16,39 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SubTareaService {
 
-    private final SubtareaRepository tareaRepository;
-
+    private final SubtareaRepository subtareaRepository;
+    private final TareaRepository tareaRepository;
+    private final PrioridadRepository prioridadRepository;
     private final UsuarioRepository usuarioRepository;
 
     // Crear una nueva tarea
     public Subtarea crearTarea(Subtarea tarea) {
-        return tareaRepository.save(tarea);
+        return subtareaRepository.save(tarea);
     }
 
     // Obtener todas las tareas de un módulo
     public List<Subtarea> obtenerTareasPorModulo(Tarea tarea) {
-        return tareaRepository.findByTarea(tarea);
+        return subtareaRepository.findByTarea(tarea);
     }
 
     // Obtener una tarea por ID
     public Optional<Subtarea> obtenerTareaPorId(Long id) {
-        return tareaRepository.findById(id);
+        return subtareaRepository.findById(id);
     }
 
     // Actualizar una tarea
     public Subtarea actualizarTarea(Subtarea tarea) {
-        return tareaRepository.save(tarea);
+        return subtareaRepository.save(tarea);
     }
 
     // Eliminar una tarea
     public void eliminarTarea(Long id) {
-        tareaRepository.deleteById(id);
+        subtareaRepository.deleteById(id);
     }
 
     public Subtarea actualizarUsuarios(Long subtareaId, List<Long> nuevosUsuarioIds) {
         // Buscar el subtarea por ID, lanzando una excepción si no se encuentra
-        Subtarea subtaera = tareaRepository.findById(subtareaId)
+        Subtarea subtaera = subtareaRepository.findById(subtareaId)
                 .orElseThrow(() -> new ResourceNotFoundException("subtarea no encontrado"));
 
         // Limpiar la lista de usuarios existente (opcional)
@@ -67,12 +66,12 @@ public class SubTareaService {
         subtaera.getUsuarios().addAll(nuevosUsuarios);
 
         // Guardar el proyecto actualizado
-        return tareaRepository.save(subtaera);
+        return subtareaRepository.save(subtaera);
     }
 
     public  Subtarea eliminarUsuarioDeModulo(Long subtaraId, Long usuarioId) {
         // Buscar el proyecto por su ID, lanzando una excepción si no se encuentra
-        Subtarea subtarea = tareaRepository.findById(subtaraId)
+        Subtarea subtarea = subtareaRepository.findById(subtaraId)
                 .orElseThrow(() -> new ResourceNotFoundException("subtarea con ID " + subtaraId + " no encontrado"));
 
         // Filtrar la lista de usuarios para eliminar el usuario con el ID especificado
@@ -84,6 +83,33 @@ public class SubTareaService {
         }
 
         // Guardar el proyecto actualizado
-        return tareaRepository.save(subtarea);
+        return subtareaRepository.save(subtarea);
+    }
+
+
+    public Subtarea actualizarPrioridad(Long tareaId, Long subtareaId, Long prioridadId) {
+        // Verificar que el proyecto exista
+        Tarea tarea = tareaRepository.findById(tareaId)
+                .orElseThrow(() -> new ResourceNotFoundException("modulo no encontrado"));
+
+        // Verificar que el módulo pertenezca al proyecto
+        Subtarea subtarea = subtareaRepository.findById(subtareaId)
+                .orElseThrow(() -> new ResourceNotFoundException("taera no encontrado"));
+
+        if (!subtarea.getTarea().getId().equals(tarea.getId())) {
+            throw new IllegalArgumentException("Latarea no pertenece al modulo especificado");
+        }
+
+        // Actualizar la prioridad del módulo
+        if (prioridadId == null) {
+            subtarea.setPrioridad(null);
+        } else {
+            Prioridad nuevaPrioridad = prioridadRepository.findById(prioridadId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Prioridad no encontrada"));
+            subtarea.setPrioridad(nuevaPrioridad);
+        }
+
+        // Guardar y retornar el módulo actualizado
+        return subtareaRepository.save(subtarea);
     }
 }

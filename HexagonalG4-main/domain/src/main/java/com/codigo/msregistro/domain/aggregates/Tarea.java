@@ -3,6 +3,7 @@ package com.codigo.msregistro.domain.aggregates;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;  // Import necesario para evitar la recursión
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -47,8 +48,10 @@ public class Tarea {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaFin;
 
-
-    private String prioridad;
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "prioridad_id") // Columna que almacena la relación
+    private Prioridad prioridad; // Relación con la clase Prioridad
 
     @ManyToOne
     @JoinColumn(name = "modulo_id")

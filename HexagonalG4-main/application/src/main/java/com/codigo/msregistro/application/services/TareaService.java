@@ -1,9 +1,9 @@
 package com.codigo.msregistro.application.services;
 
 import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
-import com.codigo.msregistro.domain.aggregates.Tarea;
-import com.codigo.msregistro.domain.aggregates.Modulo;
-import com.codigo.msregistro.domain.aggregates.Usuario;
+import com.codigo.msregistro.domain.aggregates.*;
+import com.codigo.msregistro.infraestructure.repositories.ModuloRepository;
+import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,8 @@ public class TareaService {
 
     private final TareaRepository tareaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final PrioridadRepository prioridadRepository;
+    private final ModuloRepository moduloRepository;
     // Crear una nueva tarea
     public Tarea crearTarea(Tarea tarea) {
         return tareaRepository.save(tarea);
@@ -80,6 +82,33 @@ public class TareaService {
         }
 
         // Guardar el proyecto actualizado
+        return tareaRepository.save(tarea);
+    }
+
+
+    public Tarea actualizarPrioridad(Long moduoId, Long tareaId, Long prioridadId) {
+        // Verificar que el proyecto exista
+        Modulo modulo = moduloRepository.findById(moduoId)
+                .orElseThrow(() -> new ResourceNotFoundException("modulo no encontrado"));
+
+        // Verificar que el módulo pertenezca al proyecto
+        Tarea tarea = tareaRepository.findById(tareaId)
+                .orElseThrow(() -> new ResourceNotFoundException("taera no encontrado"));
+
+        if (!tarea.getModulo().getId().equals(modulo.getId())) {
+            throw new IllegalArgumentException("Latarea no pertenece al modulo especificado");
+        }
+
+        // Actualizar la prioridad del módulo
+        if (prioridadId == null) {
+            tarea.setPrioridad(null);
+        } else {
+            Prioridad nuevaPrioridad = prioridadRepository.findById(prioridadId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Prioridad no encontrada"));
+            tarea.setPrioridad(nuevaPrioridad);
+        }
+
+        // Guardar y retornar el módulo actualizado
         return tareaRepository.save(tarea);
     }
 

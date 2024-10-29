@@ -94,7 +94,8 @@ const KanbanBoard = () => {
                         [tarea.id]: {
                             id: tarea.id.toString(),
                             title: tarea.nombre || 'Sin título',
-                            description: tarea.descripcion,
+                            fechaFin:tarea.fechaFin,
+
                             estado: tarea.estado, // Agrega el estado de la tarea
                         }
                     }), {}),
@@ -314,7 +315,7 @@ const KanbanBoard = () => {
             }}> {/* Borde inferior suave */}
                 <Button
                     type="primary"
-                    icon={<ArrowLeftOutlined />} // Añade un icono para mejor visualización
+                    icon={<ArrowLeftOutlined/>} // Añade un icono para mejor visualización
                     onClick={() => navigate(-1)} // Navega hacia atrás en el historial
                     style={{
                         marginRight: '10px',
@@ -326,34 +327,49 @@ const KanbanBoard = () => {
                 >
                     Atrás
                 </Button>
-                < span style={{ color: '#555', fontSize: 13, cursor: 'pointer'}}>
-                    <MergeOutlined />
-                   Tareas
-                </span>
+
                 <Tooltip title={projectData ? projectData.nombre : 'Cargando nombre del proyecto...'} placement="top">
-            <span style={{ fontWeight: 'bold', color: '#555', fontSize: 18, marginLeft: 18, cursor: 'pointer' }}>
+            <span style={{
+                fontWeight: 'bold',
+                color: '#555',
+                fontSize: 14,
+                marginLeft: 10,
+                marginRight: 3,
+                cursor: 'pointer'
+            }}>
 
                  <FolderOutlined style={{
 
                      color: 'black',
 
                      // Espacio entre el icono y el texto
-                 }} />
-                <span> {truncateTextP( projectData.nombre , 16)} </span>
+                 }}/>
+                <span> {truncateTextP(projectData.nombre, 16)} </span>
             </span>
                 </Tooltip>
-                <span style={{margin: '0 8px', fontWeight: 'bold', color: '#555', fontSize:19}}>/</span>
+                <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
 
                 <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del proyecto...'} placement="top">
-        <span style={{ color: '#555', fontSize: 18, cursor: 'pointer'}}>
+        <span style={{color: '#555', fontSize: 14, cursor: 'pointer'}}>
             <MenuOutlined style={{
 
                 color: 'black',
-                 // Espacio entre el icono y el texto
-            }} />
+                // Espacio entre el icono y el texto
+            }}/>
             <span> {truncateTextM(moduleData.nombre, 16)} </span>
         </span>
                 </Tooltip>
+                <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
+                < span style={{color: '#555', fontSize: 13, cursor: 'pointer'}}>
+                    <MergeOutlined/>
+                   Tareas
+                </span>
+                <span><EllipsisOutlined style={{
+                    marginTop:4,
+                    marginLeft: 5,
+                    fontSize: 17,
+                    fontWeight: 800
+                }}/></span>
 
 
             </div>
