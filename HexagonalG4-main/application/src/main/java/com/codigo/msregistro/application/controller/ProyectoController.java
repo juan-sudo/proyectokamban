@@ -103,6 +103,8 @@ public class ProyectoController {
         return proyectoService.listarProyectosNoArchivados();
     }
 
+
+
     @GetMapping("/archivados")
     public List<Proyecto> obtenerProyectosArchivados() {
         return proyectoService.listarProyectosArchivados();

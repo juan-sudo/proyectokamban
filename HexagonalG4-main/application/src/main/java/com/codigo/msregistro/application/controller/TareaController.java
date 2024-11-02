@@ -1,5 +1,6 @@
 package com.codigo.msregistro.application.controller;
 
+import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.application.services.TareaService;
 import com.codigo.msregistro.domain.aggregates.EstadoTarea;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
@@ -29,6 +30,47 @@ public class TareaController {
     private ModuloService moduloService;
 
     private final Logger log = LoggerFactory.getLogger(TareaController.class);
+
+    @PutMapping("/actualizar/{tareaId}")
+    public ResponseEntity<?> updateTarea(@RequestBody Tarea tarea, @PathVariable Long tareaId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Tarea tareaActualizada = tareaService.actualizarTarea(tareaId, tarea);
+            response.put("message", "Tarea actualizada exitosamente");
+            response.put("tarea", tareaActualizada);
+            return ResponseEntity.ok(response);
+        } catch (ResourceNotFoundException e) {
+            response.put("message", "Error: No se encontró la tarea con ID " + tareaId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            response.put("message", "Error al actualizar la tarea");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    @DeleteMapping("/delete/{idTarea}")
+    public ResponseEntity<String> deleteTareaByID(@PathVariable Long moduloId, @PathVariable Long idTarea) {
+
+        log.info("estas aqui");
+        // Verifica si el módulo existe
+        Optional<Modulo> moduloOpt = moduloService.obtenerModuloPorId(moduloId);
+        if (!moduloOpt.isPresent()) {
+            return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra el módulo
+        }
+
+        // Verifica si la tarea existe
+        Optional<Tarea> tareaOpt = tareaService.obtenerTareaPorId(idTarea);
+        if (tareaOpt.isPresent()) {
+            // Elimina la tarea si existe
+            tareaService.deleteTarea(idTarea);
+            return ResponseEntity.ok("Tarea eliminada exitosamente");
+        } else {
+            return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra la tarea
+        }
+    }
+
     // Crear una nueva tarea en un módulo
     @PostMapping
     public ResponseEntity<?> crearTarea(@Valid @PathVariable Long moduloId, @RequestBody Tarea nuevaTarea, BindingResult result) {

@@ -7,19 +7,42 @@ import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-public class TareaService {
+    @RequiredArgsConstructor
+    public class TareaService {
 
-    private final TareaRepository tareaRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final PrioridadRepository prioridadRepository;
-    private final ModuloRepository moduloRepository;
+        private final TareaRepository tareaRepository;
+        private final UsuarioRepository usuarioRepository;
+        private final PrioridadRepository prioridadRepository;
+        private final ModuloRepository moduloRepository;
+
+    public String deleteTarea(Long id) {
+        Tarea tarea = tareaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarea con ID " + id + " no encontrada"));
+
+        tareaRepository.delete(tarea);
+        return "Tarea eliminada exitosamente";
+    }
+
+    public Tarea actualizarTarea(Long id, Tarea tarea) {
+        Tarea tareaExistente = tareaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarea con ID " + id + " no encontrada"));
+
+        tareaExistente.setNombre(tarea.getNombre());
+        tareaExistente.setDescripcion(tarea.getDescripcion());
+        tareaExistente.setFechaInicio(tarea.getFechaInicio());
+        tareaExistente.setFechaFin(tarea.getFechaFin());
+
+        return tareaRepository.save(tareaExistente);
+    }
+
+
     // Crear una nueva tarea
     public Tarea crearTarea(Tarea tarea) {
         return tareaRepository.save(tarea);

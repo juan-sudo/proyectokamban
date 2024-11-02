@@ -4,6 +4,7 @@ import React,{ useEffect, useState } from 'react';
 import "../index.css";
 import { useNavigate } from 'react-router-dom'; // Asegúrate de importar useN
 import _ from 'lodash';
+import dayjs from 'dayjs';
 import {
     DatePicker,
     Menu,
@@ -18,7 +19,7 @@ import {
     Modal,
     Form,
     Select,
-    Space
+    Space, Spin
 } from 'antd';
 import {
     EditOutlined,
@@ -103,7 +104,7 @@ function ProyectoList() {
         fetchProyectos();
         fetchUsuario();
         fetchPrioridad();
-        console.log((prioridad));
+
 
 
     }, []);
@@ -398,8 +399,10 @@ function ProyectoList() {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
                     value: usuario.id,
-                    emoji: "🇨🇳",
-                    desc: usuario.nombres,
+                    emoji:  <Avatar style={{ backgroundColor: usuario.backgroundUser }}
+                        size={20}
+                        icon={<UserAddOutlined />} />,
+                    desc: usuario.nombres+" "+usuario.apellidoPaterno+" "+usuario.apellidoMaterno,
                 }));
                 setUsuario(usuarioValor);
             }
@@ -639,7 +642,8 @@ setSelectedTareaUserIds(newUserIds)
 
     const handleButtonClick = (proyectoId,moduloId) => {
         console.log(`Navegando a /modulos/${proyectoId}/tareas`);
-       // navigate(`/modulos/${proyectoId}/tareas`); // Elimina '/api' si es innecesario
+       // navigate(`/m
+        // odulos/${proyectoId}/tareas`); // Elimina '/api' si es innecesario
 navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
     };
@@ -663,6 +667,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         navigate(`/proyectos/${proyectoId}/modulos/${moduloId}/tarea/${tareaId}`)
 
     };
+
     const options = [
         {
             label: 'juan',
@@ -1019,7 +1024,7 @@ console.log("entro aqui---------------")
                 text: 'Por favor, corrige los errores en el formulario.',
                 confirmButtonText: 'OK',
             });
-        });;
+        });
     };
 
     const handleCancel = () => {
@@ -1140,6 +1145,15 @@ console.log("entro aqui---------------")
     ];
 
 
+    if (!proyectos) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Spin tip="Cargando..." size="large" /> {/* Cambiar el tamaño aquí */}
+            </div>
+        );// Muestra un mensaje de carga mientras se obtienen los datos
+    }
+
+
     return (
         <>
 
@@ -1240,7 +1254,7 @@ console.log("entro aqui---------------")
                                         />
                                         <FolderOutlined
                                             style={{
-                                                backgroundColor: row.color,
+                                                backgroundColor: row.backgroundProyecto,
                                                 color: 'black',
                                                 padding: '5px',
                                                 borderRadius: '50%',
@@ -1486,7 +1500,7 @@ console.log("entro aqui---------------")
                                                 />
                                                 <FolderOutlined
                                                     style={{
-                                                        backgroundColor: row.color,
+                                                        backgroundColor: row.backgroundProyecto,
                                                         color: 'black',
                                                         padding: '5px',
                                                         borderRadius: '50%',
@@ -1701,6 +1715,7 @@ console.log("entro aqui---------------")
                                                         </Space>
                                                     </Option>
                                                 </Select>
+
                                             ) : (
                                                 <span style={{ cursor: 'pointer', marginLeft:10 }} onDoubleClick={() => handleDoubleClickModulo(modulo.id)}>
             {modulo.prioridad ? (
@@ -1745,7 +1760,7 @@ console.log("entro aqui---------------")
                                                         icon={expandedModules[`${row.id}-${modulo.id}-${tarea.id}`] ? <CaretUpOutlined /> : <CaretDownOutlined />}
                                                     />
                                                     <FileTextOutlined style={{
-                                                        backgroundColor: row.color,
+                                                        backgroundColor: row.backgroundProyecto,
                                                         color: 'black',
                                                         marginTop: '7px',
                                                         fontSize:19,
@@ -1966,7 +1981,7 @@ console.log("entro aqui---------------")
                                                             width: '20px', // Ajusta el tamaño del círculo
                                                             height: '20px',
                                                             borderRadius: '50%',
-                                                            backgroundColor: row.color, // Cambia el color según tus necesidades
+                                                            backgroundColor: row.backgroundProyecto, // Cambia el color según tus necesidades
                                                             marginRight: '8px' // Espacio entre el círculo y el texto
                                                         }}>
 
@@ -2404,7 +2419,7 @@ console.log("entro aqui---------------")
                     </Form>
                 )}
 
-                {(modalType === 'Añadirproyecto' || modalType === 'AñadirModulo') && (
+                {(modalType === 'Añadirproyecto') && (
                     <Form form={form} layout="vertical">
                         <Form.Item
                             name="nombre"
@@ -2427,6 +2442,107 @@ console.log("entro aqui---------------")
                         >
                             <DatePicker />
                         </Form.Item>
+
+                        <Form.Item
+                            name="descripcion"
+                            label="Descripción"
+                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                        >
+                            <Input.TextArea />
+                        </Form.Item>
+                    </Form>
+                )}
+                {(modalType === 'AñadirModulo') && (
+                    <Form form={form} layout="vertical">
+                        <Form.Item
+                            name="nombre"
+                            label="Nombre"
+                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                        >
+                            <Input />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="fechaInicio"
+                            label="Fecha de Inicio"
+                            rules={[
+                                { required: true, message: 'Por favor, selecciona una fecha' },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const fechaInicio = dayjs(value);
+
+                                        // Verifica si hay algún proyecto con fechas que se superpongan
+                                        const isWithinRange = proyectos.some(row => {
+                                            const rangoInicio = dayjs(row.fechaInicio);
+                                            const rangoFin = dayjs(row.fechaFin);
+
+                                            // Compara si la fechaInicio está dentro del rango de cada proyecto
+                                            return fechaInicio.isSameOrAfter(rangoInicio) && fechaInicio.isSameOrBefore(rangoFin)
+                                        });
+
+                                        // Depuración: Imprime las fechas
+                                        console.log('Fecha de Inicio:', fechaInicio.format());
+                                        console.log('Rango de Proyectos:', proyectos.map(row => `${row.nombre}: ${row.fechaInicio} - ${row.fechaFin}`).join(', '));
+
+                                        // Si la fecha no está en ningún rango de proyecto, rechaza la promesa
+                                        if (isWithinRange) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('La fecha de inicio debe estar dentro del rango de fechas de al menos un proyecto.'));
+                                    }
+                                })
+                            ]}
+                        >
+                            <DatePicker />
+                        </Form.Item>
+
+
+                        <Form.Item
+                            name="fechaFin"
+                            label="Fecha de Fin"
+                            rules={[
+                                { required: true, message: 'Por favor, selecciona una fecha' },
+                                {
+                                    validator: (_, value) => {
+                                        if (!value || dayjs(value).isBefore(dayjs(), 'day')) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('La fecha debe ser menor que la actual'));
+                                    }
+                                },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const fechaFin = dayjs(value);
+                                        const fechaInicio = dayjs(getFieldValue('fechaInicio'));
+                                        const rangoFin = dayjs(row.fechaFin);
+
+                                        // Depuración: Imprime las fechas
+                                        console.log('Fecha de Fin:', fechaFin.format());
+                                        console.log('Rango de Fin:', rangoFin.format());
+
+                                        // Compara fechas correctamente
+                                        if (!value || (fechaFin.isAfter(fechaInicio) && fechaFin.isBefore(rangoFin))) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('La fecha de fin debe estar dentro del rango del proyecto'));
+                                    }
+                                }),
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        const fechaInicio = dayjs(getFieldValue('fechaInicio'));
+                                        const fechaFin = dayjs(value);
+
+                                        if (!value || !fechaInicio || fechaFin.isAfter(fechaInicio)) {
+                                            return Promise.resolve();
+                                        }
+                                        return Promise.reject(new Error('La fecha de fin no puede ser anterior a la fecha de inicio'));
+                                    }
+                                })
+                            ]}
+                        >
+                            <DatePicker />
+                        </Form.Item>
+
 
                         <Form.Item
                             name="descripcion"

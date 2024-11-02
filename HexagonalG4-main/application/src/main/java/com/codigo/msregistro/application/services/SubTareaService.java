@@ -6,6 +6,7 @@ import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.SubtareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,29 @@ public class SubTareaService {
     public Subtarea crearTarea(Subtarea tarea) {
         return subtareaRepository.save(tarea);
     }
+
+    public Subtarea actualizarSubtarea(Long id, Subtarea tarea) {
+        // Busca la subtarea por ID
+        Optional<Subtarea> optionalSubtarea = subtareaRepository.findById(id);
+
+        // Verifica si la subtarea existe
+        if (optionalSubtarea.isPresent()) {
+            Subtarea subtarea = optionalSubtarea.get();
+
+            // Actualiza los campos de la subtarea
+            subtarea.setNombre(tarea.getNombre());
+            subtarea.setDescripcion(tarea.getDescripcion());
+            subtarea.setFechaInicio(tarea.getFechaInicio());
+            subtarea.setFechaFin(tarea.getFechaFin());
+
+            // Guarda la subtarea actualizada
+            return subtareaRepository.save(subtarea);
+        } else {
+            // Manejar el caso en que la subtarea no existe (puedes lanzar una excepción o retornar null)
+            throw new EntityNotFoundException("Subtarea no encontrada con ID: " + id);
+        }
+    }
+
 
     // Obtener todas las tareas de un módulo
     public List<Subtarea> obtenerTareasPorModulo(Tarea tarea) {

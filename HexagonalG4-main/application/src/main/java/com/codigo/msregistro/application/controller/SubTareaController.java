@@ -30,6 +30,28 @@ public class SubTareaController {
     private SubTareaService subTareaService;
 
     private final Logger log = LoggerFactory.getLogger(SubTareaController.class);
+
+    @PutMapping("/{idSubtarea}")
+    public ResponseEntity<?> crearSubTarea(@Valid @PathVariable Long tareaId,
+                                           @PathVariable Long idSubtarea,
+                                           @RequestBody Subtarea nuevaTarea) {
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<Tarea> tareaOpt = tareaService.obtenerTareaPorId(tareaId);
+        if (tareaOpt.isPresent()) {
+            nuevaTarea.setTarea(tareaOpt.get()); // Asignar el módulo a la tarea
+            Subtarea tareaGuardada = subTareaService.actualizarSubtarea(idSubtarea, nuevaTarea);
+
+            response.put("mensaje", "Subtarea actualizada exitosamente");
+            response.put("subtarea", tareaGuardada);
+
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("mensaje", "Tarea no encontrada con ID: " + tareaId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response); // Si no encuentra la tarea, devolver 404
+        }
+    }
+
     // Crear una nueva tarea en un módulo
     @PostMapping
     public ResponseEntity<?> crearSubTarea(@Valid @PathVariable Long tareaId, @RequestBody Subtarea nuevaTarea, BindingResult result) {
@@ -124,5 +146,6 @@ public class SubTareaController {
         Subtarea subtareaActualizado = subTareaService.actualizarPrioridad(tareaId,idSubtarea,null);
         return ResponseEntity.ok(subtareaActualizado);
     }
+
 
 }

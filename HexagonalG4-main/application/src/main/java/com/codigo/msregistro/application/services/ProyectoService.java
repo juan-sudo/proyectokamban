@@ -1,18 +1,16 @@
 package com.codigo.msregistro.application.services;
 
 import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
-import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
-import com.codigo.msregistro.domain.aggregates.Prioridad;
-import com.codigo.msregistro.domain.aggregates.Usuario;
+import com.codigo.msregistro.domain.aggregates.*;
 import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import com.codigo.msregistro.domain.aggregates.Proyecto;
 import com.codigo.msregistro.infraestructure.repositories.ProyectoRepository;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,8 +42,13 @@ public class ProyectoService {
     // Crear un nuevo proyecto
     public Proyecto createProyecto(Proyecto proyecto) {
         proyecto.setEstado(EstadoProyecto.PENDIENTE);
-
+        proyecto.setBackgroundProyecto(generarColorAleatorio());
         return proyectoRepository.save(proyecto);
+    }
+
+    private String generarColorAleatorio() {
+        int color = (int) (Math.random() * 0xFFFFFF);
+        return String.format("#%06X", color);
     }
 
     // Eliminar un proyecto (moverlo a la papelera)
@@ -72,11 +75,31 @@ public class ProyectoService {
         return false;
     }
 
-
     public List<Proyecto> listarProyectosNoArchivados() {
-        // Ordenar los proyectos no archivados en orden descendente
-        return proyectoRepository.findByEstadoNot(EstadoProyecto.ARCHIVADO, Sort.by(Sort.Direction.DESC, "id")); // Cambia "id" por el campo que desees
+        // Obtener los proyectos no archivados en orden descendente
+        List<Proyecto> proyectos = proyectoRepository.findByEstadoNot(
+                EstadoProyecto.ARCHIVADO, Sort.by(Sort.Direction.DESC, "id")
+        );
+
+        // Ordenar los módulos, tareas y subtareas dentro de cada proyecto en orden descendente
+        proyectos.forEach(proyecto -> {
+            // Ordenar módulos en orden descendente por "id"
+            proyecto.getModulos().sort(Comparator.comparing(Modulo::getId).reversed());
+
+            proyecto.getModulos().forEach(modulo -> {
+                // Ordenar tareas dentro de cada módulo en orden descendente por "id"
+                modulo.getTareas().sort(Comparator.comparing(Tarea::getId).reversed());
+
+                // Ordenar subtareas dentro de cada tarea en orden descendente por "id"
+                modulo.getTareas().forEach(tarea ->
+                        tarea.getSubtareas().sort(Comparator.comparing(Subtarea::getId).reversed())
+                );
+            });
+        });
+
+        return proyectos;
     }
+
 
     public List<Proyecto> listarProyectosArchivados() {
         return proyectoRepository.findByEstado(EstadoProyecto.ARCHIVADO);
