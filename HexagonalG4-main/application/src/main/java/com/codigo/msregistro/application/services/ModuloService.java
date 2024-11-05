@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,9 +25,12 @@ public class ModuloService {
     private final PrioridadRepository prioridadRepository;
     private final ProyectoRepository proyectoRepository;
 
+
     public Modulo crearModulo(Proyecto proyecto, Modulo modulo) {
         modulo.setProyecto(proyecto);
         modulo.setEstado(EstadoModulo.PENDIENTE);
+        modulo.setUserCreate("salomon santa perez");
+        modulo.setCreateAt(new Date());
         return moduloRepository.save(modulo);
     }
 

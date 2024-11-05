@@ -24,6 +24,8 @@ public class ModuloController {
         this.proyectoService = proyectoService;
     }
 
+
+
     @PostMapping
     public ResponseEntity<Modulo> crearModulo(@PathVariable Long proyectoId, @RequestBody Modulo modulo) {
         Optional<Proyecto> proyectoOpt = proyectoService.getProyectoById(proyectoId);

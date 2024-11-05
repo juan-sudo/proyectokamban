@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.codigo.msregistro.infraestructure.repositories.ProyectoRepository;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,6 +44,8 @@ public class ProyectoService {
     public Proyecto createProyecto(Proyecto proyecto) {
         proyecto.setEstado(EstadoProyecto.PENDIENTE);
         proyecto.setBackgroundProyecto(generarColorAleatorio());
+        proyecto.setUserCreate("salomon santa perez");
+        proyecto.setCreateAt(new Date());
         return proyectoRepository.save(proyecto);
     }
 

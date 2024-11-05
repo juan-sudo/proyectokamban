@@ -19,7 +19,7 @@ import {
     Modal,
     Form,
     Select,
-    Space, Spin
+    Space, Spin, Timeline,InputNumber,Tabs,Divider
 } from 'antd';
 import {
     EditOutlined,
@@ -49,6 +49,13 @@ import {
     RobotOutlined,
     FileOutlined,
     FlagOutlined,
+    CopyOutlined,
+    StarOutlined,
+    MoreOutlined,
+    BookOutlined,
+    AppstoreOutlined,
+    DeleteOutlined,
+    InboxOutlined,
 
 
 } from '@ant-design/icons';
@@ -186,7 +193,60 @@ function ProyectoList() {
     }, [selectedsubTarea]);
 
 
+//TAPS
+    const onChange = (key) => {
+        console.log(key);
+    };
+//  TAPS
+    const itemsTap = [
+        {
+            key: '1',
+            label: 'Módulo',
+            children:  (
+                <div>
+                    <p style={{display: 'flex', alignItems: 'center', color:'#656f7d'}}>
+                        <AppstoreOutlined style={{marginRight: '8px', fontSize: '16px'}}/>
+                      <span style={{fontWeight:600, marginRight:5}}> Cantidad de módulos:</span> <span>{selectedProject?.modulos?.length}</span>
+                    </p>
+                </div>
+            ),
+        },
 
+    ];
+
+//MODULOS
+    const itemsTapModulos = [
+        {
+            key: '1',
+            label: 'Tarea',
+            children:  (
+                <div>
+                    <p style={{display: 'flex', alignItems: 'center', color:'#656f7d'}}>
+                        <AppstoreOutlined style={{marginRight: '8px', fontSize: '16px'}}/>
+                        <span style={{fontWeight:600, marginRight:5}}> Cantidad de tareas:</span> <span>{selectedModule?.tareas?.length}</span>
+                    </p>
+                </div>
+            ),
+        },
+
+    ];
+
+    //  TAPS
+    const itemsTapSubtarea = [
+        {
+            key: '1',
+            label: 'Subatarea',
+            children:  (
+                <div>
+                    <p style={{display: 'flex', alignItems: 'center', color:'#656f7d'}}>
+                        <AppstoreOutlined style={{marginRight: '8px', fontSize: '16px'}}/>
+                        <span style={{fontWeight:600, marginRight:5}}> Cantidad de Subtarea:</span> <span>{selectedTarea?.subtareas?.length}</span>
+                    </p>
+                </div>
+            ),
+        },
+
+    ];
 
 
     const handleDoubleClick = (projectId) => {
@@ -641,7 +701,7 @@ setSelectedTareaUserIds(newUserIds)
     };
 
     const handleButtonClick = (proyectoId,moduloId) => {
-        console.log(`Navegando a /modulos/${proyectoId}/tareas`);
+        console.log(`Navegando a /modulos/${moduloId}/tareas`);
        // navigate(`/m
         // odulos/${proyectoId}/tareas`); // Elimina '/api' si es innecesario
 navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
@@ -662,7 +722,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
 
     const  handleButtonClickSub = (proyectoId,moduloId,tareaId) => {
-        console.log(`Navegando a /modulos/${proyectoId}/tareas`);
+        console.log(`Navegando a /modulos/${moduloId}/tareas`);
         // navigate(`/modulos/${proyecto7Id}/tareas`); // Elimina '/api' si es innecesario
         navigate(`/proyectos/${proyectoId}/modulos/${moduloId}/tarea/${tareaId}`)
 
@@ -733,7 +793,12 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         }
 
         // Lógica para añadir proyecto o módulo
-        if (typeModal === 'AñadirModulo'&& moduloId) {
+        if (typeModal === 'AñadirModulo'&& id) {
+            const proyecto = proyectos.find(p => p.id === id);
+            if (proyecto) {
+                // Actualiza el estado con el proyecto seleccionado
+                setSelectedProject(proyecto);
+            }
             // Resetea el formulario para que esté vacío al añadir un proyecto o módulo
             form.resetFields();
         }
@@ -778,6 +843,26 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             }
         }
         if (typeModal === 'AñadirTarea'&& id&&moduloId) {
+
+            const proyecto = proyectos.find(p => p.id === id);
+
+            // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
+            if (proyecto) {
+                // Actualiza el estado con el proyecto seleccionado
+                setSelectedProject(proyecto);
+
+                const modulo = proyecto.modulos.find(m => m.id === moduloId);
+
+                // Si se encuentra el módulo, actualiza el estado con ese módulo
+                if (modulo) {
+                    setSelectedModule(modulo);
+                } else {
+                    console.error("Módulo no encontrado");
+                }
+            } else {
+                console.error("Proyecto no encontrado");
+            }
+
             // Resetea el formulario para que esté vacío al añadir un proyecto o módulo
             form.resetFields();
         }
@@ -871,6 +956,27 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
         // Resetea el formulario para añadir tareas o subtareas
         if (typeModal === 'AñadirSubtarea'&&id&&moduloId&&tareaId) {
+            const proyecto = proyectos.find(p => p.id === id);
+
+            console.log("proyecto seleccionada:", proyecto);
+            if (proyecto) {
+                const modulo = proyecto.modulos.find(m => m.id === moduloId);
+                if (modulo) {
+                    const tarea = modulo.tareas.find(t => t.id === tareaId);
+                    if (tarea) {
+                        setSelectedTarea(tarea);
+
+
+
+                    } else {
+                        console.error("Tarea no encontrada");
+                    }
+                } else {
+                    console.error("Módulo no encontrado");
+                }
+            } else {
+                console.error("Proyecto no encontrado");
+            }
             form.resetFields();
         }
     };
@@ -1215,11 +1321,14 @@ console.log("entro aqui---------------")
                         <Col span={4}>
                             <div className="task-item__assignee">Persona asignado</div>
                         </Col>
-                        <Col span={3}>
+                        <Col span={2}>
                             <div className="task-item__due-date">Fecha Inicio</div>
                         </Col>
-                        <Col span={3}>
+                        <Col span={2}>
                             <div className="task-item__due-date">Fecha Fin</div>
+                        </Col>
+                        <Col span={2}>
+                            <div className="task-item__due-date">Ampliado</div>
                         </Col>
                         <Col span={3}>
                             <div className="task-item__due-date">Prioridad</div>
@@ -1381,37 +1490,49 @@ console.log("entro aqui---------------")
 
 
 
-                                <Col style={{ paddingTop: '8px',color:'#055706' }} span={3}>
-                                        <span style={{
-                                            fontSize: '14px',
-                                            paddingLeft: 5,
-                                            margin: 0,
-                                            fontWeight: '400'
-                                        }}>
-                                       {new Date(row.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
 
-                                    </span>
+                                <Col style={{paddingTop: '8px', paddingLeft: 10, color: '#055706'}}
+                                     span={2}>
+
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 0,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {row.fechaInicio} < /span>
+
 
                                 </Col>
-                                <Col style={{ paddingTop: '8px',color:'#055706' }} span={3}>
-                                             <span style={{
-                                                 fontSize: '14px',
-                                                 paddingLeft: 5,
-                                                 margin: 0,
-                                                 fontWeight: '400'
-                                             }}>
-                                       {new Date(row.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
 
-                                    </span>
+                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                     span={2}>
+
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 0,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {row.fechaFin} < /span>
+
+
                                 </Col>
+                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                         span={2}>
+    
+                                                        <span style={{
+                                                            fontSize: '14px',
+                                                            paddingLeft: 0,
+                                                            margin: 0,
+                                                            fontWeight: '400'
+                                                        }}>
+                                                                <CalendarOutlined/>
+                                                          < /span>
+    
+    
+                                    </Col>
+
                                 <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
                                      onMouseEnter={() => handleMouseEnter(row.id)}
                                      onMouseLeave={handleMouseLeave}
@@ -1641,36 +1762,47 @@ console.log("entro aqui---------------")
                                                 )}
                                             </div>
                                         </Col>
-                                        <Col style={{paddingTop: '8px', paddingLeft: 6,color:'#055706'}} span={3}>
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-                                       {new Date(modulo.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
+                                        <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                             span={2}>
 
-                                    </span>
-                                        </Col>
-                                        <Col style={{ paddingTop: '8px', paddingLeft:6,color:'#055706' }} span={3}>
-                                                   <span style={{
-                                                       fontSize: '14px',
-                                                       paddingLeft: 5,
-                                                       margin: 0,
-                                                       fontWeight: '400'
-                                                   }}>
-                                       {new Date(modulo.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 5,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {modulo.fechaInicio} < /span>
 
-                                    </span>
+
                                         </Col>
+                                        <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                             span={2}>
+
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 5,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {modulo.fechaFin} < /span>
+
+
+                                        </Col>
+                                        <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                             span={2}>
+
+                                                        <span style={{
+                                                            fontSize: '14px',
+                                                            paddingLeft: 0,
+                                                            margin: 0,
+                                                            fontWeight: '400'
+                                                        }}>
+                                                                <CalendarOutlined/>
+                                                          < /span>
+
+
+                                        </Col>
+
                                         <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
 
                                              onMouseLeave={handleMouseLeave}
@@ -1868,34 +2000,47 @@ console.log("entro aqui---------------")
                                                         )}
                                                     </div>
                                                 </Col>
-                                                <Col style={{ paddingTop: '8px' ,paddingLeft: 4,color:'#055706'}} span={3}>
-                                                          <span style={{
-                                                              fontSize: '14px',
-                                                              paddingLeft: 5,
-                                                              margin: 0,
-                                                              fontWeight: '400'
-                                                          }}>
-                                       {new Date(tarea.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
+                                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                                     span={2}>
 
-                                    </span>
-                                                </Col>
-                                                <Col style={{ paddingTop: '8px',paddingLeft: 8 ,color:'#055706'}} span={3}><span style={{
+                                                    <span style={{
                                                     fontSize: '14px',
                                                     paddingLeft: 5,
                                                     margin: 0,
                                                     fontWeight: '400'
                                                 }}>
-                                       {new Date(tarea.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
+                                                     {tarea.fechaInicio} < /span>
 
-                                    </span></Col>
+
+                                                </Col>
+
+                                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                                     span={2}>
+
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 5,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {tarea.fechaFin} < /span>
+
+
+                                                </Col>
+                                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                                     span={2}>
+
+                                                        <span style={{
+                                                            fontSize: '14px',
+                                                            paddingLeft: 0,
+                                                            margin: 0,
+                                                            fontWeight: '400'
+                                                        }}>
+                                                                <CalendarOutlined/>
+                                                          < /span>
+
+
+                                                </Col>
                                                 <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
 
                                                      onMouseLeave={handleMouseLeave}
@@ -2053,35 +2198,47 @@ console.log("entro aqui---------------")
                                                             )}
                                                         </div>
                                                     </Col>
-                                                    <Col style={{ paddingTop: '8px',color:'#055706' }} span={3}>
+                                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                                         span={2}>
+
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 5,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {subtarea.fechaInicio} < /span>
+
+
+                                                    </Col>
+
+
+                                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                                         span={2}>
+
+                                                    <span style={{
+                                                        fontSize: '14px',
+                                                        paddingLeft: 5,
+                                                        margin: 0,
+                                                        fontWeight: '400'
+                                                    }}>
+                                                     {subtarea.fechaFin} < /span>
+
+
+                                                    </Col>
+                                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                                         span={2}>
+
                                                         <span style={{
                                                             fontSize: '14px',
-                                                            paddingLeft: 8,
-                                                            // Ajusta este valor según lo que necesites
+                                                            paddingLeft: 0,
                                                             margin: 0,
                                                             fontWeight: '400'
                                                         }}>
-                                                            {new Date(subtarea.fechaInicio).toLocaleDateString('es-ES', {
-                                                                day: '2-digit',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </span>
-                                                    </Col>
-                                                    <Col style={{ paddingTop: '8px' ,color:'#055706'}} span={3}>
-                                                            <span style={{
-                                                                fontSize: '14px',
-                                                                paddingLeft: 10,
-                                                                margin: 0,
-                                                                fontWeight: '400'
-                                                            }}>
-                                       {new Date(subtarea.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
+                                                                <CalendarOutlined />
+                                                          < /span>
 
-                                    </span>
+
                                                     </Col>
                                                     <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
 
@@ -2157,19 +2314,20 @@ console.log("entro aqui---------------")
             </div>
 
             <Modal
+                style={{
+                    top: 20,
+                }}
                 title={
                     modalType === 'verProyecto' ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '8px'  }}>
-                                <HomeOutlined />
-                                Detalle proyecto
+
                               </span>
                         ) :
                         modalType === 'editarProyecto' ? 'Editar Proyecto' :
                             modalType === 'Añadirproyecto' ? 'Crear Proyecto' :
                                 modalType === 'verModulo' ? (
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px'  }}>
-                                <GroupOutlined />
-                                Detalle módulo
+
                             </span>
                                     ):
                                     modalType === 'editarModulo' ? 'Editar Módulo' :
@@ -2178,8 +2336,7 @@ console.log("entro aqui---------------")
                                                 modalType === 'Añadirproyecto' ? 'Crear Proyecto' :
                                                     modalType === 'verTarea' ? (
                                                             <span style={{ display: 'flex', alignItems: 'center', gap: '8px'  }}>
-                                <RobotOutlined />
-                                Detalle tarea
+
                             </span>
                                                         ):
 
@@ -2187,8 +2344,7 @@ console.log("entro aqui---------------")
                                                             modalType === 'AñadirTarea' ? 'Crear Tarea':
                                                                 modalType === 'verSubtarea' ? (
                                                                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px'  }}>
-                                <FileOutlined />
-                                Detalle subtarea
+
                             </span>
                                                                     ):
 
@@ -2199,7 +2355,11 @@ console.log("entro aqui---------------")
                 visible={isModalOpen}
                 onOk={handleOk}
                 onCancel={handleCancel}
-                width={modalType === 'verProyecto'|| modalType === 'verModulo' ||modalType==='verTarea'||modalType==='verSubtarea'? 800 : undefined}
+                footer={modalType === 'verProyecto' || modalType === 'verModulo' || modalType === 'verTarea' || modalType === 'verSubtarea' ? null : [
+                    <Button key="cancel" onClick={handleCancel}>Cancelar</Button>,
+                    <Button key="ok" type="primary" onClick={handleOk}>Guardar</Button>
+                ]}
+                width={modalType === 'verProyecto'|| modalType === 'verModulo' ||modalType==='verTarea'||modalType==='verSubtarea'? 1200 : undefined}
                 //  bodyStyle={{  borderBottom: '1px solid #d9d9d9',borderTop: '1px solid #d9d9d9', borderRadius: '8px' }} // Estilo del cuerpo del modal
 
 
@@ -2208,98 +2368,224 @@ console.log("entro aqui---------------")
 
                 {
                     modalType === 'verProyecto' && selectedProject && (
+<>
+                        <Row style={{borderBottom:'1px solid #f0f3f7', paddingBottom:6}}>
+                            <Col span={24}>
+                                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
 
-                    <div style={{paddingLeft: 10}}>
+                                    <div>
+      <span
+          style={{
+              backgroundColor: `${selectedProject.backgroundProyecto}`,
+              padding: '4px 8px',
+              color: '#ffffff',
+              borderRadius: '4px'
+          }}
+      >
+        P
+      </span>
+                                        <span>
+        <BookOutlined style={{fontSize: '17px', color: '#656f7d', marginLeft: 8}}/>
+      </span>
+                                        <span style={{
+                                            fontWeight: 600,
+                                            color: '#656f7d',
+                                            fontSize: '17px',
+                                            marginLeft: 8
+                                        }}>/</span>
+                                        <span style={{marginLeft: 8, color: '#656f7d'}}>PROYECTO</span>
+                                    </div>
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 30}}>
+                                        <Tooltip title={"Archivar proyecto"}>
+
+                                            <Button
+                                                style={{
+                                                    padding: '3px 7px',
+                                                    backgroundColor: '#001529',
+                                                    borderRadius: 5,
+                                                    color: '#ffffff',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    border: 'none'
+                                                }}
+                                                icon={<InboxOutlined style={{fontSize: '17px', color: '#ffffff'}}/>}
+                                            >
+                                                Archivar
+                                            </Button>
+
+                                        </Tooltip>
+                                        <Divider type="vertical"/>
 
 
-                        <p style={{fontSize: '30px', fontWeight: 'bold'}}>
-                            {selectedProject.nombre}
-                        </p>
+                                        <div style={{display: 'flex', gap: '3px'}}>
 
+                                            <Tooltip title={"Eliminar proyecto"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                            />
+                                            </Tooltip>
 
-                        <div>
+                                            <Tooltip title={"Copiar proyecto"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                            />
+                                            </Tooltip>
 
-                            <p
-                                style={{
+                                            <Tooltip title={"Calificar proyecto"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                            />
+                                            </Tooltip>
 
-                                    padding: '10px',
-                                    backgroundColor: '#f0f2f5',
-                                    borderRadius: '5px',
-                                    display: 'flex', // Usar flex para alinear el ícono y el texto
-                                    alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
-                                }}
-                            >
-                                <MessageOutlined
-                                    style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                {selectedProject.descripcion}
-                            </p>
-
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: "space-between"}}>
-                                <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <RedoOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Estado:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>{selectedProject.estado}</span>
-                                            </p>
-
-
+                                            <Tooltip title={"Mas opciones"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                            />
+                                            </Tooltip>
                                         </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
+                                    </div>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha incio:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                </div>
+                            </Col>
+
+                        </Row>
+
+    <Row>
+        <Col span={15} style={{overflowY: "auto", height: 450, paddingRight: 10}}>
+
+            <div style={{paddingLeft: 10}}>
+
+
+                <p style={{fontSize: '30px', fontWeight: 'bold'}}>
+                    {selectedProject.nombre}
+                </p>
+
+
+                <div>
+
+                    <p
+                        style={{
+
+                            padding: '10px',
+                            backgroundColor: '#f0f2f5',
+                            borderRadius: '5px',
+                            display: 'flex', // Usar flex para alinear el ícono y el texto
+                            alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
+                        }}
+                    >
+                    <MessageOutlined
+                                           style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
+                                       {selectedProject.descripcion}
+                                   </p>
+
+                                   <div
+                                       style={{
+                                           display: 'flex',
+                                           alignItems: 'initial',
+                                           justifyContent: "space-between",
+                                           marginTop: 20,
+
+
+                                       }}>
+                                       <div style={{
+                                           display: 'flex',
+                                           flexDirection: 'column',
+                                           gap: '16px',
+                                           color: '#656f7d'
+
+                                       }}>
+                                           <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                               <div style={{
+                                                   display: 'flex',
+                                                   alignItems: 'center',
+                                                   gap: '8px',
+                                                   color: '#656f7d'
+                                               }}>
+                                                   <RedoOutlined/>
+                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                       Estado:<span style={{
+                                                       fontSize: '14px',
+                                                       paddingLeft: 5,
+                                                       margin: 0,
+                                                       fontWeight: '400'
+                                                   }}>{selectedProject.estado}</span>
+                                                   </p>
+
+
+                                               </div>
+                                               <div style={{
+                                                   display: 'flex',
+                                                   alignItems: 'center',
+                                                   gap: '8px',
+                                                   marginTop: 5,
+                                                   color: '#656f7d'
+                                               }}>
+                                                   <CalendarOutlined/>
+
+                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                       Fecha incio:
+                                                       <span style={{
+                                                           fontSize: '14px',
+                                                           paddingLeft: 5,
+                                                           margin: 0,
+                                                           fontWeight: '400'
+                                                       }}>
         {new Date(new Date(selectedProject.fechaInicio).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
+                                                   </p>
+                                               </div>
+                                               <div style={{
+                                                   display: 'flex',
+                                                   alignItems: 'center',
+                                                   gap: '8px',
+                                                   marginTop: 5,
+                                                   color: '#656f7d'
+                                               }}>
+                                                   <CalendarOutlined/>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha fin:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                       Fecha fin:
+                                                       <span style={{
+                                                           fontSize: '14px',
+                                                           paddingLeft: 5,
+                                                           margin: 0,
+                                                           fontWeight: '400'
+                                                       }}>
         {new Date(new Date(selectedProject.fechaFin).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
+                                                   </p>
 
-                                        </div>
+                                               </div>
 
 
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <HourglassOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Duración:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>
+                                               <div style={{
+                                                   display: 'flex',
+                                                   alignItems: 'center',
+                                                   gap: '8px',
+                                                   marginTop: 5,
+                                                   color: '#656f7d'
+                                               }}>
+                                                   <HourglassOutlined/>
+                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                       <span> Duración: </span><span style={{
+                                                       fontSize: '14px',
+                                                       paddingLeft: 5,
+                                                       margin: 0,
+                                                       fontWeight: '400',
+
+                                                   }}>
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
@@ -2309,19 +2595,24 @@ console.log("entro aqui---------------")
         </span>
                                     </span>
 
-                                            </p>
+                                                   </p>
 
-                                        </div>
-
-
-                                    </div>
+                                               </div>
 
 
-                                </div>
+                                           </div>
 
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                       </div>
+
+                                       <div style={{
+                                           display: 'flex',
+                                           flexDirection: 'column',
+                                           gap: '16px',
+                                           color: '#656f7d'
+                                       }}>
+
+                                           <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -2329,63 +2620,175 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                        <div style={{width: 300}}>
+                                               <div style={{width: 300}}>
 
-                                            <Select
-                                                mode="multiple"
-                                                style={{width: '100%'}}
-                                                placeholder="Seleccionar una opción"
-                                                value={selectedUserIds}
-                                                onChange={handleUserChange}
-                                                onBlur={handleUpdateUsers}
-                                            >
-                                                {usuarios.map(({value, label, emoji, desc}) => (
-                                                    <Option key={value} value={value}>
-                                                        <Space>
-                                                            <span role="img" aria-label={label}>{emoji}</span>
-                                                            {desc}
-                                                        </Space>
-                                                    </Option>
-                                                ))}
-                                            </Select>
+                                                   <Select
+                                                       mode="multiple"
+                                                       style={{width: '100%'}}
+                                                       placeholder="Seleccionar una opción"
+                                                       value={selectedUserIds}
+                                                       onChange={handleUserChange}
+                                                       onBlur={handleUpdateUsers}
+                                                   >
+                                                       {usuarios.map(({value, label, emoji, desc}) => (
+                                                           <Option key={value} value={value}>
+                                                               <Space>
+                                                                   <span role="img" aria-label={label}>{emoji}</span>
+                                                                   {desc}
+                                                               </Space>
+                                                           </Option>
+                                                       ))}
+                                                   </Select>
 
 
-                                        </div>
+                                               </div>
 
-                                    </div>
+                                           </div>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                        <FlagOutlined
-                                            style={{
-                                                fontSize: '16px',
-                                                color: 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                        <p style={{fontSize: '14px', margin: 0}}>
-        <span style={{fontWeight: 600,marginRight: 5}}>
+                                           <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                               <FlagOutlined
+                                                   style={{
+                                                       fontSize: '16px',
+                                                       color: 'gray' // Color predeterminado si es null
+                                                   }}
+                                               />
+                                               <p style={{fontSize: '14px', margin: 0}}>
+        <span style={{fontWeight: 600, marginRight: 5}}>
             Prioridad:
         </span>
-                                            <FlagOutlined
-                                                style={{ marginRight: 5,
-                                                    fontSize: '16px',
-                                                    color: selectedProject?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
-                                                }}
-                                            />
-                                            <span style={{color: selectedProject?.prioridad?.backgroundPrioridad || 'gray'}}
-                                            >{selectedProject?.prioridad?.nombre || "Sin prioridad"}</span>
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                            </div>
+                                                   <FlagOutlined
+                                                       style={{
+                                                           marginRight: 5,
+                                                           fontSize: '16px',
+                                                           color: selectedProject?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                                       }}
+                                                   />
+                                                   <span
+                                                       style={{color: selectedProject?.prioridad?.backgroundPrioridad || 'gray'}}
+                                                   >{selectedProject?.prioridad?.nombre || "Sin prioridad"}</span>
+                                               </p>
+                                           </div>
 
 
-                        </div>
+                                       </div>
+
+
+                                   </div>
+
+                    <div style={{marginTop: 20}}>
+
+
+
+                        <Tabs defaultActiveKey="1" items={itemsTap} onChange={onChange}/>
+
 
                     </div>
 
 
+                    <div style={{marginTop:18}}>
+                                       <h3 style={{borderBottom:'1px solid #f0f3f7'}}>Ampliacion de fecha</h3>
+                                       <div style={{
+                                           display: 'flex',
+                                           alignItems: 'center',
+                                           gap: '8px',
+                                           marginTop: 5,
+                                           color: '#656f7d'
+                                       }}>
+                                       <CalendarOutlined/>
+
+                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                           Dias:
+
+
+                                       </p>
+                                           <InputNumber
+                                               min={0}               // Establece un valor mínimo, opcional
+                                               max={100}             // Establece un valor máximo, opcional
+                                               defaultValue={1}      // Valor inicial
+                                               onChange={(value) => console.log(value)} // Maneja cambios en el valor
+                                           />
+
+                                   </div>
+
+                                   </div>
+
+
+                               </div>
+
+
+                           </div>
+
+                       </Col>
+        <Col span={9} style={{overflowY:"auto", height:450, paddingRight:10, backgroundColor:'#fbfbfc'}}>
+                           <h2 style={{marginTop:10, marginBottom:20}}>Actividades</h2>
+                           <Timeline style={{paddingLeft: 20}}
+                                     items={[
+
+                                         {
+                                             color:'green',
+                                             children: (
+                                                 <span style={{display: 'flex', alignItems: 'center'}}>
+                <Avatar size="small" style={{marginRight: '4px'}}>
+                    <UserOutlined
+                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
+                </Avatar>
+                <span style={{color: '#4f5762', fontWeight: 600}}>
+                    {`${selectedProject.userCreate}`} {/* Texto de usuario en negro */}
+                </span>
+                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
+               <span style={{color: '#4f5762', fontWeight: 600}}>
+    {` ${dayjs(selectedProject.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
+</span>
+            </span>
+                                             ),
+                                         },
+
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                         {
+                                             color: 'red',
+                                             children: 'Eliminado solved 2015-09-01',
+                                         },
+                                     ]}
+                           />
+                           </Col>
+                   </Row>
+
+</>
                     )
                 }
 
@@ -2396,7 +2799,7 @@ console.log("entro aqui---------------")
                             label="Nombre"
                             rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                        <Input/>
+                            <Input/>
                         </Form.Item>
                         <Form.Item
                             name="descripcion"
@@ -2431,24 +2834,24 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="fechaInicio"
                             label="Fecha de Inicio"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
+                            rules={[{required: true, message: 'Por favor, selecciona una fecha'}]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
                         <Form.Item
                             name="fechaFin"
                             label="Fecha de Fin"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
+                            rules={[{required: true, message: 'Por favor, selecciona una fecha'}]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
 
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
@@ -2457,194 +2860,272 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input />
+                            <Input/>
                         </Form.Item>
+
 
                         <Form.Item
                             name="fechaInicio"
                             label="Fecha de Inicio"
                             rules={[
-                                { required: true, message: 'Por favor, selecciona una fecha' },
-                                ({ getFieldValue }) => ({
+                                {required: true, message: 'Por favor, selecciona una fecha'},
+                                {
                                     validator(_, value) {
-                                        const fechaInicio = dayjs(value);
+                                        // Convertimos selectedProject.fechaInicio a un objeto Date
+                                        const projectStart = new Date(selectedProject.fechaInicio);
 
-                                        // Verifica si hay algún proyecto con fechas que se superpongan
-                                        const isWithinRange = proyectos.some(row => {
-                                            const rangoInicio = dayjs(row.fechaInicio);
-                                            const rangoFin = dayjs(row.fechaFin);
-
-                                            // Compara si la fechaInicio está dentro del rango de cada proyecto
-                                            return fechaInicio.isSameOrAfter(rangoInicio) && fechaInicio.isSameOrBefore(rangoFin)
-                                        });
-
-                                        // Depuración: Imprime las fechas
-                                        console.log('Fecha de Inicio:', fechaInicio.format());
-                                        console.log('Rango de Proyectos:', proyectos.map(row => `${row.nombre}: ${row.fechaInicio} - ${row.fechaFin}`).join(', '));
-
-                                        // Si la fecha no está en ningún rango de proyecto, rechaza la promesa
-                                        if (isWithinRange) {
+                                        // Validamos que value exista y sea mayor a projectStart
+                                        if (!value || new Date(value).getTime() > projectStart.getTime()) {
                                             return Promise.resolve();
                                         }
-                                        return Promise.reject(new Error('La fecha de inicio debe estar dentro del rango de fechas de al menos un proyecto.'));
-                                    }
-                                })
+
+                                        // Mensaje de error si la fecha no es posterior
+                                        return Promise.reject(new Error(`La fecha inicio debe ser igual o posterior a ${projectStart.toISOString().split('T')[0]}`));
+                                    },
+                                },
                             ]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
 
 
                         <Form.Item
                             name="fechaFin"
-                            label="Fecha de Fin"
+                            label="Fecha fin"
                             rules={[
-                                { required: true, message: 'Por favor, selecciona una fecha' },
+                                {required: true, message: 'Por favor, selecciona una fecha'},
                                 {
-                                    validator: (_, value) => {
-                                        if (!value || dayjs(value).isBefore(dayjs(), 'day')) {
+                                    validator(_, value) {
+                                        // Convertimos selectedProject.fechaInicio a un objeto Date
+                                        const projectStart = new Date(selectedProject.fechaFin);
+                                        projectStart.setDate(projectStart.getDate() + 1);
+                                        // Validamos que value exista y sea mayor a projectStart
+                                        if (!value || new Date(value).getTime() < projectStart.getTime()) {
                                             return Promise.resolve();
                                         }
-                                        return Promise.reject(new Error('La fecha debe ser menor que la actual'));
-                                    }
+                                        projectStart.setDate(projectStart.getDate() - 1);
+
+                                        // Mensaje de error si la fecha no es posterior
+                                        return Promise.reject(new Error(`La fecha fin debe ser menor o igual ${projectStart.toISOString().split('T')[0]}`));
+                                    },
                                 },
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        const fechaFin = dayjs(value);
-                                        const fechaInicio = dayjs(getFieldValue('fechaInicio'));
-                                        const rangoFin = dayjs(row.fechaFin);
-
-                                        // Depuración: Imprime las fechas
-                                        console.log('Fecha de Fin:', fechaFin.format());
-                                        console.log('Rango de Fin:', rangoFin.format());
-
-                                        // Compara fechas correctamente
-                                        if (!value || (fechaFin.isAfter(fechaInicio) && fechaFin.isBefore(rangoFin))) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject(new Error('La fecha de fin debe estar dentro del rango del proyecto'));
-                                    }
-                                }),
-                                ({ getFieldValue }) => ({
-                                    validator(_, value) {
-                                        const fechaInicio = dayjs(getFieldValue('fechaInicio'));
-                                        const fechaFin = dayjs(value);
-
-                                        if (!value || !fechaInicio || fechaFin.isAfter(fechaInicio)) {
-                                            return Promise.resolve();
-                                        }
-                                        return Promise.reject(new Error('La fecha de fin no puede ser anterior a la fecha de inicio'));
-                                    }
-                                })
                             ]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
 
 
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
 
                 {modalType === 'verModulo' && selectedModule && (
+                   <>
 
 
-                    <div style={{paddingLeft: 10}}>
+                    <Row style={{borderBottom:'1px solid #f0f3f7', paddingBottom:6}}>
+                        <Col span={24}>
+
+                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+
+                            <div>
+ <span style={{
+     backgroundColor: `${selectedProject.backgroundProyecto}`,
+     padding: '4px 8px',
+     color: '#ffffff',
+     borderRadius: '4px'
+ }}>
+                    M
+                </span>
+                                <spa>
+                                    <BookOutlined style={{fontSize: '17px', color: '#656f7d', marginLeft: 8}}/>
+                                </spa>
+
+                                <span style={{fontWeight: 600, color: '#656f7d', fontSize: '17px', marginLeft: 8}}>
+                                    /
+                                </span>
+
+                                <span style={{
+                                    marginLeft: 8, color: '#656f7d'
+
+                                }}>
+
+                    MODULO
+                </span>
 
 
-                        <p style={{fontSize: '30px', fontWeight: 'bold'}}>
-                            {selectedModule.nombre}
-                        </p>
+                            </div>
+
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 30}}>
 
 
-                        <div>
-
-                            <p
-                                style={{
-
-                                    padding: '10px',
-                                    backgroundColor: '#f0f2f5',
-                                    borderRadius: '5px',
-                                    display: 'flex', // Usar flex para alinear el ícono y el texto
-                                    alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
-                                }}
-                            >
-                                <MessageOutlined
-                                    style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                {selectedModule.descripcion}
-                            </p>
-
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: "space-between"}}>
-                                <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <RedoOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Estado:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>{selectedModule.estado}</span>
-                                            </p>
 
 
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
+                                <div style={{display: 'flex', gap: '3px'}}>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha inicio:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                    <Tooltip title={"Eliminar modulo"}>
+                                        <Button
+                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                            icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                        />
+                                    </Tooltip>
+
+                                    <Tooltip title={"Copiar modulo"}>
+                                        <Button
+                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                            icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                        />
+                                    </Tooltip>
+
+                                    <Tooltip title={"Calificar modulo"}>
+                                        <Button
+                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                            icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                        />
+                                    </Tooltip>
+
+                                    <Tooltip title={"Mas opciones"}>
+                                        <Button
+                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                            icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                        />
+                                    </Tooltip>
+                                </div>
+                            </div>
+                        </div>
+
+                        </Col>
+                    </Row>
+
+
+                       <Row>
+
+                           <Col span={15} style={{overflowY: "auto", height: 450, paddingRight: 10}}>
+
+                               <div style={{paddingLeft: 10}}>
+
+
+                                   <p style={{fontSize: '30px', fontWeight: 'bold'}}>
+                                       {selectedModule.nombre}
+                                   </p>
+
+
+                                   <div>
+
+                                       <p
+                                           style={{
+
+                                               padding: '10px',
+                                               backgroundColor: '#f0f2f5',
+                                               borderRadius: '5px',
+                                               display: 'flex', // Usar flex para alinear el ícono y el texto
+                                               alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
+                                           }}
+                                       >
+                                           <MessageOutlined
+                                               style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
+                                           {selectedModule.descripcion}
+                                       </p>
+
+                                       <div style={{
+                                           display: 'flex',
+                                           alignItems: 'initial',
+                                           justifyContent: "space-between"
+                                       }}>
+                                           <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
+                                               <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <RedoOutlined/>
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           Estado:<span style={{
+                                                           fontSize: '14px',
+                                                           paddingLeft: 5,
+                                                           margin: 0,
+                                                           fontWeight: '400'
+                                                       }}>{selectedModule.estado}</span>
+                                                       </p>
+
+
+                                                   </div>
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <CalendarOutlined/>
+
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           Fecha inicio:
+                                                           <span style={{
+                                                               fontSize: '14px',
+                                                               paddingLeft: 5,
+                                                               margin: 0,
+                                                               fontWeight: '400'
+                                                           }}>
         {new Date(new Date(selectedModule.fechaInicio).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
+                                                       </p>
+                                                   </div>
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <CalendarOutlined/>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha fin:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           Fecha fin:
+                                                           <span style={{
+                                                               fontSize: '14px',
+                                                               paddingLeft: 5,
+                                                               margin: 0,
+                                                               fontWeight: '400'
+                                                           }}>
         {new Date(new Date(selectedModule.fechaFin).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <HourglassOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Duración:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>
+                                                       </p>
+                                                   </div>
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <HourglassOutlined/>
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           Duración:<span style={{
+                                                           fontSize: '14px',
+                                                           paddingLeft: 5,
+                                                           margin: 0,
+                                                           fontWeight: '400'
+                                                       }}>
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
@@ -2653,16 +3134,30 @@ console.log("entro aqui---------------")
             } días
         </span>
                                     </span>
-                                            </p>
+                                                       </p>
 
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                                                   </div>
 
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                   <div style={{marginTop: 20}}>
+
+
+                                                       <Tabs defaultActiveKey="1" items={itemsTapModulos} onChange={onChange}/>
+
+
+                                                   </div>
+                                               </div>
+                                           </div>
+
+                                           <div style={{
+                                               display: 'flex',
+                                               flexDirection: 'column',
+                                               gap: '16px',
+                                               color: '#656f7d'
+                                           }}>
+
+
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '8px',}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -2670,61 +3165,126 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                        <div style={{width: 300}}>
+                                                <div style={{width: 300}}>
 
-                                            <Select
-                                                mode="multiple"
-                                                style={{width: '100%'}}
-                                                placeholder="Seleccionar una opción"
-                                                value={selectedModuloUserIds}
-                                                onChange={handleUserModuloChange}
-                                                onBlur={handleUpdateModuloUsers}
-                                            >
-                                                {usuarios.map(({value, label, emoji, desc}) => (
-                                                    <Option key={value} value={value}>
-                                                        <Space>
-                                                            <span role="img" aria-label={label}>{emoji}</span>
-                                                            {desc}
-                                                        </Space>
-                                                    </Option>
-                                                ))}
-                                            </Select>
+                                                    <Select
+                                                        mode="multiple"
+                                                        style={{width: '100%'}}
+                                                        placeholder="Seleccionar una opción"
+                                                        value={selectedModuloUserIds}
+                                                        onChange={handleUserModuloChange}
+                                                        onBlur={handleUpdateModuloUsers}
+                                                    >
+                                                        {usuarios.map(({value, label, emoji, desc}) => (
+                                                            <Option key={value} value={value}>
+                                                                <Space>
+                                                                    <span role="img" aria-label={label}>{emoji}</span>
+                                                                    {desc}
+                                                                </Space>
+                                                            </Option>
+                                                        ))}
+                                                    </Select>
 
-                                        </div>
-                                    </div>
+                                                </div>
+                                            </div>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
 
-                                        <FlagOutlined
-                                            style={{
-                                                fontSize: '16px',
-                                                color: 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                        <p style={{fontSize: '14px', margin: 0}}>
+                                                <FlagOutlined
+                                                    style={{
+                                                        fontSize: '16px',
+                                                        color: 'gray' // Color predeterminado si es null
+                                                    }}
+                                                />
+                                                <p style={{fontSize: '14px', margin: 0}}>
         <span style={{fontWeight: 600, marginRight: 5}}>
             Prioridad:
         </span> <FlagOutlined
-                                            style={{
-                                                fontSize: '16px', marginRight: 5,
-                                                color: selectedModule?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                            <span
-                                                style={{color: selectedModule?.prioridad?.backgroundPrioridad || 'gray'}}
-                                            >{selectedModule?.prioridad?.nombre || "Sin prioridad"}</span>
-                                        </p>
+                                                    style={{
+                                                        fontSize: '16px', marginRight: 5,
+                                                        color: selectedModule?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                                    }}
+                                                />
+                                                    <span
+                                                        style={{color: selectedModule?.prioridad?.backgroundPrioridad || 'gray'}}
+                                                    >{selectedModule?.prioridad?.nombre || "Sin prioridad"}</span>
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+
                                     </div>
+
 
                                 </div>
 
-
                             </div>
+                        </Col>
+
+                           <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
+                            <h2>Actividades</h2>
+                            <Timeline style={{paddingLeft: 20}}
+                                      items={[
+
+                                          {
+                                              color:'green',
+                                              children: (
+                                                  <span style={{display: 'flex', alignItems: 'center'}}>
+                <Avatar size="small" style={{marginRight: '4px'}}>
+                    <UserOutlined
+                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
+                </Avatar>
+                <span style={{color: '#4f5762', fontWeight: 600}}>
+                    {`${selectedModule.userCreate}`} {/* Texto de usuario en negro */}
+                </span>
+                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
+               <span style={{color: '#4f5762', fontWeight: 600}}>
+    {` ${dayjs(selectedModule.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
+</span>
+            </span>
+                                              ),
+                                          },
+
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                      ]}
+
+                            />
+                        </Col>
 
 
-                        </div>
 
-                    </div>
+                    </Row>
+                   </>
+
+
                 )}
 
                 {modalType === 'editarModulo' && (
@@ -2748,96 +3308,178 @@ console.log("entro aqui---------------")
 
                 {modalType === 'verTarea' && selectedTarea && (
 
+<>
+                    <Row style={{borderBottom:'1px solid #f0f3f7', paddingBottom:6}}>
+                        <Col span={24}>
 
-                    <div style={{paddingLeft: 10}}>
+                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
 
+                                <div>
+                                <span style={{
+                                    backgroundColor: `${selectedProject.backgroundProyecto}`,
+                                    padding: '4px 8px',
+                                    color: '#ffffff',
+                                    borderRadius: '4px'
+                                }}>
+                    T
+                </span>
+                                    <spa>
+                                        <BookOutlined style={{fontSize: '17px', color: '#656f7d', marginLeft: 8}}/>
+                                    </spa>
 
-                        <p style={{fontSize: '30px', fontWeight: 'bold'}}>
-                            {selectedTarea.nombre}
-                        </p>
+                                    <span style={{fontWeight: 600, color: '#656f7d', fontSize: '17px', marginLeft: 8}}>
+                                    /
+                                </span>
 
+                                    <span style={{
+                                        marginLeft: 8, color: '#656f7d'
 
-                        <div>
+                                    }}>
 
-                            <p
-                                style={{
+                        TAREA
+                </span>
 
-                                    padding: '10px',
-                                    backgroundColor: '#f0f2f5',
-                                    borderRadius: '5px',
-                                    display: 'flex', // Usar flex para alinear el ícono y el texto
-                                    alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
-                                }}
-                            >
-                                <MessageOutlined
-                                    style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                {selectedTarea.descripcion}
-                            </p>
-
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: "space-between"}}>
-                                <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <RedoOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Estado:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>{selectedTarea.estado}</span>
-                                            </p>
+                                </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 30}}>
 
 
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha inicio:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                    <div style={{display: 'flex', gap: '3px'}}>
+
+                                        <Tooltip title={"Eliminar tarea"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                            />
+                                        </Tooltip>
+
+                                        <Tooltip title={"Copiar tarea"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                            />
+                                        </Tooltip>
+
+                                        <Tooltip title={"Calificar tarea"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                            />
+                                        </Tooltip>
+
+                                        <Tooltip title={"Mas opciones"}>
+                                            <Button
+                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                            />
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </Col>
+                    </Row>
+
+    <Row>
+
+        <Col span={15} style={{overflowY: "auto", height: 450, paddingRight: 10}}>
+
+            <div style={{paddingLeft: 10}}>
+
+
+                <p style={{fontSize: '30px', fontWeight: 'bold'}}>
+                    {selectedTarea.nombre}
+                </p>
+
+
+                <div>
+
+                    <p
+                        style={{
+
+                            padding: '10px',
+                            backgroundColor: '#f0f2f5',
+                            borderRadius: '5px',
+                            display: 'flex', // Usar flex para alinear el ícono y el texto
+                            alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
+                        }}
+                    >
+                        <MessageOutlined
+                            style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
+                        {selectedTarea.descripcion}
+                    </p>
+
+                    <div style={{display: 'flex', alignItems: 'initial', justifyContent: "space-between"}}>
+                        <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                                marginTop: 5,
+                                color: '#656f7d'
+                            }}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <RedoOutlined/>
+                                    <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                        Estado:<span style={{
+                                        fontSize: '14px',
+                                        paddingLeft: 5,
+                                        margin: 0,
+                                        fontWeight: '400'
+                                    }}>{selectedTarea.estado}</span>
+                                    </p>
+
+
+                                </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <CalendarOutlined/>
+
+                                    <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                        Fecha inicio:
+                                        <span style={{
+                                            fontSize: '14px',
+                                            paddingLeft: 5,
+                                            margin: 0,
+                                            fontWeight: '400'
+                                        }}>
         {new Date(new Date(selectedTarea.fechaInicio).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
+                                    </p>
+                                </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <CalendarOutlined/>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha fin:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                    <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                        Fecha fin:
+                                        <span style={{
+                                            fontSize: '14px',
+                                            paddingLeft: 5,
+                                            margin: 0,
+                                            fontWeight: '400'
+                                        }}>
         {new Date(new Date(selectedTarea.fechaFin).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
+                                    </p>
 
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <HourglassOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Duración:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>
+                                </div>
+                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <HourglassOutlined/>
+                                    <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                        Duración:<span style={{
+                                        fontSize: '14px',
+                                        paddingLeft: 5,
+                                        margin: 0,
+                                        fontWeight: '400'
+                                    }}>
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
@@ -2846,15 +3488,21 @@ console.log("entro aqui---------------")
             } días
         </span>
                                     </span>
-                                            </p>
+                                    </p>
 
-                                        </div>
-                                    </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px',
+                            marginTop: 5,
+                            color: '#656f7d'
+                        }}>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -2862,55 +3510,131 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                        <div style={{width: 300}}>
-                                            <Select
-                                                mode="multiple"
-                                                style={{width: '100%'}}
-                                                placeholder="Seleccionar una opción"
-                                                value={selectedTareaUserIds}
-                                                onChange={handleUserTareaChange}
-                                                onBlur={handleUpdateTareaUsers}
-                                            >
-                                                {usuarios.map(({value, label, emoji, desc}) => (
-                                                    <Option key={value} value={value}>
-                                                        <Space>
-                                                            <span role="img" aria-label={label}>{emoji}</span>
-                                                            {desc}
-                                                        </Space>
-                                                    </Option>
-                                                ))}
-                                            </Select>
-                                        </div>
-                                    </div>
+                                <div style={{width: 300}}>
+                                    <Select
+                                        mode="multiple"
+                                        style={{width: '100%'}}
+                                        placeholder="Seleccionar una opción"
+                                        value={selectedTareaUserIds}
+                                        onChange={handleUserTareaChange}
+                                        onBlur={handleUpdateTareaUsers}
+                                    >
+                                        {usuarios.map(({value, label, emoji, desc}) => (
+                                            <Option key={value} value={value}>
+                                                <Space>
+                                                    <span role="img" aria-label={label}>{emoji}</span>
+                                                    {desc}
+                                                </Space>
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            </div>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                        <FlagOutlined
-                                            style={{
-                                                fontSize: '16px',
-                                                color: 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                        <p style={{fontSize: '14px', margin: 0}}>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                <FlagOutlined
+                                    style={{
+                                        fontSize: '16px',
+                                        color: 'gray' // Color predeterminado si es null
+                                    }}
+                                />
+                                <p style={{fontSize: '14px', margin: 0}}>
         <span style={{fontWeight: 600, marginRight: 5}}>
             Prioridad:
         </span> <FlagOutlined
-                                            style={{
-                                                fontSize: '16px', marginRight: 5,
-                                                color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                            <span
-                                                style={{color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray'}}
-                                            >{selectedTarea?.prioridad?.nombre || "Sin prioridad"}</span>
-                                        </p>
-                                    </div>
-
-                                </div>
-
+                                    style={{
+                                        fontSize: '16px', marginRight: 5,
+                                        color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                    }}
+                                />
+                                    <span
+                                        style={{color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray'}}
+                                    >{selectedTarea?.prioridad?.nombre || "Sin prioridad"}</span>
+                                </p>
                             </div>
+
                         </div>
 
                     </div>
+                </div>
+                <div style={{marginTop: 20}}>
+
+
+                    <Tabs defaultActiveKey="1" items={itemsTapSubtarea} onChange={onChange}/>
+
+
+                </div>
+
+            </div>
+
+        </Col>
+        <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
+            <h2>Actividades</h2>
+            <Timeline style={{paddingLeft: 20}}
+                      items={[
+
+                          {
+                              color: 'green',
+                              children: (
+                                  <span style={{display: 'flex', alignItems: 'center'}}>
+                <Avatar size="small" style={{marginRight: '4px'}}>
+                    <UserOutlined
+                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
+                </Avatar>
+                <span style={{color: '#4f5762', fontWeight: 600}}>
+                    {`${selectedTarea.userCreate}`} {/* Texto de usuario en negro */}
+                </span>
+                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
+               <span style={{color: '#4f5762', fontWeight: 600}}>
+    {` ${dayjs(selectedTarea.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
+</span>
+            </span>
+                              ),
+                          },
+
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                          {
+                              color: 'red',
+                              children: 'Eliminado solved 2015-09-01',
+                          },
+                      ]}
+            />
+        </Col>
+
+
+    </Row>
+
+
+</>
+
+
                 )}
 
                 {modalType === 'editarTarea' && (
@@ -2937,29 +3661,65 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input />
+                            <Input/>
                         </Form.Item>
+
 
                         <Form.Item
                             name="fechaInicio"
                             label="Fecha de Inicio"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
+                            rules={[
+                                {required: true, message: 'Por favor, selecciona una fecha'},
+                                {
+                                    validator(_, value) {
+                                        // Convertimos selectedProject.fechaInicio a un objeto Date
+                                        const projectStart = new Date(selectedModule.fechaInicio);
+
+                                        // Validamos que value exista y sea mayor a projectStart
+                                        if (!value || new Date(value).getTime() > projectStart.getTime()) {
+                                            return Promise.resolve();
+                                        }
+
+                                        // Mensaje de error si la fecha no es posterior
+                                        return Promise.reject(new Error(`La fecha inicio debe ser igual o posterior a ${projectStart.toISOString().split('T')[0]}`));
+                                    },
+                                },
+                            ]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
+
+
                         <Form.Item
                             name="fechaFin"
-                            label="Fecha de Fin"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
+                            label="Fecha fin"
+                            rules={[
+                                {required: true, message: 'Por favor, selecciona una fecha'},
+                                {
+                                    validator(_, value) {
+                                        // Convertimos selectedProject.fechaInicio a un objeto Date
+                                        const projectStart = new Date(selectedModule.fechaFin);
+                                        projectStart.setDate(projectStart.getDate() + 1);
+                                        // Validamos que value exista y sea mayor a projectStart
+                                        if (!value || new Date(value).getTime() < projectStart.getTime()) {
+                                            return Promise.resolve();
+                                        }
+                                        projectStart.setDate(projectStart.getDate() - 1);
+
+                                        // Mensaje de error si la fecha no es posterior
+                                        return Promise.reject(new Error(`La fecha inicio debe ser menor o igual ${projectStart.toISOString().split('T')[0]}`));
+                                    },
+                                },
+                            ]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
                         <Form.Item
                             name="estado"
                             label="Estado"
-                            rules={[{ required: true, message: 'Por favor selecciona un estado' }]}
+                            rules={[{required: true, message: 'Por favor selecciona un estado'}]}
                         >
                             <Select>
                                 <Select.Option value="PENDIENTE">Pendiente</Select.Option>
@@ -2971,107 +3731,198 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
 
 
+                {modalType === 'verSubtarea' && selectedsubTarea && (
 
-                {modalType === 'verSubtarea' && selectedsubTarea&& (
+                    <>
+                        <Row style={{borderBottom:'1px solid #f0f3f7', paddingBottom:6}}>
+                            <Col span={24}>
 
-                    <div style={{paddingLeft: 10}}>
+                                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+
+                                    <div>
+ <span style={{
+     backgroundColor: `${selectedProject.backgroundProyecto}`,
+     padding: '4px 8px',
+     color: '#ffffff',
+     borderRadius: '4px'
+ }}>
+                    S
+                </span>
+                                        <spa>
+                                            <BookOutlined style={{fontSize: '17px', color: '#656f7d', marginLeft: 8}}/>
+                                        </spa>
+
+                                        <span style={{
+                                            fontWeight: 600,
+                                            color: '#656f7d',
+                                            fontSize: '17px',
+                                            marginLeft: 8
+                                        }}>
+                                    /
+                                </span>
+
+                                        <span style={{
+                                            marginLeft: 8, color: '#656f7d'
+
+                                        }}>
+
+                        SUBTAREA
+                </span>
+
+                                    </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 30}}>
 
 
-                        <p style={{fontSize: '30px', fontWeight: 'bold'}}>
-                            {selectedsubTarea.nombre}
-                        </p>
+                                        <div style={{display: 'flex', gap: '3px'}}>
 
+                                            <Tooltip title={"Eliminar subtarea"}>
+                                                <Button
+                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                    icon={<DeleteOutlined
+                                                        style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                                />
+                                            </Tooltip>
 
-                        <div>
+                                            <Tooltip title={"Copiar subtarea"}>
+                                                <Button
+                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                    icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                                />
+                                            </Tooltip>
 
-                            <p
-                                style={{
+                                            <Tooltip title={"Calificar subtarea"}>
+                                                <Button
+                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                    icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                                />
+                                            </Tooltip>
 
-                                    padding: '10px',
-                                    backgroundColor: '#f0f2f5',
-                                    borderRadius: '5px',
-                                    display: 'flex', // Usar flex para alinear el ícono y el texto
-                                    alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
-                                }}
-                            >
-                                <MessageOutlined
-                                    style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                {selectedsubTarea.descripcion}
-                            </p>
-
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: "space-between"}}>
-                                <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <RedoOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Estado:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>{selectedsubTarea.estado}</span>
-                                            </p>
-
-
+                                            <Tooltip title={"Mas opciones"}>
+                                                <Button
+                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                                    icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
+                                                />
+                                            </Tooltip>
                                         </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha inicio:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                    </div>
+                                </div>
+
+
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col span={15} style={{overflowY: "auto", height: 450, paddingRight: 10}}>
+
+                                <div style={{paddingLeft: 10}}>
+
+
+                                    <p style={{fontSize: '30px', fontWeight: 'bold'}}>
+                                        {selectedsubTarea.nombre}
+                                    </p>
+
+
+                                    <div>
+
+                                        <p
+                                            style={{
+
+                                                padding: '10px',
+                                                backgroundColor: '#f0f2f5',
+                                                borderRadius: '5px',
+                                                display: 'flex', // Usar flex para alinear el ícono y el texto
+                                                alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
+                                            }}
+                                        >
+                                            <MessageOutlined
+                                                style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
+                                            {selectedsubTarea.descripcion}
+                                        </p>
+
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'initial',
+                                            justifyContent: "space-between"
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'flex-start',
+                                                gap: '16px',
+                                                marginTop: 5,
+                                                color: '#656f7d'
+                                            }}>
+                                                <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                        <RedoOutlined/>
+                                                        <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                            Estado:<span style={{
+                                                            fontSize: '14px',
+                                                            paddingLeft: 5,
+                                                            margin: 0,
+                                                            fontWeight: '400'
+                                                        }}>{selectedsubTarea.estado}</span>
+                                                        </p>
+
+
+                                                    </div>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                        <CalendarOutlined/>
+                                                        <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                            Fecha inicio:
+                                                            <span style={{
+                                                                fontSize: '14px',
+                                                                paddingLeft: 5,
+                                                                margin: 0,
+                                                                fontWeight: '400'
+                                                            }}>
         {new Date(new Date(selectedsubTarea.fechaInicio).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
+                                                        </p>
 
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
+                                                    </div>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                        <CalendarOutlined/>
 
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha fin:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                                        <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                            Fecha fin:
+                                                            <span style={{
+                                                                fontSize: '14px',
+                                                                paddingLeft: 5,
+                                                                margin: 0,
+                                                                fontWeight: '400'
+                                                            }}>
         {new Date(new Date(selectedsubTarea.fechaFin).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
         })}
     </span>
-                                            </p>
+                                                        </p>
 
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <HourglassOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Duración:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
+                                                    </div>
+                                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                        <HourglassOutlined/>
+                                                        <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                            Duración:
+                                                            <span style={{
+                                                                fontSize: '14px',
+                                                                paddingLeft: 5,
+                                                                margin: 0,
+                                                                fontWeight: '400'
+                                                            }}>
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
@@ -3080,15 +3931,21 @@ console.log("entro aqui---------------")
             } días
         </span>
                                     </span>
-                                            </p>
+                                                        </p>
 
-                                        </div>
-                                    </div>
-                                </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '16px',
+                                                marginTop: 5,
+                                                color: '#656f7d'
+                                            }}>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -3097,56 +3954,122 @@ console.log("entro aqui---------------")
                                     </span>
 
 
-                                        <div style={{width: 300}}>
-                                            <Select
-                                                mode="multiple"
-                                                style={{width: '100%'}}
-                                                placeholder="Seleccionar una opción"
-                                                value={selectedSubTareaUserIds}
-                                                onChange={handleUserSubTareaChange}
-                                                onBlur={handleUpdateSubTareaUsers}
-                                            >
-                                                {usuarios.map(({value, label, emoji, desc}) => (
-                                                    <Option key={value} value={value}>
-                                                        <Space>
-                                                            <span role="img" aria-label={label}>{emoji}</span>
-                                                            {desc}
-                                                        </Space>
-                                                    </Option>
-                                                ))}
-                                            </Select>
-                                        </div>
+                                                    <div style={{width: 300}}>
+                                                        <Select
+                                                            mode="multiple"
+                                                            style={{width: '100%'}}
+                                                            placeholder="Seleccionar una opción"
+                                                            value={selectedSubTareaUserIds}
+                                                            onChange={handleUserSubTareaChange}
+                                                            onBlur={handleUpdateSubTareaUsers}
+                                                        >
+                                                            {usuarios.map(({value, label, emoji, desc}) => (
+                                                                <Option key={value} value={value}>
+                                                                    <Space>
+                                                                        <span role="img"
+                                                                              aria-label={label}>{emoji}</span>
+                                                                        {desc}
+                                                                    </Space>
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </div>
 
-                                    </div>
+                                                </div>
 
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                        <FlagOutlined
-                                            style={{
-                                                fontSize: '16px',
-                                                color: 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                        <p style={{fontSize: '14px', margin: 0}}>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                    <FlagOutlined
+                                                        style={{
+                                                            fontSize: '16px',
+                                                            color: 'gray' // Color predeterminado si es null
+                                                        }}
+                                                    />
+                                                    <p style={{fontSize: '14px', margin: 0}}>
         <span style={{fontWeight: 600, marginRight: 5}}>
             Prioridad:
         </span> <FlagOutlined
-                                            style={{
-                                                fontSize: '16px', marginRight: 5,
-                                                color: selectedsubTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                            <span
-                                                style={{color: selectedsubTarea?.prioridad?.backgroundPrioridad || 'gray'}}
-                                            >{selectedsubTarea?.prioridad?.nombre || "Sin prioridad"}</span>
-                                        </p>
+                                                        style={{
+                                                            fontSize: '16px', marginRight: 5,
+                                                            color: selectedsubTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
+                                                        }}
+                                                    />
+                                                        <span
+                                                            style={{color: selectedsubTarea?.prioridad?.backgroundPrioridad || 'gray'}}
+                                                        >{selectedsubTarea?.prioridad?.nombre || "Sin prioridad"}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
                                     </div>
+
+                                  
+
                                 </div>
-                            </div>
+
+                            </Col>
+                            <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
+                                <h2>Actividades</h2>
+                                <Timeline style={{paddingLeft: 20}}
+                                      items={[
+
+                                          {
+                                              color: 'green',
+                                              children: (
+                                                  <span style={{display: 'flex', alignItems: 'center'}}>
+                <Avatar size="small" style={{marginRight: '4px'}}>
+                    <UserOutlined
+                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
+                </Avatar>
+                <span style={{color: '#4f5762', fontWeight: 600}}>
+                    {`${selectedsubTarea.userCreate}`} {/* Texto de usuario en negro */}
+                </span>
+                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
+               <span style={{color: '#4f5762', fontWeight: 600}}>
+    {` ${dayjs(selectedsubTarea.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
+</span>
+            </span>
+                                              ),
+                                          },
+
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                          {
+                                              color: 'red',
+                                              children: 'Eliminado solved 2015-09-01',
+                                          },
+                                      ]}
+                            />
+                        </Col>
+
+                    </Row>
+
+                    </>
 
 
-                        </div>
-
-                    </div>
                 )}
 
                 {modalType === 'editarSubtarea' && (
@@ -3173,28 +4096,66 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="nombre"
                             label="Nombre"
-                            rules={[{required: true, message: 'Por favor, ingresa el nombre' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                         >
-                            <Input />
+                            <Input/>
                         </Form.Item>
+
+
                         <Form.Item
                             name="fechaInicio"
                             label="Fecha de Inicio"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
+                            rules={[
+                                {required: true, message: 'Por favor, selecciona una fecha'},
+                                {
+                                    validator(_, value) {
+                                        // Convertimos selectedProject.fechaInicio a un objeto Date
+                                        const projectStart = new Date(selectedTarea.fechaInicio);
+
+                                        // Validamos que value exista y sea mayor a projectStart
+                                        if (!value || new Date(value).getTime() > projectStart.getTime()) {
+                                            return Promise.resolve();
+                                        }
+
+                                        // Mensaje de error si la fecha no es posterior
+                                        return Promise.reject(new Error(`La fecha inicio debe ser igual o posterior a ${projectStart.toISOString().split('T')[0]}`));
+                                    },
+                                },
+                            ]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
+
                         <Form.Item
                             name="fechaFin"
-                            label="Fecha de Fin"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
+                            label="Fecha fin"
+                            rules={[
+                                {required: true, message: 'Por favor, selecciona una fecha'},
+                                {
+                                    validator(_, value) {
+                                        // Convertimos selectedProject.fechaInicio a un objeto Date
+                                        const projectStart = new Date(selectedTarea.fechaFin);
+                                        projectStart.setDate(projectStart.getDate() + 1);
+
+                                        // Validamos que value exista y sea mayor a projectStart
+                                        if (!value || new Date(value).getTime() <= projectStart.getTime()) {
+                                            return Promise.resolve();
+                                        }
+                                        projectStart.setDate(projectStart.getDate() - 1);
+                                        // Mensaje de error si la fecha no es posterior
+                                        return Promise.reject(new Error(`La fecha inicio debe ser igual o posterior a ${projectStart.toISOString().split('T')[0]}`));
+                                    },
+                                },
+                            ]}
                         >
-                            <DatePicker />
+                            <DatePicker/>
                         </Form.Item>
+
+
                         <Form.Item
                             name="estado"
                             label="Estado"
-                            rules={[{ required: true, message: 'Por favor selecciona un estado' }]}
+                            rules={[{required: true, message: 'Por favor selecciona un estado'}]}
                         >
                             <Select>
                                 <Select.Option value="PENDIENTE">Pendiente</Select.Option>
@@ -3207,17 +4168,14 @@ console.log("entro aqui---------------")
                         <Form.Item
                             name="descripcion"
                             label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
                         >
-                            <Input.TextArea />
+                            <Input.TextArea/>
                         </Form.Item>
                     </Form>
                 )}
 
             </Modal>
-
-
-
 
 
         </>

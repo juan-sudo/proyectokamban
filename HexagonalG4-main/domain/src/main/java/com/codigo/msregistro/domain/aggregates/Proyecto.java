@@ -98,4 +98,22 @@ public class Proyecto {
             this.eliminado = false;  // Establecer como false si es null
         }
     }
+
+    @Column(name = "create_at")
+    private Date createAt;
+
+    @Column(name = "user_create")
+    private String userCreate;
+
+    @Column(name = "modify_at")
+    private Date modifyAt;
+
+    @Column(name = "user_modify")
+    private String userModify;
+
+    @Column(name = "delete_at")
+    private Date deleteAt;
+
+    @Column(name = "user_delete")
+    private String userDelete;
 }

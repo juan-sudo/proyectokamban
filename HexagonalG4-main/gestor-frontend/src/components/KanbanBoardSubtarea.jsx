@@ -1,42 +1,35 @@
 import Swal from 'sweetalert2';
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import {Card, Col, Row, Button, Modal, Tooltip, Avatar, Space, Form, Popover, Drawer, Timeline} from 'antd';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {Card, Col, Row, Button, Modal, Tooltip, Avatar, Space, Form, Popover, Drawer, Timeline, Divider,} from 'antd';
+import { DragDropContext, Droppable, Draggable, } from 'react-beautiful-dnd';
 import axios from 'axios';
 import {useNavigate, useParams} from 'react-router-dom';
 import {
     DatePicker,
     Spin,
-
     Input,
 
     Select,
 
 } from 'antd';
 import {
-
     EditOutlined,
     CloseOutlined,
-
+    CheckOutlined,
     MenuOutlined,
-
     EllipsisOutlined,
     UserAddOutlined,
     CalendarOutlined,
-
     FolderOutlined,
-
-    RedoOutlined,
-
     UserOutlined,
     MessageOutlined,
-    HourglassOutlined,
 
     FlagOutlined,
     ArrowLeftOutlined,
     DeleteOutlined,
-    MergeOutlined, CopyOutlined, ArrowRightOutlined, StarOutlined
+    MergeOutlined, CopyOutlined, ArrowRightOutlined, StarOutlined,
+    RightCircleOutlined
 
 
 } from '@ant-design/icons';
@@ -71,6 +64,9 @@ const KanbanBoardSubtarea = () => {
     const [selectedTareaId, setSelectedTareaId] = useState(null);
     const [selectedTarea, setSelectedTarea] = useState(null); // proyecto seleccionado
     const [selectedTareaUserIds, setSelectedTareaUserIds] = useState([]);
+    const [selectedPriroridadIds, setSelectedPriroridadIds] = useState([]);
+
+
     //const [selectedModule,  ] = useState(null); // proyecto seleccionado
     const [selectedModule, setSelectedModule] = useState(null); // proyecto seleccionado
     const [usuarios, setUsuario] = useState([]);
@@ -82,26 +78,49 @@ const KanbanBoardSubtarea = () => {
     const [selectedTask, setSelectedTask] = useState(null); // State to hold the selected task
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const [prioridad, setPrioridad] = useState([]);
+
+    const [selectedOptionSubtarea, setSelectedOptionSubtarea] = useState(null);
+    const [editingSubtareaId, setEditingSubtareaId] = useState(null);
+
     useEffect(() => {
         fetchUsuario();
         fetchTasks();
+        fetchPrioridad();
+        console.log("subatrea", tareaData);
 
-        console.log("esates modulo"+moduleData)
-        console.log("tareas esta ----"+selectedTask)
 
     }, []);
 
-
     const showDrawer = (task) => {
+        if (!task) {
+            console.error("La tarea proporcionada es nula o no tiene datos completos.");
+            return;
+        }
 
-        console.log("id que va: "+task.id)
-        setSelectedTask(task); // Set the selected task
-
-
-        setOpen(true); // Open the drawer
+        setSelectedTask(task); // Establece la tarea seleccionada
+        setSelectedOptionSubtarea(null); // Limpia la opción de subtarea si es necesario
+        setOpen(true); // Abre el drawer
     };
 
 
+    const fetchPrioridad = async () => {
+        try {
+            const response = await axios.get(`http://localhost:8080/api/prioridad`);
+            if (Array.isArray(response.data)) {
+                const usuarioValor = response.data.map(prioridad => ({
+                    label: prioridad.nombre,
+                    value: prioridad.id,
+                    color: prioridad.backgroundPrioridad,
+                    desc: prioridad.nombre,
+                }));
+                setPrioridad(usuarioValor);
+            }
+        } catch (error) {
+            console.error("Error al obtener prioridades:", error);
+            // Puedes mostrar un mensaje de error si es necesario
+        }
+    };
 
 // Maneja la apertura del Drawer
     const handleOpenDrawer = () => {
@@ -117,13 +136,9 @@ const KanbanBoardSubtarea = () => {
         setOpen(false);
     };
 
-    //PARA EDITAR TAREA EN DRAW
 
     const [isEditing, setIsEditing] = useState(false);
 
-    // Manejar el click en el botón "Editar"
-    // Manejar el clic en el botón "Editar"
-    // En tu función handleEditClick
     const handleEditClick = () => {
         if (selectedTask) {
             form.setFieldsValue({
@@ -139,7 +154,7 @@ const KanbanBoardSubtarea = () => {
 
         try {
             const values = await form.validateFields();
-            console.log("Valores enviados:", values); // Asegúrate de que 'nombre' tenga un valor
+
 
             const url = `${backendUrl}/api/tareas/${tareaId}/subTareas/${subTareaId}`;
 
@@ -178,7 +193,7 @@ const KanbanBoardSubtarea = () => {
     useEffect(() => {
         if (selectedTask && selectedTask.usuarios) {
             const userIds = selectedTask.usuarios.map(user => user.id);
-            console.log("usuariros de tarea:::: "+userIds);
+
             setSelectedTareaUserIds(userIds);
 
 
@@ -188,6 +203,27 @@ const KanbanBoardSubtarea = () => {
 
         }
     }, [selectedTask]);
+
+    useEffect(() => {
+        console.log("Esta valor:", selectedTask);
+        if (selectedTask && selectedTask.prioridad) {
+            const userIds = Array.isArray(selectedTask.prioridad)
+                ? selectedTask.prioridad.map(prioridad => prioridad.id)
+                : [selectedTask.prioridad.id]; // Aquí asumimos que `prioridad` es un objeto
+            console.log("IDs extraídos de prioridades:", userIds);
+            setSelectedPriroridadIds(userIds);
+        } else {
+            setSelectedPriroridadIds([]);
+        }
+    }, [selectedTask]);
+
+    // useEffect separado para actualizar la prioridad
+    useEffect(() => {
+        if (selectedTask && selectedTask.prioridad) {
+            console.log("La prioridad de la tarea seleccionada ha cambiado:", selectedTask.prioridad);
+        }
+    }, [selectedTask?.prioridad]); // Se ejecuta solo cuando cambia `selectedTask.prioridad`
+
 
     const onClose = () => {
         setOpen(false); // Close the drawer
@@ -210,12 +246,8 @@ const KanbanBoardSubtarea = () => {
                     <ArrowRightOutlined style={{marginLeft: 8}}/> {/* Ícono de mover a la derecha */}
                 </Row>
             </div>
-            <div onClick={() => handleEditTask(task.id)} style={{cursor: 'pointer'}}>
-                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
-                    <EditOutlined style={{marginRight: 8}}/> {/* Ícono de editar */}
-                    <span>Editar tarea</span>
-                </Row>
-            </div>
+
+
             <div onClick={() => handleDeleteTask(task.id)} style={{cursor: 'pointer'}}>
                 <Row align="middle" style={{padding: 4, borderRadius: 5, color: "red"}}>
                     <DeleteOutlined style={{marginRight: 8}}/> {/* Ícono de eliminar */}
@@ -244,29 +276,28 @@ const KanbanBoardSubtarea = () => {
         <>
             <div onClick={() => handleCopyTask(taskId)} style={{cursor: 'pointer'}}>
                 <Row align="middle" style={{padding: 4, borderRadius: 5}}>
-                    <CopyOutlined style={{marginRight: 8}} /> {/* Ícono de copiar */}
+                    <CopyOutlined style={{marginRight: 8}}/> {/* Ícono de copiar */}
                     <span>Copiar tarea</span>
-                    <span>{taskId}</span>
+
                 </Row>
             </div>
 
-            <div   style={{cursor: 'pointer'}}>
+
+            <div style={{cursor: 'pointer'}}>
                 <Row align="middle" style={{padding: 4, borderRadius: 5}}>
-                    <ArrowLeftOutlined style={{marginRight: 8}} /> {/* Ícono de mover a la izquierda */}
+                    <ArrowLeftOutlined style={{marginRight: 8}}/> {/* Ícono de mover a la izquierda */}
                     <span>Mover tarea</span>
-                    <ArrowRightOutlined style={{marginLeft: 8}} /> {/* Ícono de mover a la derecha */}
+                    <ArrowRightOutlined style={{marginLeft: 8}}/> {/* Ícono de mover a la derecha */}
                 </Row>
             </div>
-            <div  onClick={() => showModal('EditarTarea',null,moduleDataId,null, taskId)} style={{cursor: 'pointer'}}>
-                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
-                    <EditOutlined style={{marginRight: 8}} /> {/* Ícono de editar */}
-                    <span>Editar tarea</span>
-                </Row>
-            </div>
-            <div onClick={() => handleDeleteTask(taskId,moduleDataId,nombreTarea)} style={{cursor: 'pointer'}}>
+            {/* Separador vertical */}
+            <Divider type="horizontal" style={{ backgroundColor: '#d9d9d9', padding:0, marginTop:6,marginBottom:6 }} />
+
+
+            <div onClick={() => handleDeleteTask(taskId, moduleDataId, nombreTarea)} style={{cursor: 'pointer'}}>
                 <Row align="middle" style={{padding: 4, borderRadius: 5, color: "red"}}>
-                    <DeleteOutlined style={{marginRight: 8}} /> {/* Ícono de eliminar */}
-                    <span>Eliminar tarea</span>
+                    <DeleteOutlined style={{marginRight: 8}}/> {/* Ícono de eliminar */}
+                    <span>Eliminar Sub tarea</span>
                 </Row>
             </div>
         </>
@@ -277,7 +308,7 @@ const KanbanBoardSubtarea = () => {
     useEffect(() => {
         if (selectedTarea && selectedTarea.usuarios) {
             const userIds = selectedTarea.usuarios.map(user => user.id);
-            console.log("usuariros de tarea:::: "+userIds);
+            console.log("usuariros de tarea:::: " + userIds);
             setSelectedTareaUserIds(userIds);
 
 
@@ -289,9 +320,8 @@ const KanbanBoardSubtarea = () => {
     }, [selectedTarea]);
 
 
-
     useEffect(() => {
-        console.log("Tarea seleccionada:", selectedTarea);
+
         if (selectedTarea) {
             const { nombre, fechaInicio, fechaFin, descripcion, estado } = selectedTarea;
             form.setFieldsValue({
@@ -324,7 +354,8 @@ const KanbanBoardSubtarea = () => {
         // Si el usuario confirma, se procede a eliminar
         if (result.isConfirmed) {
             try {
-                const response = await axios.delete(`/api/modulos/${moduloId}/tareas/delete/${taskId}`);
+                const response = await axios.delete(`/api/tareas/${tareaId}/subTareas/delete/${taskId}`);
+                ///api/tareas/{tareaId}/subTareas/delete/{idTarea}
                 if (response.status === 200) {
                     Swal.fire(
                         '¡Eliminado!',
@@ -367,7 +398,7 @@ const KanbanBoardSubtarea = () => {
     };
 //Eliminar USUARIO TAREA
     const handleUserTareaChange = (newUserIds) => {
-        console.log("id selecionado para elimiar::-"+newUserIds)
+
 
         const removedUserIds = selectedTareaUserIds.filter(id => !newUserIds.includes(id));
 
@@ -376,8 +407,6 @@ const KanbanBoardSubtarea = () => {
             try {
                 await axios.delete(`http://localhost:8080/api/tareas/${tareaData.id}/subTareas/${selectedTask.id}/usuarios/${userId}`);
 
-                //http://localhost:8080/api/modulos/2/tareas/1/usuarios/4
-                // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
 
                 await fetchTasks();
 
@@ -399,12 +428,6 @@ const KanbanBoardSubtarea = () => {
             console.log("Usuarios seleccionados:", selectedTareaUserIds);
             await axios.put(`http://localhost:8080/api/tareas/${tareaData.id}/subTareas/${selectedTask.id}/usuarios`, selectedTareaUserIds);
 
-            ////http://localhost:8080/api/modulos/2/tareas/1/usuarios
-
-            // /api/proyectos/{proyectoId}/modulos/{id}/usuarios
-            //message.success('Usuarios actualizados correctamente');
-            // Actualizar el estado del proyecto para reflejar los usuarios asignados
-            // Vuelve a obtener todos los proyectos para reflejar los cambios
             await fetchTasks();
 
             const updatedUsuarios = usuarios
@@ -430,14 +453,15 @@ const KanbanBoardSubtarea = () => {
             // Obtener datos del modulo
             const moduloResponse = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}`);
             const moduleData = moduloResponse.data;
-            console.log("modulos aqui...........::",moduleData);
+
             // Actualiza el estado de projectData
             setModuleData(moduleData);
 
             const responseTarea = await axios.get(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}`);
             const tareaData = responseTarea.data;
             setTareaData(tareaData); // Actualiza el estado del módulo
-            console.log("tareas aquii::",tareaData);
+
+            console.log("lo que traea::"+tareaData)
             // Actualiza el estado de projectData
 
             // Actualiza el estado de projectData
@@ -465,7 +489,10 @@ const KanbanBoardSubtarea = () => {
                         estado: subtarea.estado|| '-', // Agrega el estado de la tarea
                         usuarios:subtarea.usuarios||'sin usuarios',
                         prioridad:subtarea.prioridad||'-',
-                        subtareas:subtarea.subtareas||'0'
+                        subtareas:subtarea.subtareas||'0',
+                        createAt:subtarea.createAt,
+                        userCreate:subtarea.userCreate
+
                     }
 
                 }), {}),
@@ -610,16 +637,28 @@ const KanbanBoardSubtarea = () => {
         setIsHoveredCalendario(null); // Limpiar el estado cuando se sale de la fila
     };
 
+    //FECHA fin HOVER
+    const [isHoveredCalendarioFin, setIsHoveredCalendarioFin] = useState(null);
 
-    //HOVER PRIORIDAD
+    const handleMouseEnterCalendarioFin = (rowId) => {
+        setIsHoveredCalendarioFin(rowId); // Establecer la fila que se está "hovering"
+    };
+
+    const handleMouseLeaveCalendarioFin = () => {
+        setIsHoveredCalendarioFin(null); // Limpiar el estado cuando se sale de la fila
+    };
+
+    //DOBLE CLICK EN  PRIORIDAD
 
     const [isHoveredPrioridad, setIsHoveredPrioridad] = useState(null);
 
     const handleMouseEnterPrioridad = (rowId) => {
+
         setIsHoveredPrioridad(rowId); // Establecer la fila que se está "hovering"
     };
 
     const handleMouseLeavePrioridad = () => {
+
         setIsHoveredPrioridad(null); // Limpiar el estado cuando se sale de la fila
     };
 
@@ -635,6 +674,39 @@ const KanbanBoardSubtarea = () => {
         setIsHoveredSubtarea(null); // Limpiar el estado cuando se sale de la fila
     };
 
+    const handleChangeSubtareaPrioridad = async (value, tareaId, subtareaId) => {
+        setSelectedOptionSubtarea(value === 'none' ? null : prioridad.find(option => option.value === value));
+
+        try {
+            let response;
+            if (value === 'none') {
+                response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad`);
+                console.log("Prioridad actualizada a null:", response.data);
+                // Actualiza selectedTask para reflejar que no hay prioridad
+                setSelectedTask(prev => ({
+                    ...prev,
+                    id: +subtareaId,
+                    prioridad: null // Asegúrate de establecer esto en null
+                }));
+            } else {
+                response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad/${value}`);
+                console.log("Prioridad actualizada:", response.data);
+                const newPriority = prioridad.find(option => option.value === value);
+                // Actualiza selectedTask con la nueva prioridad
+                setSelectedTask(prev => ({
+                    ...prev,
+                    id: +subtareaId,
+                    prioridad: newPriority
+                }));
+            }
+
+            await fetchTasks(); // Asegúrate de actualizar la lista de tareas
+        } catch (error) {
+            console.error("Error al actualizar la prioridad:", error);
+        }
+        setEditingSubtareaId(null);
+    };
+
 
     const showModal = (typeModal, moduloId = null, tareaId = null,columnId=null) => {
 
@@ -644,82 +716,15 @@ const KanbanBoardSubtarea = () => {
         setSelectedColumnId(columnId);
         setSelectedTareaId(tareaId);
 
-
-
         setIsModalOpen(true);
-
 
         if (typeModal === 'AñadirSubTarea'&& moduloId&&tareaId) {
             // Resetea el formulario para que esté vacío al añadir un proyecto o módulo
             form.resetFields();
         }
 
-        if (typeModal === 'verTarea' && id && moduloId && tareaId) {
-
-            // Asegúrate de que projectData sea un arreglo
-            const data = Array.isArray(moduleData) ? moduleData : [moduleData];
-
-            const modulo = data.find(p => p.id === id);
-            console.log("data proyecto aqui::"+data)
-            console.log("proyecto aqui::"+modulo)
-
-            // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
-            if (modulo) {
-
-                const tareaM = Array.isArray(tareaData) ? tareaData : [tareaData];
-                const tarea = tareaM.find(m => m.id === moduloId);
-
-                console.log("modulo aqui::"+tarea)
 
 
-
-                // Si se encuentra el módulo, actualiza el estado con ese módulo
-                if (modulo) {
-                    setSelectedModule(modulo);
-                    const tarea = modulo.tareas.find(t => t.id === Number(tareaId));
-                    if (tarea) {
-                        console.log("entra a tarea-------")
-                        setSelectedTarea(tarea);
-                    } else {
-                        console.error("Tarea no encontrada");
-                    }
-
-                } else {
-                    console.error("Módulo no encontrado");
-                }
-            } else {
-                console.error("Proyecto no encontrado");
-            }
-        }
-
-
-        // Lógica para editar tarea
-        if (typeModal === 'EditarTarea'&& moduloId&&tareaId) {
-
-            console.log("id de modulo"+moduloId);
-
-
-            const dataM = Array.isArray(moduleData) ? moduleData : [moduleData];
-            const moduloM = dataM.find(m => m.id === moduloId);
-
-            console.log("esat en modulo_"+moduloM);
-
-            // Si se encuentra el módulo, actualiza el estado con ese módulo
-            if(moduloM) {
-                setSelectedModule(moduloM);
-                const tarea = moduloM.tareas.find(t => t.id === Number(tareaId));
-                if (tarea) {
-                    console.log("entra a tarea-------")
-                    setSelectedTarea(tarea);
-                } else {
-                    console.error("Tarea no encontrada");
-                }
-
-            } else {
-                console.error("Módulo no encontrado");
-            }
-
-        }
 
         // Encuentra el proyecto por su ID
 
@@ -870,8 +875,7 @@ const KanbanBoardSubtarea = () => {
                     Atras
                 </Button>
 
-
-                <Tooltip title={tareaData ? tareaData.nombre : 'Cargando nombre del tareas...'} placement="top">
+                <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del modulo...'} placement="top">
             <span style={{
                 fontWeight: 'bold',
                 color: '#555',
@@ -887,10 +891,11 @@ const KanbanBoardSubtarea = () => {
 
                      // Espacio entre el icono y el texto
                  }}/>
-                <span> {truncateTextP(tareaData.nombre, 16)} </span>
+                <span> {truncateTextP(moduleData.nombre, 16)} </span>
             </span>
                 </Tooltip>
                 <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
+
 
                 <Tooltip title={tareaData ? tareaData.nombre : 'Cargando nombre del proyecto...'} placement="top">
         <span style={{color: '#555', fontSize: 14, cursor: 'pointer'}}>
@@ -908,7 +913,7 @@ const KanbanBoardSubtarea = () => {
                 <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
                 < span style={{color: '#555', fontSize: 13, cursor: 'pointer'}}>
                     <MergeOutlined/>
-                   Tareas
+                   Sub Tareas
                 </span>
                 <span><EllipsisOutlined style={{
                     marginTop:4,
@@ -1040,7 +1045,8 @@ const KanbanBoardSubtarea = () => {
                                                                     paddingTop:2,
                                                                     paddingBottom:2,
                                                                     paddingLeft:7,
-                                                                    borderRadius:10
+                                                                    borderRadius:10,
+                                                                    marginTop:10
                                                                 }}
                                                                 onMouseEnter={() => handleMouseEnter(task.id)} // Activa el hover
                                                                 onMouseLeave={handleMouseLeave} // Desactiva el hover
@@ -1159,15 +1165,15 @@ const KanbanBoardSubtarea = () => {
 
                                                                     // Desactiva el hover
 
-                                                                    backgroundColor: isHoveredCalendario===task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
+                                                                    backgroundColor: isHoveredCalendarioFin===task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
                                                                     transition: 'background-color 0.3s ease', // Transición suave
                                                                     paddingTop:2,
                                                                     paddingBottom:0,
                                                                     paddingLeft:7,
                                                                     borderRadius:10
                                                                 }}
-                                                                onMouseEnter={() => handleMouseEnterCalendario(task.id)} // Activa el hover
-                                                                onMouseLeave={handleMouseLeaveCalendario} // Desactiva el hover
+                                                                onMouseEnter={() => handleMouseEnterCalendarioFin(task.id)} // Activa el hover
+                                                                onMouseLeave={handleMouseLeaveCalendarioFin} // Desactiva el hover
 
 
                                                             >
@@ -1248,58 +1254,7 @@ const KanbanBoardSubtarea = () => {
                                                                 </Col>
                                                             </Row>
 
-                                                            <Row
-                                                                style={{
 
-                                                                    backgroundColor: isHoveredSubtarea===task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
-                                                                    transition: 'background-color 0.3s ease', // Transición suave
-                                                                    paddingTop:2,
-                                                                    paddingBottom:0,
-                                                                    paddingLeft:7,
-                                                                    borderRadius:10
-                                                                }}
-                                                                onMouseEnter={() => handleMouseEnterSubtarea(task.id)} // Activa el hover
-                                                                onMouseLeave={handleMouseLeaveSubtarea} // Desactiva el hover
-
-                                                            >
-
-
-                                                                <Col span={2}>
-
-
-                                                                     <span style={{fontWeight: 800}}>
-
-                                                                  <MergeOutlined style={{
-                                                                      fontSize: '13px',
-                                                                      transform: 'scale(1.2)',
-                                                                      color: '#656f7d'
-                                                                  }}/>
-
-
-                                                                </span>
-                                                                </Col>
-                                                                <Col span={22} style={{
-                                                                    fontSize: 12,
-                                                                    color: '#2a2e2a',
-                                                                    fontWeight: 400,
-                                                                }}>
-
-
-                                                                    <span>
-
-
-                                                                    {Array.isArray(task.subtareas) ? task.subtareas.length : 0}
-                                                                </span>
-                                                                    <span style={{marginLeft: 6}}>
-
-
-                                                                        Subtareas
-                                                                    </span>
-                                                                    <span style={{color: "red"}}>{task.id}</span>
-                                                                    <span style={{color: "red"}}>{tareaData.id}</span>
-
-                                                                </Col>
-                                                            </Row>
 
                                                             {hoveredRowIdPoper === task.id && (
                                                                 <Space
@@ -1371,14 +1326,14 @@ const KanbanBoardSubtarea = () => {
             <Modal
                 title={
                     modalType === 'AñadirSubTarea' ? 'Crear SubTarea':
-                        modalType === 'EditarTarea' ? 'Editar tarea':'Editar Tarea'
+                       'Editar Tarea'
 
                 }
                 visible={isModalOpen}
                 onOk={handleOk}
                 onCancel={handleCancel}
                 confirmLoading={isProcessing} // Deshabilita mientras se procesa
-                width={modalType === 'verProyecto'|| modalType === 'verModulo' ||modalType==='verTarea'||modalType==='verSubtarea'? 800 : undefined}
+                width={modalType==='verSubtarea'? 800 : undefined}
                 //  bodyStyle={{  borderBottom: '1px solid #d9d9d9',borderTop: '1px solid #d9d9d9', borderRadius: '8px' }} // Estilo del cuerpo del modal
 
 
@@ -1414,6 +1369,7 @@ const KanbanBoardSubtarea = () => {
                             name="estado"
                             // Ocultar el campo
                             // Ocultar el campo del formulario
+                            style={{display:"none"}}
                             initialValue={selectedColumnId || ''} // Establecer valor inicial
                         >
                             <Input  readOnly />
@@ -1436,216 +1392,6 @@ const KanbanBoardSubtarea = () => {
                     </Form>
                 )}
 
-                {modalType === 'verTarea' && selectedTarea && (
-
-
-                    <div style={{paddingLeft: 10}}>
-
-
-                        <p style={{fontSize: '30px', fontWeight: 'bold'}}>
-                            {selectedTarea.nombre}
-                        </p>
-
-
-                        <div>
-
-                            <p
-                                style={{
-
-                                    padding: '10px',
-                                    backgroundColor: '#f0f2f5',
-                                    borderRadius: '5px',
-                                    display: 'flex', // Usar flex para alinear el ícono y el texto
-                                    alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
-                                }}
-                            >
-                                <MessageOutlined
-                                    style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                {selectedTarea.descripcion}
-                            </p>
-
-                            <div style={{display: 'flex', alignItems: 'center', justifyContent: "space-between"}}>
-                                <div style={{display: 'flex', alignItems: 'flex-start', gap: '16px'}}>
-                                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <RedoOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Estado:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>{selectedTarea.estado}</span>
-                                            </p>
-
-
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
-
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha inicio:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-        {new Date(new Date(selectedTarea.fechaInicio).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        })}
-    </span>
-                                            </p>
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <CalendarOutlined/>
-
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Fecha fin:
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-        {new Date(new Date(selectedTarea.fechaFin).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        })}
-    </span>
-                                            </p>
-
-                                        </div>
-                                        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <HourglassOutlined/>
-                                            <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                Duración:<span style={{
-                                                fontSize: '14px',
-                                                paddingLeft: 5,
-                                                margin: 0,
-                                                fontWeight: '400'
-                                            }}>
-                                        <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
-            {
-                Math.ceil(
-                    (new Date(selectedTarea.fechaFin) - new Date(selectedTarea.fechaInicio)) / (1000 * 60 * 60 * 24)
-                )
-            } días
-        </span>
-                                    </span>
-                                            </p>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
-
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                         <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                      <UserOutlined/>
-                                      <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                        Asignar persona:
-                                      </p>
-                                    </span>
-
-                                        <div style={{width: 300}}>
-                                            <Select
-                                                mode="multiple"
-                                                style={{width: '100%'}}
-                                                placeholder="Seleccionar una opción"
-                                                value={selectedTareaUserIds}
-                                                onChange={handleUserTareaChange}
-                                                onBlur={handleUpdateTareaUsers}
-                                            >
-                                                {usuarios.map(({value, label, emoji, desc}) => (
-                                                    <Option key={value} value={value}>
-                                                        <Space>
-                                                            <span role="img" aria-label={label}>{emoji}</span>
-                                                            {desc}
-                                                        </Space>
-                                                    </Option>
-                                                ))}
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                        <FlagOutlined
-                                            style={{
-                                                fontSize: '16px',
-                                                color: 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                        <p style={{fontSize: '14px', margin: 0}}>
-        <span style={{fontWeight: 600, marginRight: 5}}>
-            Prioridad:
-        </span> <FlagOutlined
-                                            style={{
-                                                fontSize: '16px', marginRight: 5,
-                                                color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                            <span
-                                                style={{color: selectedTarea?.prioridad?.backgroundPrioridad || 'gray'}}
-                                            >{selectedTarea?.prioridad?.nombre || "Sin prioridad"}</span>
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-
-                {modalType === 'EditarTarea' && (
-                    <Form form={form} layout="vertical">
-                        <Form.Item
-                            name="nombre"
-                            label="Nombre"
-                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
-                        >
-                            <Input />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="fechaInicio"
-                            label="Fecha de Inicio"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
-                        >
-                            <DatePicker />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="fechaFin"
-                            label="Fecha de Fin"
-                            rules={[{ required: true, message: 'Por favor, selecciona una fecha' }]}
-                        >
-                            <DatePicker />
-                        </Form.Item>
-
-                        <Form.Item
-                            name="descripcion"
-                            label="Descripción"
-                            rules={[{ required: true, message: 'Por favor, ingresa la descripción' }]}
-                        >
-                            <Input.TextArea />
-                        </Form.Item>
-
-                        {/* Este campo de estado se puede manejar de otra manera si no quieres ocultarlo */}
-                        <Form.Item
-                            name="estado"
-                            style={{ display: 'none' }} // Ocultar el campo
-                        >
-                            <Input readOnly />
-                        </Form.Item>
-                    </Form>
-                )}
 
 
 
@@ -1679,8 +1425,8 @@ const KanbanBoardSubtarea = () => {
 
                     <Form form={form} layout="vertical" hideRequiredMark>
 
-                        <Row gutter={16}>
-                            <Col span={18}>
+                        <Row gutter={16} style={{borderBottom:'1px solid #e6eaf0', marginBottom:9, paddingBottom:9}}>
+                            <Col span={18} >
                                 {isEditing ? (
                                     <Form.Item
                                         name="nombre"
@@ -1690,14 +1436,30 @@ const KanbanBoardSubtarea = () => {
                                         <Input />
                                     </Form.Item>
                                 ) : (
-                                    <p style={{fontSize: 32, color: '#343940'}}>
+                                    <span style={{fontSize: 28, color: '#343940'}}>
 
                                         {selectedTask.nombre || 'Sin título'}
-                                    </p>
+                                    </span>
                                 )}
+                                    <span style={{display: 'flex', alignItems: 'center',
+
+                                    }}>
+       {/* Icono de check */}
+                                        <span style={{
+                                            backgroundColor: '#8957e5', // Cambia el color de fondo según lo desees
+                                            padding: '4px 8px', // Espaciado interno
+                                            borderRadius: '4px', // Esquinas redondeadas opcionales
+                                            color:'#ffffff',
+                                            fontWeight:500
+                                        }}>
+                                             <CheckOutlined style={{marginRight: '4px', color: '#ffffff',
+
+                                             }}/>
+                                            Subtarea</span>
+    </span>
                             </Col>
 
-                            <Col span={6} style={{ display: 'flex', gap: '8px'}}>
+                            <Col span={6} style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
                                 {isEditing ? (
                                     <>
 
@@ -1777,9 +1539,14 @@ const KanbanBoardSubtarea = () => {
                                 />
                             </Col>
                         </Row>
-                        <Row gutter={16}>
-                            <Col span={17}>
 
+
+
+
+
+                        <Row gutter={16}>
+
+                            <Col span={16}>
 
                                 <div>
 
@@ -1788,9 +1555,9 @@ const KanbanBoardSubtarea = () => {
                                         <Form.Item
                                             name="descripcion"
                                             label={"Descripcion"}
-                                            rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
+                                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
                                         >
-                                            <Input.TextArea rows={4} />
+                                            <Input.TextArea rows={4}/>
                                         </Form.Item>
                                     ) : (
                                         // Mostrar el título cuando no está en modo edición
@@ -1807,38 +1574,77 @@ const KanbanBoardSubtarea = () => {
                                             <MessageOutlined
                                                 style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
 
-                                            <span>  {selectedTask.descripcion|| 'Sin descripcion'}  </span>
+                                            <span>  {selectedTask.descripcion || 'Sin descripcion'}  </span>
                                         </p>
                                     )}
 
 
                                 </div>
+
+
+
+                                <Timeline style={{paddingLeft: 20}}
+                                          items={[
+
+                                              {
+                                                  color:'green',
+                                                  children: (
+                                                      <span style={{display: 'flex', alignItems: 'center'}}>
+                <Avatar size="small" style={{marginRight: '4px'}}>
+                    <UserOutlined
+                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
+                </Avatar>
+                <span style={{color: '#4f5762', fontWeight: 600}}>
+                    {`${selectedTask.userCreate}`} {/* Texto de usuario en negro */}
+                </span>
+                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
+               <span style={{color: '#4f5762', fontWeight: 600}}>
+    {` ${dayjs(selectedTask.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
+</span>
+            </span>
+                                                  ),
+                                              },
+
+                                              {
+                                                  color: 'red',
+                                                  children: 'Eliminado solved 2015-09-01',
+                                              },
+                                          ]}
+                                />
                             </Col>
-                            <Col span={7}>
+                            <Col span={8}>
+                            <h3 style={{marginBottom: 20, color:'#4f5762'}}> Fechas</h3>
+
+                                <Timeline >
 
 
-                                <Timeline>
+
+
+
                                     <Timeline.Item
                                         dot={<CalendarOutlined
-                                            style={{fontSize: '20px', color: '#888'}}/>} // Color gris plomo
+                                            style={{fontSize: '15px', color: '#888'}}/>} // Color gris plomo
                                         color="gray" // Color para el ítem
                                     >
+
                                         <div style={{display: 'flex', alignItems: 'center'}}>
+
 
                                             {isEditing ? (
                                                 // Mostrar el campo de entrada cuando está en modo edición
 
                                                 <Form.Item
                                                     name="fechaInicio"
-                                                    label="Fecha inicio"
+                                                    label={"Fecha inicio "}
 
                                                 >
                                                     <DatePicker/>
                                                 </Form.Item>
                                             ) : (
                                                 // Mostrar el título cuando no está en modo edición
+                                                <Tooltip title={'Fecha incio'}>
                                                 <p style={{fontSize: '14px', margin: 0}}>
-                                                    <span style={{fontWeight: 600}}>Fecha inicio: </span>
+
                                                     {selectedTask.fechaInicio ?
                                                         (typeof selectedTask.fechaInicio === 'object' ?
                                                             selectedTask.fechaInicio.format('YYYY-MM-DD') :
@@ -1846,17 +1652,22 @@ const KanbanBoardSubtarea = () => {
                                                         :
                                                         'Sin fecha'} {/* Maneja el caso cuando fechaInicio es undefined o null */}
                                                 </p>
+                                                </Tooltip>
 
                                             )}
 
                                         </div>
+
+
                                     </Timeline.Item>
+
                                     <Timeline.Item
                                         dot={<CalendarOutlined
-                                            style={{fontSize: '20px', color: '#52c41a'}}/>} // Color verde
+                                            style={{fontSize: '15px', color: '#52c41a'}}/>} // Color verde
                                         color="green" // Color para el ítem
+                                        style={{marginBottom:0,paddingBottom:0}}
                                     >
-                                        <div style={{display: 'flex', alignItems: 'center' }}>
+                                        <div style={{display: 'flex', alignItems: 'center'}}>
 
 
                                             {isEditing ? (
@@ -1864,15 +1675,17 @@ const KanbanBoardSubtarea = () => {
 
                                                 <Form.Item
                                                     name="fechaFin"
-                                                    label="Fecha fin"
+                                                    label={"Fecha fin"}
+
 
                                                 >
                                                     <DatePicker/>
                                                 </Form.Item>
                                             ) : (
                                                 // Mostrar el título cuando no está en modo edición
+                                                <Tooltip title={'Fecha fin'}>
                                                 <p style={{fontSize: '14px', margin: 0}}>
-                                                    <span style={{fontWeight: 600}}>Fecha fin: </span>
+
                                                     {selectedTask.fechaFin ?
                                                         (typeof selectedTask.fechaFin === 'object' ?
                                                             selectedTask.fechaFin.format('YYYY-MM-DD') :
@@ -1880,6 +1693,7 @@ const KanbanBoardSubtarea = () => {
                                                         :
                                                         'Sin fecha'} {/* Maneja el caso cuando fechaInicio es undefined o null */}
                                                 </p>
+                                                </Tooltip>
 
                                             )}
 
@@ -1889,89 +1703,51 @@ const KanbanBoardSubtarea = () => {
                                 </Timeline>
 
 
-                            </Col>
-                        </Row>
-
-                        <Row gutter={16}>
-
-                            <Col span={17}>
-                                <h2>Actividades</h2>
-                                <Timeline
-                                    items={[
-                                        {
-                                            color: 'green',
-                                            children: 'Create a services site 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Solve initial network problems 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Technical testing 2015-09-01',
-                                        },
-                                        {
-
-                                            children: 'Network problems being solved 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Create a services site 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Solve initial network problems 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Technical testing 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Network problems being solved 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Create a services site 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Solve initial network problems 2015-09-01',
-                                        },
-                                        {
-                                            children: 'Technical testing 2015-09-01',
-                                        },
-                                        {
-                                            color: 'red',
-                                            children: 'Network problems being solved 2015-09-01',
-                                        },
-                                    ]}
-                                />
-                            </Col>
-                            <Col span={7}>
-
                                 <div
                                     style={{
                                         width: '100%',
 
 
-
-                                    }} // Ancho del Card
-
-                                >
-                                    <p style={{fontWeight: 700}}>Estado </p>
-                                    <span> {selectedTask.estado} </span>
-
-                                    {/* Aquí puedes agregar más contenido si lo deseas */}
-                                </div>
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        marginTop: 10,
-                                        borderBottom: '1px solid #e6e9ed',
-                                        marginBottom:10
                                     }} // Ancho del Card
 
                                 >
 
 
+                                    <h3 style={{marginBottom: 10, color: '#4f5762'}}> Estado</h3>
+                                    <span
+                                        style={{
+
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            flexDirection: 'initial'
+
+                                        }}
+
+                                    >
+
+                                       <span style={{
+
+                                           // Cambia al color de fondo que desees
+                                           padding: '2px 6px', // Espaciado interno opcional
+                                           borderRadius: '8px', // Esquinas redondeadas opcionales
+                                           backgroundColor: '#f0f6fc ',
+                                           alignItems: 'center',
+                                           textTransform: 'lowercase',
+                                           border: '1px solid #f0f0f0 '
+                                       }}> {selectedTask.estado}</span>
+</span>
+
                                     {/* Aquí puedes agregar más contenido si lo deseas */}
                                 </div>
+
+                                <div style={{marginTop: 10}}>
+
+                                    <h3 style={{marginBottom: 20, color: '#4f5762'}}> Asignados</h3>
+                                </div>
+
                                 <Card
-                                    style={{width: '100%'}} // Ancho del Card
-                                    title="Asignar usuarios" // Título del Card
+                                    style={{width: '100%',}} // Ancho del Card
+
                                 >
                                     <div style={{width: 300}}>
                                         <Select
@@ -1995,45 +1771,27 @@ const KanbanBoardSubtarea = () => {
                                     {/* Aquí puedes agregar más contenido si lo deseas */}
                                 </Card>
 
-                                <div
-                                    style={{
-                                        width: '100%',
+                                <div style={{marginTop: 10}}>
 
-                                        marginTop: 15
-                                    }} // Ancho del Card
-
-                                >
-                                    <p style={{fontWeight: 700}}>Prioridad </p>
-
-                                    <p style={{fontSize: '14px', margin: 0}}>
-
-                                        <FlagOutlined
-                                            style={{
-                                                marginRight: 5,
-                                                fontSize: '16px',
-                                                color: selectedTask?.prioridad?.backgroundPrioridad || 'gray' // Color predeterminado si es null
-                                            }}
-                                        />
-                                        <span style={{color: selectedTask?.prioridad?.selectedTask || 'gray'}}
-                                        >{selectedTask?.prioridad?.nombre || "Sin prioridad"}</span>
-                                    </p>
-
-
-                                    {/* Aquí puedes agregar más contenido si lo deseas */}
-                                </div>
-                                <div
-                                    style={{
-                                        width: '100%',
-                                        marginTop: 10,
-                                        borderBottom: '1px solid #e6e9ed'
-                                    }} // Ancho del Card
-
-                                >
-
-
-                                    {/* Aquí puedes agregar más contenido si lo deseas */}
+                                    <h3 style={{marginBottom: 10, color: '#4f5762'}}> Prioridad</h3>
                                 </div>
 
+                                <div style={{display: 'flex', alignItems: 'center'}}
+                                    >
+
+                                        <Space>
+                                            <FlagOutlined style={{
+                                                fontSize: '12px',
+                                                color: selectedTask.prioridad.backgroundPrioridad
+                                            }}/>
+                                            <span style={{
+                                                color: selectedTask.prioridad.backgroundPrioridad,
+                                                fontSize: 12
+                                            }}>{selectedTask.prioridad.nombre}</span>
+                                        </Space>
+
+
+                                </div>
 
                             </Col>
 

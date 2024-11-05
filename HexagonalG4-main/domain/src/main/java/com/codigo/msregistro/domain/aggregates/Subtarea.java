@@ -71,4 +71,24 @@
                 inverseJoinColumns = @JoinColumn(name = "usuario_id")
         )
         private List<Usuario> usuarios = new ArrayList<>();
+
+        @Column(name = "create_at")
+        private Date createAt;
+
+        @Column(name = "user_create")
+        private String UserCreate;
+
+        @Column(name = "modify_at")
+        private Date modifyAt;
+
+        @Column(name = "user_modify")
+        private String UserModify;
+
+        @Column(name = "delete_at")
+        private Date deleteAt;
+
+        @Column(name = "user_delete")
+        private String UserDelete;
+
+
     }

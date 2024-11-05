@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +46,8 @@ import java.util.Optional;
 
     // Crear una nueva tarea
     public Tarea crearTarea(Tarea tarea) {
+        tarea.setUserCreate("salomon santa perez");
+        tarea.setCreateAt(new Date());
         return tareaRepository.save(tarea);
     }
 

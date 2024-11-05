@@ -31,6 +31,27 @@ public class SubTareaController {
 
     private final Logger log = LoggerFactory.getLogger(SubTareaController.class);
 
+    @DeleteMapping("/delete/{idTarea}")
+    public ResponseEntity<String> deleteTareaByID(@PathVariable Long tareaId, @PathVariable Long idTarea) {
+
+        log.info("estas aqui");
+        // Verifica si el módulo existe
+        Optional<Tarea> tareaOp = tareaService.obtenerTareaPorId(tareaId);
+        if (!tareaOp.isPresent()) {
+            return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra el módulo
+        }
+
+        // Verifica si la tarea existe
+        Optional<Subtarea> tareaOpt = subTareaService.obtenerTareaPorId(idTarea);
+        if (tareaOpt.isPresent()) {
+            // Elimina la tarea si existe
+            subTareaService.deleteSubTarea(idTarea);
+            return ResponseEntity.ok("Subtarea eliminada exitosamente");
+        } else {
+            return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra la tarea
+        }
+    }
+
     @PutMapping("/{idSubtarea}")
     public ResponseEntity<?> crearSubTarea(@Valid @PathVariable Long tareaId,
                                            @PathVariable Long idSubtarea,

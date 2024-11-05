@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,8 +23,19 @@ public class SubTareaService {
     private final PrioridadRepository prioridadRepository;
     private final UsuarioRepository usuarioRepository;
 
+    public String deleteSubTarea(Long id) {
+        Subtarea subtatarea = subtareaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarea con ID " + id + " no encontrada"));
+
+        subtareaRepository.delete(subtatarea);
+        return "Tarea eliminada exitosamente";
+    }
+
+
     // Crear una nueva tarea
     public Subtarea crearTarea(Subtarea tarea) {
+        tarea.setUserCreate("salomon santa perez");
+        tarea.setCreateAt(new Date());
         return subtareaRepository.save(tarea);
     }
 

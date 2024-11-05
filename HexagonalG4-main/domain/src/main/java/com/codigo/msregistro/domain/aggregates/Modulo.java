@@ -72,5 +72,23 @@ public class Modulo {
     @JsonManagedReference  // Evitar la recursión al serializar
     private List<Tarea> tareas;  // Agregar este campo
 
+    @Column(name = "create_at")
+    private Date createAt;
+
+    @Column(name = "user_create")
+    private String userCreate;
+
+    @Column(name = "modify_at")
+    private Date modifyAt;
+
+    @Column(name = "user_modify")
+    private String userModify;
+
+    @Column(name = "delete_at")
+    private Date deleteAt;
+
+    @Column(name = "user_delete")
+    private String userDelete;
+
     // Otros atributos y métodos
 }
