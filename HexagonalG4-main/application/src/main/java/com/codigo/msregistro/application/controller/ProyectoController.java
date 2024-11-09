@@ -2,15 +2,18 @@ package com.codigo.msregistro.application.controller;
 
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
 import com.codigo.msregistro.domain.aggregates.Usuario;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.codigo.msregistro.application.services.ProyectoService;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
+
+import javax.management.ObjectName;
 
 @RestController
 @RequestMapping("/api/proyectos")
@@ -19,10 +22,74 @@ public class ProyectoController {
 
     private final ProyectoService proyectoService;
 
+    //ACTULZIAR FECHA UNICIo
+
+    @PatchMapping("/actualizarFechaInicio/{idProyecto}")
+    public ResponseEntity<?> actualizarFechaInicoProyecto(@PathVariable Long idProyecto, @RequestBody Proyecto proyecto) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Proyecto proyectoActualizado = proyectoService.actualizarFechaInicioProyecto(idProyecto, proyecto);
+
+            if (proyectoActualizado == null) {
+                response.put("mensaje", "Proyecto no encontrado con ID: " + idProyecto);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            response.put("mensaje", "Proyecto actualizado con éxito");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el proyecto: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // Inyección de dependencias a través del constructor
     public ProyectoController(ProyectoService proyectoService) {
         this.proyectoService = proyectoService;
     }
+
+    @PatchMapping("/{idProyecto}/ampliar/dias={dias}")
+    public ResponseEntity<?> actualizarProyecto(@PathVariable Long idProyecto, @PathVariable Long dias) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Proyecto proyectoActualizado = proyectoService.ampliarFechaProyecto(idProyecto, dias);
+            return ResponseEntity.ok(proyectoActualizado);  // Retorna el proyecto actualizado
+        } catch (EntityNotFoundException e) {
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } catch (Exception e) {
+            response.put("error", "Error al actualizar el proyecto: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+
+
+
+
+    @PatchMapping("/actualizar/{id}")
+    public ResponseEntity<?> actualizarNombreProyecto(@PathVariable Long id, @RequestBody Proyecto proyecto) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Proyecto proyectoActualizado = proyectoService.actualizarNombreProyecto(id, proyecto);
+
+            if (proyectoActualizado == null) {
+                response.put("mensaje", "Proyecto no encontrado con ID: " + id);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            response.put("mensaje", "Proyecto actualizado con éxito");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el proyecto: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     // Obtener todos los proyectos (no eliminados)
     @GetMapping
@@ -75,28 +142,44 @@ public class ProyectoController {
         return new ResponseEntity<>(nuevoProyecto, HttpStatus.CREATED);
     }
 
-    // Mover un proyecto a la papelera (eliminación lógica)
-    @PatchMapping("/{id}/eliminar")
-    public ResponseEntity<Void> eliminarProyecto(@PathVariable Long id) {
-        boolean eliminado = proyectoService.eliminarProyecto(id);
-        if (eliminado) {
-            return new ResponseEntity<>(HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 
-    // Restaurar un proyecto desde la papelera
-    @PatchMapping("/{id}/restaurar")
-    public ResponseEntity<Void> restaurarProyecto(@PathVariable Long id) {
+
+
+    //LiSTAR PROYECTOS ELIMINADOS
+    @GetMapping("/eliminados")
+    public List<Proyecto> obtenerProyectosEliminados() {
+        return proyectoService.listarProyectosElimindos();
+    }
+    // RESTAURAR DE PAPELERA
+    @PatchMapping("/{id}/restaurar-papelera")
+    public ResponseEntity<?> restaurarProyectoDePapelera(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
         boolean restaurado = proyectoService.restaurarProyecto(id);
         if (restaurado) {
-            return new ResponseEntity<>(HttpStatus.OK);
+            response.put("mensaje", "El proyecto  se ha restaurado correctamente.");
+            return ResponseEntity.ok(response);
+
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            response.put("error", "Proyecto no encontrado.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+    // Mover un proyecto a la papelera (eliminación lógica)
+    @PatchMapping("/{id}/eliminar")
+    public ResponseEntity<Map<String, String>> eliminarProyecto(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+
+        boolean eliminado = proyectoService.eliminarProyecto(id);
+        if (eliminado) {
+            response.put("mensaje", "El proyecto ha sido movido a la papelera correctamente.");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("error", "Proyecto no encontrado.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
+    //LISAT DE PROYECTOS NO ARCHIVADOS
 
     @GetMapping("/no-archivados")
     public List<Proyecto> obtenerProyectosNoArchivados() {
@@ -104,22 +187,50 @@ public class ProyectoController {
     }
 
 
+    //LISTA DE PROYETOSARCHIVADOS
 
     @GetMapping("/archivados")
     public List<Proyecto> obtenerProyectosArchivados() {
         return proyectoService.listarProyectosArchivados();
     }
+
     // Endpoint para cambiar el estado de un proyecto
     @PutMapping("/{id}/estado")
-    public ResponseEntity<String> cambiarEstadoProyecto(@PathVariable Long id, @RequestParam EstadoProyecto nuevoEstado) {
+    public ResponseEntity<Map<String, String>> cambiarEstadoProyecto(
+            @PathVariable Long id,
+            @RequestParam EstadoProyecto nuevoEstado) {
+
+        Map<String, String> response = new HashMap<>();
         boolean actualizado = proyectoService.cambiarEstadoProyecto(id, nuevoEstado);
 
         if (actualizado) {
-            return ResponseEntity.ok("Estado del proyecto actualizado correctamente.");
+            response.put("mensaje", "El proyecto se ha archivado correctamente.");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado.");
+            response.put("error", "Proyecto no encontrado.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
+
+//RESAURAR DE ARCHIVADO
+    @PutMapping("/{id}/restaurar")
+    public ResponseEntity<?> restaurarDeArchivado(@PathVariable Long id) {
+        Map<Object, String> response = new HashMap<>();
+
+        boolean actualizado = proyectoService.restaurarProyectoNoArchivado(id);
+
+        if (actualizado) {
+            response.put("mensaje", "El proyecto ha sido restaurado correctamente.");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("error", "Proyecto no encontrado.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+
+
+
 
 
     @PutMapping("/{id}/usuarios")

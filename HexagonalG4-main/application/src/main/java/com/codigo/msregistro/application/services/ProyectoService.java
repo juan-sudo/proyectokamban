@@ -4,6 +4,7 @@ import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.*;
 import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -14,6 +15,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Calendar;
+
 
 @Service
 @AllArgsConstructor
@@ -24,6 +27,79 @@ public class ProyectoService {
     private final UsuarioRepository usuarioRepository;
 
     private final PrioridadRepository prioridadRepository;
+
+
+    //ACTUALIZR NOMBRE PROYECTO
+    public Proyecto actualizarFechaInicioProyecto(Long id, Proyecto proyecto) {
+        Optional<Proyecto> proyectoOptional = proyectoRepository.findById(id);
+
+        if (proyectoOptional.isPresent()) {
+            Proyecto proyectoActual = proyectoOptional.get();
+
+            // Actualizar los campos del proyecto
+            proyectoActual.setFechaInicio(proyecto.getFechaInicio());
+            proyectoActual.setUserModify("quiii santa perez");
+            proyectoActual.setModifyAt(new Date());
+
+
+
+            // Guardar el proyecto actualizado
+            return proyectoRepository.save(proyectoActual);  // Retorna el proyecto actualizado
+        } else {
+            // Opcionalmente, lanzar una excepción si no se encuentra el proyecto
+            throw new EntityNotFoundException("Proyecto no encontrado con ID: " + id);
+        }
+    }
+
+    //AMPLIAR FECHA
+    public Proyecto ampliarFechaProyecto(Long idProyecto, Long dias) {
+        Optional<Proyecto> proyectoOptional = proyectoRepository.findById(idProyecto);
+
+        if (proyectoOptional.isPresent()) {
+            Proyecto proyectoActual = proyectoOptional.get();
+
+            // Obtener fechaFin y agregar los días
+            Date fechaFin = proyectoActual.getFechaFin();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(fechaFin);
+            calendar.add(Calendar.DAY_OF_MONTH, dias.intValue());  // Sumar los días a fechaFin
+
+            // Establecer fecha ampliada en el proyecto
+            proyectoActual.setFechaAmpliada(calendar.getTime());
+
+            proyectoActual.setUserModify("quiii santa perez");
+            proyectoActual.setModifyAt(new Date());
+
+            // Guardar el proyecto actualizado
+            return proyectoRepository.save(proyectoActual);  // Retorna el proyecto actualizado
+        } else {
+            // Opcionalmente, lanzar una excepción si no se encuentra el proyecto
+            throw new EntityNotFoundException("Proyecto no encontrado con ID: " + idProyecto);
+        }
+    }
+
+    //ACTUALIZR NOMBRE PROYECTO
+    public Proyecto actualizarNombreProyecto(Long id, Proyecto proyecto) {
+        Optional<Proyecto> proyectoOptional = proyectoRepository.findById(id);
+
+        if (proyectoOptional.isPresent()) {
+            Proyecto proyectoActual = proyectoOptional.get();
+
+            // Actualizar los campos del proyecto
+            proyectoActual.setNombre(proyecto.getNombre());
+            proyectoActual.setUserModify("quiii santa perez");
+            proyectoActual.setModifyAt(new Date());
+
+
+
+            // Guardar el proyecto actualizado
+            return proyectoRepository.save(proyectoActual);  // Retorna el proyecto actualizado
+        } else {
+            // Opcionalmente, lanzar una excepción si no se encuentra el proyecto
+            throw new EntityNotFoundException("Proyecto no encontrado con ID: " + id);
+        }
+    }
+
 
     // Obtener todos los proyectos no eliminados
     public List<Proyecto> getAllProyectos() {
@@ -54,11 +130,14 @@ public class ProyectoService {
         return String.format("#%06X", color);
     }
 
-    // Eliminar un proyecto (moverlo a la papelera)
+    // EMILNAR PROYECTO mover a papelera
     public boolean eliminarProyecto(Long id) {
         Optional<Proyecto> proyecto = proyectoRepository.findById(id);
+
         if (proyecto.isPresent()) {
             Proyecto p = proyecto.get();
+            p.setUserDelete("pepe diaz salvatierra");
+            p.setDeleteAt(new Date());
             p.moverAPapelera();
             proyectoRepository.save(p);
             return true;
@@ -80,7 +159,7 @@ public class ProyectoService {
 
     public List<Proyecto> listarProyectosNoArchivados() {
         // Obtener los proyectos no archivados en orden descendente
-        List<Proyecto> proyectos = proyectoRepository.findByEstadoNot(
+        List<Proyecto> proyectos = proyectoRepository.findByEstadoNotAndEliminadoFalse(
                 EstadoProyecto.ARCHIVADO, Sort.by(Sort.Direction.DESC, "id")
         );
 
@@ -108,19 +187,46 @@ public class ProyectoService {
         return proyectoRepository.findByEstado(EstadoProyecto.ARCHIVADO);
     }
 
-    // Método para cambiar el estado de un proyecto
+    public List<Proyecto> listarProyectosElimindos() {
+        return proyectoRepository.findByEliminadoTrue();
+    }
+
+
+
+    // CAMIBAR ESTADO DE PROYECTOS
     public boolean cambiarEstadoProyecto(Long id, EstadoProyecto nuevoEstado) {
         Optional<Proyecto> proyectoOpt = proyectoRepository.findById(id);
 
         if (proyectoOpt.isPresent()) {
             Proyecto proyecto = proyectoOpt.get();
             proyecto.setEstado(nuevoEstado);  // Actualizar el estado del proyecto
+            if(nuevoEstado.equals(EstadoProyecto.ARCHIVADO)){
+                proyecto.setArchivarAt(new Date());
+                proyecto.setArchivarDelete("SAlomon lopez de la tierra");
+            }
             proyectoRepository.save(proyecto);  // Guardar los cambios
             return true;
         }
 
         return false;  // Si el proyecto no existe, devolver false
     }
+
+    // Método para cambiar el estado de un proyecto
+    public boolean restaurarProyectoNoArchivado(Long id) {
+        Optional<Proyecto> proyectoOpt = proyectoRepository.findById(id);
+
+        if (proyectoOpt.isPresent()) {
+            Proyecto proyecto = proyectoOpt.get();
+            proyecto.setEstado(EstadoProyecto.PENDIENTE);  // Actualizar el estado del proyecto
+            proyectoRepository.save(proyecto);  // Guardar los cambios
+            return true;
+        }
+
+        return false;  // Si el proyecto no existe, devolver false
+    }
+
+
+
 
 
 
@@ -145,6 +251,8 @@ public class ProyectoService {
 
         // Agregar los nuevos usuarios al proyecto
         proyecto.getUsuarios().addAll(nuevosUsuarios);
+        proyecto.setModifyAt(new Date());
+        proyecto.setUserModify("pamela perez dias");
 
         // Guardar el proyecto actualizado
         return proyectoRepository.save(proyecto);

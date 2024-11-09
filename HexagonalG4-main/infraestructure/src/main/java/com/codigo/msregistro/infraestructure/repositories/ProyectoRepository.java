@@ -17,8 +17,9 @@ public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
     // Encontrar proyectos que están en la papelera
     List<Proyecto> findByEliminadoTrue();
 
-    // Método para listar proyectos cuyo estado es diferente de ARCHIVADO y ordenados
-    List<Proyecto> findByEstadoNot(EstadoProyecto estado, Sort sort);
+    // Método para listar proyectos cuyo estado es diferente de ARCHIVADO y eliminado es false
+    List<Proyecto> findByEstadoNotAndEliminadoFalse(EstadoProyecto estado, Sort sort);
+
 
     // Método para listar proyectos cuyo estado es ARCHIVADO
     List<Proyecto> findByEstado(EstadoProyecto estado);

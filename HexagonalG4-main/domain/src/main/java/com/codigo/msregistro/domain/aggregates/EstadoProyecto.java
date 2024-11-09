@@ -6,4 +6,5 @@ public enum EstadoProyecto {
     COMPLETADO,
     ENTREGADO,
     ARCHIVADO;
+
 }

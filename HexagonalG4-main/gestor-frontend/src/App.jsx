@@ -7,7 +7,7 @@ import KanbanBoardsub from './components/KanbanBoardSubtarea'; // Importa el tab
 
 import ProyectoList from './components/proyectoList.jsx';
 import ProyectoListArchivados from './components/ProyectoListArchivados.jsx';
-
+import ProyectoPapelera  from './components/proyectoPapepela.jsx';
 import Otro from './components/otro';  // Importa el tablero Kanban
 import Otra from './components/otra';  // Importa el tablero Kanban
 import UsuariosList from "./components/usuariosLista.jsx";  // Asegúrate de tener este archivo para estilos globales
@@ -71,6 +71,11 @@ function App() {
             icon: <FileOutlined />,
             label: 'Clips'
         },
+        {
+            key: '9',
+            icon: <UserOutlined />,
+            label: <Link to="/proyectoPapelera">Papelera</Link>
+        },
 
 
     ];
@@ -108,6 +113,7 @@ function App() {
                             <Route path="/otra" element={<Otra />} />
                             <Route path="/proyectoList" element={<ProyectoList />} />
                             <Route path="/proyectoListArchivados" element={<ProyectoListArchivados />} />
+                            <Route path="/proyectoPapelera" element={<ProyectoPapelera />} />
                             <Route path="/usuarioslista" element={<UsuariosList />} />
                             <Route path="/registrarusuario" element={<RegistrarUsuario />} />
                             <Route path="/modulos/:proyectoId/tareas" element={<KanbanBoard />} />

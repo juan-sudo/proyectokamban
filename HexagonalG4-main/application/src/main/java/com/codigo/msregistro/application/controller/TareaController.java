@@ -7,6 +7,7 @@ import com.codigo.msregistro.domain.aggregates.Proyecto;
 import com.codigo.msregistro.domain.aggregates.Tarea;
 import com.codigo.msregistro.domain.aggregates.Modulo;
 import com.codigo.msregistro.application.services.ModuloService;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/modulos/{moduloId}/tareas")
+@CrossOrigin(origins = "http://localhost:5173")
 public class TareaController {
 
     @Autowired
@@ -30,6 +32,81 @@ public class TareaController {
     private ModuloService moduloService;
 
     private final Logger log = LoggerFactory.getLogger(TareaController.class);
+
+    @PatchMapping("/actualizarFechaFin/{tareaId}")
+    public ResponseEntity<?> actualizarModuloFechaFin(@PathVariable Long moduloId, @PathVariable Long tareaId, @RequestBody Tarea tarea) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Tarea tareaActualizado = tareaService.actualizarTareaFechaFin(moduloId, tareaId, tarea);
+
+            response.put("mensaje", "Tarea actualizado con éxito");
+            response.put("id", tareaActualizado.getId().toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (EntityNotFoundException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+        } catch (IllegalArgumentException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el módulo: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/actualizarFechaInicio/{tareaId}")
+    public ResponseEntity<?> actualizarModuloFechaInicio(@PathVariable Long moduloId, @PathVariable Long tareaId, @RequestBody Tarea tarea) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Tarea tareaActualizado = tareaService.actualizarTareaFechaInicio(moduloId, tareaId, tarea);
+
+            response.put("mensaje", "Tarea actualizado con éxito");
+            response.put("id", tareaActualizado.getId().toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (EntityNotFoundException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+        } catch (IllegalArgumentException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el módulo: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/actualizar/{tareaId}")
+    public ResponseEntity<?> actualizarModuloNombre(@PathVariable Long moduloId, @PathVariable Long tareaId, @RequestBody Tarea tarea) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Tarea tareaActualizado = tareaService.actualizarTareaNombre(moduloId, tareaId, tarea);
+
+            response.put("mensaje", "Tarea actualizado con éxito");
+            response.put("id", tareaActualizado.getId().toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (EntityNotFoundException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+        } catch (IllegalArgumentException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el módulo: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @PutMapping("/actualizar/{tareaId}")
     public ResponseEntity<?> updateTarea(@RequestBody Tarea tarea, @PathVariable Long tareaId) {

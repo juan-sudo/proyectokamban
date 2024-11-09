@@ -68,7 +68,7 @@ const pearlescentColors = [
 ];
 
 
-function ProyectoListArchivados() {
+function ProyectoListPapelera() {
     const [proyectos, setProyectos] = useState([]);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [assignedColors, setAssignedColors] = useState({});
@@ -213,7 +213,7 @@ function ProyectoListArchivados() {
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.put(`${backendUrl}/api/proyectos/${id}/restaurar`);
+                const response = await axios.patch(`${backendUrl}/api/proyectos/${id}/restaurar-papelera`);
 
                 if (response.data.mensaje) {
                     console.log('Mensaje del servidor:', response.data.mensaje);
@@ -246,6 +246,39 @@ function ProyectoListArchivados() {
 
 // drop dow para restaurar
 
+    const sortedTimelineItems = [
+        {
+            color: 'green',
+            user: selectedProject?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedProject?.createAt,
+            formattedDate: selectedProject?.createAt ? dayjs(selectedProject.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedProject?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedProject?.modifyAt,
+            formattedDate: selectedProject?.modifyAt ? dayjs(selectedProject.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+        {
+            color: 'rgb(0, 21, 41)',
+            user: selectedProject?.archivarDelete || 'Usuario no disponible',
+            action: 'archivó',
+            date: selectedProject?.archivarAt,
+            formattedDate: selectedProject?.archivarAt ? dayjs(selectedProject.archivarAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: 'red',
+            user: selectedProject?.userDelete || 'Usuario no disponible',
+            action: 'eliminó',
+            date: selectedProject?.deleteAt,
+            formattedDate: selectedProject?.deleteAt ? dayjs(selectedProject.deleteAt).format('YYYY-MM-DD HH:mm:ss') : null
+        }
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
 
 
@@ -330,7 +363,7 @@ function ProyectoListArchivados() {
 
             // Aquí llamas a la API para establecer la prioridad a null
             try {
-                const response = await axios.get(`${backendUrl}/api/proyectos/archivados`)
+                const response = await axios.get(`${backendUrl}/api/proyectos/eliminados`)
                 console.log("Prioridad actualizada a null:", response.data);
                 await fetchProyectos();
             } catch (error) {
@@ -486,7 +519,7 @@ function ProyectoListArchivados() {
 
     const fetchProyectos = async () => {
         try {
-            const response = await axios.get(`${backendUrl}/api/proyectos/archivados`);
+            const response = await axios.get(`${backendUrl}/api/proyectos/eliminados`);
             console.log("Respuesta de la API:", response.data);
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
@@ -1335,7 +1368,7 @@ function ProyectoListArchivados() {
                 <Col span={24} style={{ padding: '16px', fontSize:23 }}>
                     <FolderOutlined style={{paddingRight:5,paddingLeft:5}} />
                     <FolderOpenOutlined style={{paddingRight:5,paddingLeft:10}} />
-                    <apan>Proyectos archivados</apan>
+                    <apan>Proyectos Eliminado</apan>
                 </Col>
             </Row>
 
@@ -2772,70 +2805,24 @@ function ProyectoListArchivados() {
                                 </Col>
                                 <Col span={9} style={{overflowY:"auto", height:450, paddingRight:10, backgroundColor:'#fbfbfc'}}>
                                     <h2 style={{marginTop:10, marginBottom:20}}>Actividades</h2>
-                                    <Timeline style={{paddingLeft: 20}}
-                                              items={[
-
-                                                  {
-                                                      color:'green',
-                                                      children: (
-                                                          <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedProject.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedProject.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+                                    <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItems.map(item => ({
+                                        color: item.color,
+                                        children: (
+                                            <span style={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar size="small" style={{ marginRight: '4px' }}>
+                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+            </Avatar>
+            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+                {item.user}
             </span>
-                                                      ),
-                                                  },
+            <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
+            <span style={{ color: '#4f5762', fontWeight: 600 }}>
+                {item.formattedDate}
+            </span>
+        </span>
+                                        ),
+                                    }))} />
 
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                                  {
-                                                      color: 'red',
-                                                      children: 'Eliminado solved 2015-09-01',
-                                                  },
-                                              ]}
-                                    />
                                 </Col>
                             </Row>
 
@@ -4250,4 +4237,4 @@ function ProyectoListArchivados() {
 
 }
 
-export default ProyectoListArchivados;
+export default ProyectoListPapelera;

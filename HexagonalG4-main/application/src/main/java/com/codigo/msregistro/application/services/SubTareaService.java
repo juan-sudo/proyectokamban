@@ -23,6 +23,118 @@ public class SubTareaService {
     private final PrioridadRepository prioridadRepository;
     private final UsuarioRepository usuarioRepository;
 
+
+
+    //ACTUALIZAR FECHA INCIO SUBTAREA
+    public Subtarea actualizarsubTareaFechaFin(Long idTarea, Long idsubTarea, Subtarea subtarea) {
+
+        // Buscar el proyecto
+        Optional<Tarea> tareaOptional = tareaRepository.findById(idTarea);
+
+        if (tareaOptional.isPresent()) {
+            Tarea modulo1 = tareaOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Subtarea> subtareaOptional = subtareaRepository.findById(idsubTarea);
+
+            if (subtareaOptional.isPresent()) {
+                Subtarea subtareaActual = subtareaOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (subtareaActual.getTarea().getId().equals(idTarea)) {
+
+                    // Actualizar los campos del módulo
+                    subtareaActual.setFechaFin(subtarea.getFechaFin());
+                    subtareaActual.setUserModify("quiii santa perez");
+                    subtareaActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return subtareaRepository.save(subtareaActual);
+                } else {
+                    throw new IllegalArgumentException("ta tarea no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("tarea no encontrado con ID: " + idsubTarea);
+            }
+        } else {
+            throw new EntityNotFoundException("modulo no encontrado con ID: " + idTarea);
+        }
+    }
+
+
+    //ACTUALIZAR FECHA INCIO SUBTAREA
+    public Subtarea actualizarsubTareaFechaInicio(Long idTarea, Long idsubTarea, Subtarea subtarea) {
+
+        // Buscar el proyecto
+        Optional<Tarea> tareaOptional = tareaRepository.findById(idTarea);
+
+        if (tareaOptional.isPresent()) {
+            Tarea modulo1 = tareaOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Subtarea> subtareaOptional = subtareaRepository.findById(idsubTarea);
+
+            if (subtareaOptional.isPresent()) {
+                Subtarea subtareaActual = subtareaOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (subtareaActual.getTarea().getId().equals(idTarea)) {
+
+                    // Actualizar los campos del módulo
+                    subtareaActual.setFechaInicio(subtarea.getFechaInicio());
+                    subtareaActual.setUserModify("quiii santa perez");
+                    subtareaActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return subtareaRepository.save(subtareaActual);
+                } else {
+                    throw new IllegalArgumentException("ta tarea no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("tarea no encontrado con ID: " + idsubTarea);
+            }
+        } else {
+            throw new EntityNotFoundException("modulo no encontrado con ID: " + idTarea);
+        }
+    }
+
+    //ACTUALIZAR NOMBRE SUBTAREA
+    public Subtarea actualizarsubTareaNombre(Long idTarea, Long idsubTarea, Subtarea subtarea) {
+
+        // Buscar el proyecto
+        Optional<Tarea> tareaOptional = tareaRepository.findById(idTarea);
+
+        if (tareaOptional.isPresent()) {
+            Tarea modulo1 = tareaOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Subtarea> subtareaOptional = subtareaRepository.findById(idsubTarea);
+
+            if (subtareaOptional.isPresent()) {
+                Subtarea subtareaActual = subtareaOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (subtareaActual.getTarea().getId().equals(idTarea)) {
+
+                    // Actualizar los campos del módulo
+                    subtareaActual.setNombre(subtarea.getNombre());
+                    subtareaActual.setUserModify("quiii santa perez");
+                    subtareaActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return subtareaRepository.save(subtareaActual);
+                } else {
+                    throw new IllegalArgumentException("ta tarea no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("tarea no encontrado con ID: " + idsubTarea);
+            }
+        } else {
+            throw new EntityNotFoundException("modulo no encontrado con ID: " + idTarea);
+        }
+    }
+
+
     public String deleteSubTarea(Long id) {
         Subtarea subtatarea = subtareaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarea con ID " + id + " no encontrada"));
@@ -100,6 +212,9 @@ public class SubTareaService {
 
         // Agregar los nuevos usuarios a subtarea
         subtaera.getUsuarios().addAll(nuevosUsuarios);
+        subtaera.setUserModify("martha tita jura");
+        subtaera.setModifyAt(new Date());
+
 
         // Guardar el proyecto actualizado
         return subtareaRepository.save(subtaera);

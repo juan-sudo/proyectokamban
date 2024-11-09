@@ -56,6 +56,11 @@ public class Proyecto {
     private Date fechaFin;
 
     @NotNull
+    @Column(name = "fecha_ampliada")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date fechaAmpliada;
+
+    @NotNull
     @NotBlank
     @Column(name = "background_proyecto", length = 7)
     private String backgroundProyecto;
@@ -116,4 +121,10 @@ public class Proyecto {
 
     @Column(name = "user_delete")
     private String userDelete;
+
+    @Column(name = "archivar_at")
+    private Date archivarAt;
+
+    @Column(name = "archivar_delete")
+    private String archivarDelete;
 }

@@ -6,6 +6,7 @@ import com.codigo.msregistro.infraestructure.repositories.ModuloRepository;
 import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,115 @@ import java.util.Optional;
         private final UsuarioRepository usuarioRepository;
         private final PrioridadRepository prioridadRepository;
         private final ModuloRepository moduloRepository;
+
+
+    //ACTULIZAR FECHA FIN
+    public Tarea actualizarTareaFechaFin(Long idModulo, Long idTarea, Tarea tarea) {
+
+        // Buscar el proyecto
+        Optional<Modulo> moduloOptional = moduloRepository.findById(idModulo);
+
+        if (moduloOptional.isPresent()) {
+            Modulo modulo1 = moduloOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Tarea> tareaOptional = tareaRepository.findById(idTarea);
+
+            if (tareaOptional.isPresent()) {
+                Tarea tareaActual = tareaOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (tareaActual.getModulo().getId().equals(idModulo)) {
+
+                    // Actualizar los campos del módulo
+                    tareaActual.setFechaFin(tarea.getFechaFin());
+                    tareaActual.setUserModify("quiii santa perez");
+                    tareaActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return tareaRepository.save(tareaActual);
+                } else {
+                    throw new IllegalArgumentException("ta tarea no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("tarea no encontrado con ID: " + idTarea);
+            }
+        } else {
+            throw new EntityNotFoundException("modulo no encontrado con ID: " + idModulo);
+        }
+    }
+        //ACTULIZAR FECHA INICIO
+    public Tarea actualizarTareaFechaInicio(Long idModulo, Long idTarea, Tarea tarea) {
+
+        // Buscar el proyecto
+        Optional<Modulo> moduloOptional = moduloRepository.findById(idModulo);
+
+        if (moduloOptional.isPresent()) {
+            Modulo modulo1 = moduloOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Tarea> tareaOptional = tareaRepository.findById(idTarea);
+
+            if (tareaOptional.isPresent()) {
+                Tarea tareaActual = tareaOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (tareaActual.getModulo().getId().equals(idModulo)) {
+
+                    // Actualizar los campos del módulo
+                    tareaActual.setFechaInicio(tarea.getFechaInicio());
+                    tareaActual.setUserModify("quiii santa perez");
+                    tareaActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return tareaRepository.save(tareaActual);
+                } else {
+                    throw new IllegalArgumentException("ta tarea no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("tarea no encontrado con ID: " + idTarea);
+            }
+        } else {
+            throw new EntityNotFoundException("modulo no encontrado con ID: " + idModulo);
+        }
+    }
+
+        //ACTUALIZAR NOMBRE TAREA
+
+        public Tarea actualizarTareaNombre(Long idModulo, Long idTarea, Tarea tarea) {
+
+            // Buscar el proyecto
+            Optional<Modulo> moduloOptional = moduloRepository.findById(idModulo);
+
+            if (moduloOptional.isPresent()) {
+                Modulo modulo1 = moduloOptional.get();
+
+                // Buscar el módulo y verificar que esté asociado al proyecto
+                Optional<Tarea> tareaOptional = tareaRepository.findById(idTarea);
+
+                if (tareaOptional.isPresent()) {
+                    Tarea tareaActual = tareaOptional.get();
+
+                    // Verificar que el módulo pertenece al proyecto
+                    if (tareaActual.getModulo().getId().equals(idModulo)) {
+
+                        // Actualizar los campos del módulo
+                        tareaActual.setNombre(tarea.getNombre());
+                        tareaActual.setUserModify("quiii santa perez");
+                        tareaActual.setModifyAt(new Date());
+
+                        // Guardar el módulo actualizado
+                        return tareaRepository.save(tareaActual);
+                    } else {
+                        throw new IllegalArgumentException("ta tarea no pertenece al proyecto especificado");
+                    }
+                } else {
+                    throw new EntityNotFoundException("tarea no encontrado con ID: " + idTarea);
+                }
+            } else {
+                throw new EntityNotFoundException("modulo no encontrado con ID: " + idModulo);
+            }
+        }
 
     public String deleteTarea(Long id) {
         Tarea tarea = tareaRepository.findById(id)
@@ -89,6 +199,9 @@ import java.util.Optional;
 
         // Agregar los nuevos usuarios al proyecto
         modulo.getUsuarios().addAll(nuevosUsuarios);
+        modulo.setUserModify("sara matias santos");
+        modulo.setModifyAt(new Date());
+
 
         // Guardar el proyecto actualizado
         return tareaRepository.save(modulo);

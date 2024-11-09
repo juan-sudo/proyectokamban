@@ -6,7 +6,9 @@ import com.codigo.msregistro.infraestructure.repositories.ModuloRepository;
 import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
 import com.codigo.msregistro.infraestructure.repositories.ProyectoRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 
@@ -26,6 +28,134 @@ public class ModuloService {
     private final ProyectoRepository proyectoRepository;
 
 
+    // ACTUALIZAR FECHA FIN MODULO
+    public Modulo actualizarFechaInicioModuloFin(Long idProyecto, Long idModulo, Modulo modulo) {
+
+        // Buscar el proyecto
+        Optional<Proyecto> proyectoOptional = proyectoRepository.findById(idProyecto);
+
+        if (proyectoOptional.isPresent()) {
+            Proyecto proyecto = proyectoOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Modulo> moduloOptional = moduloRepository.findById(idModulo);
+
+            if (moduloOptional.isPresent()) {
+                Modulo modeloActual = moduloOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (modeloActual.getProyecto().getId().equals(idProyecto)) {
+
+                    // Actualizar los campos del módulo
+                    modeloActual.setFechaFin(modulo.getFechaFin());
+                    modeloActual.setUserModify("quiii santa perez");
+                    modeloActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return moduloRepository.save(modeloActual);
+                } else {
+                    throw new IllegalArgumentException("El módulo no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("Módulo no encontrado con ID: " + idModulo);
+            }
+        } else {
+            throw new EntityNotFoundException("Proyecto no encontrado con ID: " + idProyecto);
+        }
+    }
+
+    // ACTUALIZAR FECHA INICIO MODULO
+    public Modulo actualizarFechaInicioModulo(Long idProyecto, Long idModulo, Modulo modulo) {
+
+        // Buscar el proyecto
+        Optional<Proyecto> proyectoOptional = proyectoRepository.findById(idProyecto);
+
+        if (proyectoOptional.isPresent()) {
+            Proyecto proyecto = proyectoOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Modulo> moduloOptional = moduloRepository.findById(idModulo);
+
+            if (moduloOptional.isPresent()) {
+                Modulo modeloActual = moduloOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (modeloActual.getProyecto().getId().equals(idProyecto)) {
+
+                    // Actualizar los campos del módulo
+                    modeloActual.setFechaInicio(modulo.getFechaInicio());
+                    modeloActual.setUserModify("quiii santa perez");
+                    modeloActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return moduloRepository.save(modeloActual);
+                } else {
+                    throw new IllegalArgumentException("El módulo no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("Módulo no encontrado con ID: " + idModulo);
+            }
+        } else {
+            throw new EntityNotFoundException("Proyecto no encontrado con ID: " + idProyecto);
+        }
+    }
+    // ELIMINAR MODULO
+    public String deleteModulo(Long idProyecto, Long idModulo) {
+        // Verifica si el proyecto existe
+        Optional<Proyecto> proyectoOpt = proyectoRepository.findById(idProyecto);
+        if (!proyectoOpt.isPresent()) {
+            return "El proyecto con ID " + idProyecto + " no existe.";
+        }
+
+        // Verifica si el módulo existe
+        Optional<Modulo> moduloOpt = moduloRepository.findById(idModulo);
+        if (moduloOpt.isPresent()) {
+            // Elimina el módulo si existe
+            moduloRepository.deleteById(idModulo);
+            return "Módulo con ID " + idModulo + " eliminado correctamente.";
+        } else {
+            return "El módulo con ID " + idModulo + " no existe.";
+        }
+    }
+
+
+
+    // ACTUALIZAR NOMBRE MODULO
+    public Modulo actualizarModulo(Long idProyecto, Long idModulo, Modulo modulo) {
+
+        // Buscar el proyecto
+        Optional<Proyecto> proyectoOptional = proyectoRepository.findById(idProyecto);
+
+        if (proyectoOptional.isPresent()) {
+            Proyecto proyecto = proyectoOptional.get();
+
+            // Buscar el módulo y verificar que esté asociado al proyecto
+            Optional<Modulo> moduloOptional = moduloRepository.findById(idModulo);
+
+            if (moduloOptional.isPresent()) {
+                Modulo modeloActual = moduloOptional.get();
+
+                // Verificar que el módulo pertenece al proyecto
+                if (modeloActual.getProyecto().getId().equals(idProyecto)) {
+
+                    // Actualizar los campos del módulo
+                    modeloActual.setNombre(modulo.getNombre());
+                    modeloActual.setUserModify("quiii santa perez");
+                    modeloActual.setModifyAt(new Date());
+
+                    // Guardar el módulo actualizado
+                    return moduloRepository.save(modeloActual);
+                } else {
+                    throw new IllegalArgumentException("El módulo no pertenece al proyecto especificado");
+                }
+            } else {
+                throw new EntityNotFoundException("Módulo no encontrado con ID: " + idModulo);
+            }
+        } else {
+            throw new EntityNotFoundException("Proyecto no encontrado con ID: " + idProyecto);
+        }
+    }
+
     public Modulo crearModulo(Proyecto proyecto, Modulo modulo) {
         modulo.setProyecto(proyecto);
         modulo.setEstado(EstadoModulo.PENDIENTE);
@@ -33,6 +163,8 @@ public class ModuloService {
         modulo.setCreateAt(new Date());
         return moduloRepository.save(modulo);
     }
+
+
 
     public Optional<Modulo> obtenerModuloPorId(Long id) {
         return moduloRepository.findById(id);
@@ -57,6 +189,8 @@ public class ModuloService {
 
         // Agregar los nuevos usuarios al proyecto
         modulo.getUsuarios().addAll(nuevosUsuarios);
+        modulo.setUserModify("martha tita jura");
+        modulo.setModifyAt(new Date());
 
         // Guardar el proyecto actualizado
         return moduloRepository.save(modulo);

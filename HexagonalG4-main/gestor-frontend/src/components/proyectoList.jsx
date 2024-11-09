@@ -5,6 +5,8 @@ import "../index.css";
 import { useNavigate } from 'react-router-dom'; // Asegúrate de importar useN
 import _ from 'lodash';
 import dayjs from 'dayjs';
+import moment from 'moment';
+import { DragDropContext, Droppable, Draggable, } from 'react-beautiful-dnd';
 import {
     DatePicker,
     Menu,
@@ -19,7 +21,7 @@ import {
     Modal,
     Form,
     Select,
-    Space, Spin, Timeline,InputNumber,Tabs,Divider
+    Space, Spin, Timeline, InputNumber, Tabs, Divider, Popover,theme
 } from 'antd';
 import {
     EditOutlined,
@@ -55,7 +57,7 @@ import {
     BookOutlined,
     AppstoreOutlined,
     DeleteOutlined,
-    InboxOutlined,
+    InboxOutlined, RightCircleOutlined, ArrowLeftOutlined, ArrowRightOutlined,
 
 
 } from '@ant-design/icons';
@@ -192,6 +194,1043 @@ function ProyectoList() {
         }
     }, [selectedsubTarea]);
 
+    const onDragEnd = (result) => {
+        const { destination, source, draggableId } = result;
+
+        // Verificar si no hay un destino válido
+        if (!destination) return;
+
+        // Verificar si el origen y el destino son iguales (misma posición), en cuyo caso no hacer nada
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+
+        // Obtener la fila de origen y destino desde el estado 'data'
+        const startRow = data.rows.find(row => row.id === source.droppableId);
+        const endRow = data.rows.find(row => row.id === destination.droppableId);
+
+        // Si las filas de origen y destino son las mismas, solo reorganiza las subtareas dentro de la misma fila
+        if (startRow.id === endRow.id) {
+            const newSubtaskIds = Array.from(startRow.subtaskIds);
+            newSubtaskIds.splice(source.index, 1);
+            newSubtaskIds.splice(destination.index, 0, draggableId);
+
+            const newStartRow = {
+                ...startRow,
+                subtaskIds: newSubtaskIds,
+            };
+
+            // Actualizar el estado con la fila modificada
+            setData((prevData) => ({
+                ...prevData,
+                rows: prevData.rows.map((row) =>
+                    row.id === newStartRow.id ? newStartRow : row
+                ),
+            }));
+        } else {
+            // Si se mueve a una fila diferente, actualizar ambas filas
+            const startSubtaskIds = Array.from(startRow.subtaskIds);
+            startSubtaskIds.splice(source.index, 1);
+            const newStartRow = {
+                ...startRow,
+                subtaskIds: startSubtaskIds,
+            };
+
+            const endSubtaskIds = Array.from(endRow.subtaskIds);
+            endSubtaskIds.splice(destination.index, 0, draggableId);
+            const newEndRow = {
+                ...endRow,
+                subtaskIds: endSubtaskIds,
+            };
+
+            // Actualizar el estado con las dos filas modificadas
+            setData((prevData) => ({
+                ...prevData,
+                rows: prevData.rows.map((row) =>
+                    row.id === newStartRow.id ? newStartRow : row.id === newEndRow.id ? newEndRow : row
+                ),
+            }));
+        }
+    };
+
+
+    //EDITAR FECHA INICIO PROYECTO
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPI = async (id, fechaInicio) => {
+        try {
+            const response = await axios.patch(`http://localhost:8080/api/proyectos/actualizarFechaInicio/${id}`, {
+                fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActual, setFechaInicioActual] = useState({});
+    const [isDatePickerVisible, setIsDatePickerVisible] = useState({});
+
+    const handleSpanClick = (fechaInicio, id) => {
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActual(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisible(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+    };
+
+    const handleDateChange = (date, dateString, id) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActual(prev => ({
+            ...prev,
+            [id]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPI(id, dateString);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisible(prev => ({
+            ...prev,
+            [id]: false,
+        }));
+    };
+
+
+    //EDITA FECHA INICIO MODULO
+
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPIModulo = async (moduloId, fechaInicio,proyectoId) => {
+        try {
+            ///api/proyectos/{proyectoId}/modulos/actualizarFechaInicio/{moduloId}
+            const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/actualizarFechaInicio/${moduloId}`, {
+                fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActualModulo, setFechaInicioActualModulo] = useState({});
+    const [isDatePickerVisibleModulo, setIsDatePickerVisibleModulo] = useState({});
+
+    const handleSpanClickModulo = (fechaInicio, id) => {
+
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActualModulo(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisibleModulo(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+    };
+
+    const handleDateChangeModulo = (date, dateString, id,rowId) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActualModulo(prev => ({
+            ...prev,
+            [id]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPIModulo(id, dateString,rowId);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisibleModulo(prev => ({
+            ...prev,
+            [id]: false,
+        }));
+    };
+
+    //EDITA FECHA FIN MODULO
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPIModuloFin = async (moduloId, fechaFin,proyectoId) => {
+        try {
+            ///api/proyectos/{proyectoId}/modulos/actualizarFechaInicio/{moduloId}
+            const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/actualizarFechaFin/${moduloId}`, {
+                fechaFin: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActualModuloFin, setFechaInicioActualModuloFin] = useState({});
+    const [isDatePickerVisibleModuloFin, setIsDatePickerVisibleModuloFin] = useState({});
+
+    const handleSpanClickModuloFin = (fechaInicio, id) => {
+
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActualModuloFin(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisibleModuloFin(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+    };
+
+    const handleDateChangeModuloFin = (date, dateString, id,rowId) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActualModuloFin(prev => ({
+            ...prev,
+            [id]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPIModuloFin(id, dateString,rowId);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisibleModuloFin(prev => ({
+            ...prev,
+            [id]: false,
+        }));
+    };
+
+    //EDITA FECHA INICIO TAREA
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPITareaFechaInicio = async (tareaId, fechaInicio,moduloId) => {
+        try {
+            ////api/modulos/{moduloId}/tareas/actualizarFechaFin/{tareaId}
+            const response = await axios.patch(`http://localhost:8080/api/modulos/${moduloId}/tareas/actualizarFechaInicio/${tareaId}`, {
+                fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActualTareaFechaInicio, setFechaInicioActualTareaFechaInicio] = useState({});
+    const [isDatePickerVisibleTareaFechaInicio, setIsDatePickerVisibleTareaFechaInicio] = useState({});
+
+    const handleSpanClickTareaFechaInicio = (fechaInicio, id) => {
+
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActualTareaFechaInicio(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisibleTareaFechaInicio(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+    };
+
+    const handleDateChangeTareaFechaInicio = (date, dateString, idTarea,moduloId) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActualTareaFechaInicio(prev => ({
+            ...prev,
+            [idTarea]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPITareaFechaInicio(idTarea, dateString,moduloId);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisibleTareaFechaInicio(prev => ({
+            ...prev,
+            [idTarea]: false,
+        }));
+    };
+
+    //EDITA FECHA FIN TAREA
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPITareaFechaFin = async (tareaId, fechaFin,moduloId) => {
+        try {
+            ////api/modulos/{moduloId}/tareas/actualizarFechaFin/{tareaId}
+            const response = await axios.patch(`http://localhost:8080/api/modulos/${moduloId}/tareas/actualizarFechaFin/${tareaId}`, {
+                fechaFin: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActualTareaFechaFin, setFechaInicioActualTareaFechaFin] = useState({});
+    const [isDatePickerVisibleTareaFechaFin, setIsDatePickerVisibleTareaFechaFin] = useState({});
+
+    const handleSpanClickTareaFechaFin = (fechaInicio, id) => {
+
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActualTareaFechaFin(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisibleTareaFechaFin(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+    };
+
+    const handleDateChangeTareaFechaFin = (date, dateString, idTarea,moduloId) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActualTareaFechaFin(prev => ({
+            ...prev,
+            [idTarea]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPITareaFechaFin(idTarea, dateString,moduloId);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisibleTareaFechaFin(prev => ({
+            ...prev,
+            [idTarea]: false,
+        }));
+    };
+
+
+    //EDITA FECHA FIN SUBTAREA
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPIsubtareaFechaFin = async (subtareaId, fechaFin,tareaId) => {
+        try {
+            ////api/tareas/{tareaId}/subTareas/actualizarFechaFin/{subtareaId}
+            const response = await axios.patch(`http://localhost:8080/api/tareas/${tareaId}/subTareas/actualizarFechaFin/${subtareaId}`, {
+
+                fechaFin: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActualsubtareaFechaFin, setFechaInicioActualsubtareaFechaFin] = useState({});
+    const [isDatePickerVisiblesubtareaFechaFin, setIsDatePickerVisiblesubtareaFechaFin] = useState({});
+
+    const handleSpanClicksubtareaFechaFin = (fechaInicio, id) => {
+
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActualsubtareaFechaFin(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisiblesubtareaFechaFin(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+
+    };
+
+    const handleDateChangesubtareaFechaFin = (date, dateString, idTarea,moduloId) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActualsubtareaFechaFin(prev => ({
+            ...prev,
+            [idTarea]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPIsubtareaFechaFin(idTarea, dateString,moduloId);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisiblesubtareaFechaFin(prev => ({
+            ...prev,
+            [idTarea]: false,
+        }));
+    };
+
+
+    //EDITA FECHA INICIO SUBTAREA
+    // Función para actualizar la fecha en la API
+    const actualizarFechaInicioAPIsubtareaFechaInicio = async (subtareaId, fechaFin,tareaId) => {
+        try {
+            ////api/tareas/{tareaId}/subTareas/actualizarFechaFin/{subtareaId}
+            const response = await axios.patch(`http://localhost:8080/api/tareas/${tareaId}/subTareas/actualizarFechaInicio/${subtareaId}`, {
+                fechaInicio: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
+
+            });
+            await fetchProyectos();
+            console.log('Fecha actualizada correctamente', response.data);
+        } catch (error) {
+            console.error('Error al actualizar la fecha', error);
+        }
+    };
+    // Estados necesarios para manejar la fecha y la visibilidad
+    const [fechaInicioActualsubtareaFechaInicio, setFechaInicioActualsubtareaFechaInicio] = useState({});
+    const [isDatePickerVisiblesubtareaFechaInicio, setIsDatePickerVisiblesubtareaFechaInicio] = useState({});
+
+    const handleSpanClicksubtareaFechaInicio = (fechaInicio, id) => {
+
+        // Establece la fecha seleccionada al hacer clic en el span
+        setFechaInicioActualsubtareaFechaInicio(prev => ({
+            ...prev,
+            [id]: fechaInicio, // Guarda la fecha cuando se hace clic en el span
+        }));
+        // Muestra el DatePicker correspondiente a esta fila
+        setIsDatePickerVisiblesubtareaFechaInicio(prev => ({
+            ...prev,
+            [id]: true,
+        }));
+    };
+
+    const handleDateChangesubtareaFechaInicio = (date, dateString, idTarea,moduloId) => {
+        // Actualiza la fecha seleccionada en el estado
+        setFechaInicioActualsubtareaFechaInicio(prev => ({
+            ...prev,
+            [idTarea]: dateString,
+        }));
+        // Llama a la API para actualizar la fecha
+        actualizarFechaInicioAPIsubtareaFechaInicio(idTarea, dateString,moduloId);
+        // Cierra el DatePicker después de seleccionar una fecha
+        setIsDatePickerVisiblesubtareaFechaInicio(prev => ({
+            ...prev,
+            [idTarea]: false,
+        }));
+    };
+
+
+
+//AMPLIAR FECHA
+
+    const [dias, setDias] = useState(1); // Estado para almacenar el valor de "dias"
+
+    const handleChangeDias = (value) => {
+        // Aseguramos que el valor sea siempre positivo
+        if (value > 0) {
+            setDias(value); // Actualiza el estado solo si el valor es positivo
+        }
+    };
+
+    const ampliarFechaProyecto = async (proyectoId,fechaFin, dias) => {
+        // Muestra la alerta de confirmación antes de eliminar
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: `La fecha fin "${fechaFin}" será ampliada a  "${dias}"`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, ampliar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        // Si el usuario confirma, se procede a enviar la solicitud de ampliación
+        if (result.isConfirmed) {
+            try {
+                const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/ampliar/dias=${dias}`);
+
+                if (response.status === 200) {
+                    Swal.fire('Ampliado', 'La fecha del proyecto ha sido ampliada correctamente.', 'success');
+                    await fetchProyectos();
+                } else {
+                    Swal.fire('Error', 'Hubo un problema al ampliar la fecha del proyecto.', 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', `Hubo un error al intentar ampliar la fecha: ${error.message}`, 'error');
+            }
+        }
+
+    };
+
+
+
+// ELIMINAR MODULO
+    const handleDeleteModulo = async (proyectoId, nombreModulo,moduloId) => {
+        // Muestra la alerta de confirmación antes de eliminar
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: `La tarea "${nombreModulo}" será eliminada. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        // Si el usuario confirma, se procede a eliminar
+        if (result.isConfirmed) {
+            try {
+                const response = await axios.delete(`/api/proyectos/${proyectoId}/modulos/delete/${moduloId}`);
+                //api/proyectos/{proyectoId}/modulos/delete/{idModulo}
+
+                if (response.status === 200) {
+                    Swal.fire(
+                        '¡Eliminado!',
+                        'La tarea ha sido eliminada exitosamente.',
+                        'success'
+                    );
+                    // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
+                    await fetchProyectos();
+                    // Llama a handleCancel si deseas realizar alguna acción adicional
+                    handleCancel();
+                }
+            } catch (error) {
+                console.error("Error eliminando la tarea:", error);
+                Swal.fire(
+                    'Error',
+                    'No se pudo eliminar la tarea. Inténtalo de nuevo.',
+                    'error'
+                );
+            }
+        }
+    };
+
+// ELIMINAR TAREA
+    const handleDeleteTarea = async (idTarea, nombreTarea,moduloId) => {
+        // Muestra la alerta de confirmación antes de eliminar
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: `La tarea "${nombreTarea}" será eliminada. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        // Si el usuario confirma, se procede a eliminar
+        if (result.isConfirmed) {
+            try {
+                const response = await axios.delete(`/api/modulos/${moduloId}/tareas/delete/${idTarea}`);
+                ///api/modulos/{moduloId}/tareas/delete/{idTarea}
+
+                if (response.status === 200) {
+                    Swal.fire(
+                        '¡Eliminado!',
+                        'La tarea ha sido eliminada exitosamente.',
+                        'success'
+                    );
+
+                    // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
+                    await fetchProyectos();
+
+                    handleCancel();
+                }
+            } catch (error) {
+                console.error("Error eliminando la tarea:", error);
+                Swal.fire(
+                    'Error',
+                    'No se pudo eliminar la tarea. Inténtalo de nuevo.',
+                    'error'
+                );
+            }
+        }
+    };
+// ELIMINAR SUBTAREA
+    const handleDeletesubtarea = async (subtareaId, nombreTarea,tareaId) => {
+        // Muestra la alerta de confirmación antes de eliminar
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: `La tarea "${nombreTarea}" será eliminada. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        // Si el usuario confirma, se procede a eliminar
+        if (result.isConfirmed) {
+            try {
+                const response = await axios.delete(`/api/tareas/${tareaId}/subTareas/delete/${subtareaId}`);
+                ///api/tareas/{tareaId}/subTareas/delete/{idTarea}
+                if (response.status === 200) {
+                    Swal.fire(
+                        '¡Eliminado!',
+                        'La subtarea ha sido eliminada exitosamente.',
+                        'success'
+                    );
+                    // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
+                    
+                    await fetchProyectos();
+                    
+                    handleCancel();
+                }
+            } catch (error) {
+                console.error("Error eliminando la tarea:", error);
+                Swal.fire(
+                    'Error',
+                    'No se pudo eliminar la tarea. Inténtalo de nuevo.',
+                    'error'
+                );
+            }
+        }
+    };
+
+
+
+    //ACTUALIZAR NOMBRE PROYECTO
+
+    const [editProjectId, setEditProjectId] = useState(null); // Guarda el proyecto que está siendo editado
+    const [projectName, setProjectName] = useState(''); // Nombre temporal durante la edición
+    const [popoverVisible, setPopoverVisible] = useState(false); // Estado para controlar la visibilidad del Popover
+
+    // Inicia la edición y oculta el Popover
+    const startEditing = (row) => {
+        setEditProjectId(row.id);
+        setProjectName(row.nombre);
+        setPopoverVisible(false); // Oculta el Popover cuando empieza la edición
+    };
+
+    // Maneja la visibilidad del Popover solo si no estamos editando
+    const handleVisibleChangeP = (visible, rowId) => {
+        if (rowId !== editProjectId) { // Si no estamos editando este proyecto, mostrar el Popover
+            setPopoverVisible(visible);
+        }
+    };
+
+
+    const saveProjectName = (rowId, projectName) => {
+
+        console.log("llego hasta ahi")
+        // URL de la API para actualizar el proyecto
+        const apiUrl = `http://localhost:8080/api/proyectos/actualizar/${rowId}`;
+
+        // Datos a enviar en el cuerpo de la solicitud (PATCH)
+        const data = {
+            nombre: projectName
+        };
+
+        // Realizar solicitud PATCH con Axios
+        axios.patch(apiUrl, data)
+            .then((response) => {
+                // Si la solicitud es exitosa, muestra en la consola
+                fetchProyectos();
+
+                // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
+                setEditProjectId(null);  // Termina la edición
+                setPopoverVisible(true);  // Reabre el Popover si es necesario
+
+            })
+            .catch((error) => {
+                // Si la solicitud falla, muestra en la consola
+                console.error(`Error al actualizar el proyecto con ID: ${rowId}. Error:`, error.response?.data || error.message);
+            });
+    };
+
+    const handleEditarTask = (proyectoId,nombreProyecto) => {
+        startEditing({ id: proyectoId, nombre: nombreProyecto });
+    };
+
+//OPCIONESW DE TRES PUNTOS PROYECTO
+    const getContent = (proyectoId, nombreProyecto) => (
+        <>
+            <div onClick={() => handleEditarTask(proyectoId,nombreProyecto)} style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
+                    <EditOutlined style={{marginRight: 8}}/>
+                    <span>Editar nombre</span>
+                </Row>
+            </div>
+
+            <div onClick={() => archivarProyecto(proyectoId, nombreProyecto)} style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
+                    <InboxOutlined style={{marginRight: 8}}/> {/* Ícono de copiar */}
+                    <span>Archivar proyecto</span>
+
+                </Row>
+            </div>
+
+
+
+            {/* Separador vertical */}
+            <Divider type="horizontal" style={{ backgroundColor: '#d9d9d9', padding:0, marginTop:6,marginBottom:6 }} />
+
+
+
+            <div onClick={()=>eliminarProyectos(proyectoId, nombreProyecto)} style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5, color: "red"}}>
+                    <DeleteOutlined style={{marginRight: 8}}/> {/* Ícono de eliminar */}
+                    <span>Mover papelera proyecto</span>
+                </Row>
+            </div>
+        </>
+    );
+
+
+
+
+
+
+    //OPCIONESW DE TRES PUNTOS MODULO
+    const getContentModulo = (proyectoId, nombreModulo,moduloId) => (
+
+        <>
+
+            <div onClick={() => handleEditarTaskModulo(moduloId,nombreModulo)} style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
+                    <EditOutlined style={{marginRight: 8}}/>
+                    <span>Editar nombre</span>
+                </Row>
+            </div>
+
+
+
+            {/* Separador vertical */}
+            <Divider type="horizontal" style={{ backgroundColor: '#d9d9d9', padding:0, marginTop:6,marginBottom:6 }} />
+
+
+
+            <div onClick={() => handleDeleteModulo(proyectoId,nombreModulo,moduloId)}  style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5, color: "red"}}>
+                    <DeleteOutlined style={{marginRight: 8}}/> {/* Ícono de eliminar */}
+                    <span>Eliminar modulo</span>
+                </Row>
+            </div>
+        </>
+    );
+
+    //ACTUALIZAR NOMBRE MODULO
+
+    const [editModuloId, setEditModuloId] = useState(null); // Guarda el proyecto que está siendo editado
+    const [moduloName, seModuloName] = useState(''); // Nombre temporal durante la edición
+    const [popoverVisibleModulo, setPopoverVisibleModulo] = useState(false); // Estado para controlar la visibilidad del Popover
+
+    // Inicia la edición y oculta el Popover
+    const startEditingModulo = (modulo) => {
+        setEditModuloId(modulo.id);
+        seModuloName(modulo.nombre);
+        setPopoverVisibleModulo(false); // Oculta el Popover cuando empieza la edición
+    };
+
+    // Maneja la visibilidad del Popover solo si no estamos editando
+    const handleVisibleChangeM = (visible, rowId) => {
+        if (rowId !== editModuloId) { // Si no estamos editando este proyecto, mostrar el Popover
+            setPopoverVisibleModulo(visible);
+        }
+    };
+
+
+    const saveProjectNameModulo = (rowId,moduloId, projectName) => {
+
+
+        // URL de la API para actualizar el proyecto
+        const apiUrl = `http://localhost:8080/api/proyectos/${rowId}/modulos/actualizar/${moduloId}`;
+
+        // Datos a enviar en el cuerpo de la solicitud (PATCH)
+        const data = {
+            nombre: projectName
+        };
+
+        // Realizar solicitud PATCH con Axios
+        axios.patch(apiUrl, data)
+            .then((response) => {
+                // Si la solicitud es exitosa, muestra en la consola
+                fetchProyectos();
+
+                // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
+                setEditModuloId(null);  // Termina la edición
+                setPopoverVisibleModulo(true);  // Reabre el Popover si es necesario
+
+            })
+            .catch((error) => {
+                // Si la solicitud falla, muestra en la consola
+                console.error(`Error al actualizar el proyecto con ID: ${rowId}. Error:`, error.response?.data || error.message);
+            });
+    };
+
+
+    const handleEditarTaskModulo = (moduloId,nombreModulo) => {
+        startEditingModulo({ id: moduloId, nombre: nombreModulo });
+    };
+
+
+    //CAMBIAR NOMBRE TAREA
+
+    const [editTareaId, setEditTareaId] = useState(null); // Guarda el proyecto que está siendo editado
+    const [tareaName, setTareaName] = useState(''); // Nombre temporal durante la edición
+    const [popoverVisibleTarea, setPopoverVisibleTarea] = useState(false); // Estado para controlar la visibilidad del Popover
+
+    // Inicia la edición y oculta el Popover
+    const startEditingTarea = (tarea) => {
+        setEditTareaId(tarea.id);
+        setTareaName(tarea.nombre);
+        setPopoverVisibleTarea(false); // Oculta el Popover cuando empieza la edición
+    };
+
+    // Maneja la visibilidad del Popover solo si no estamos editando
+    const handleVisibleChangeT = (visible, rowId) => {
+        if (rowId !== editTareaId) { // Si no estamos editando este proyecto, mostrar el Popover
+            setPopoverVisibleTarea(visible);
+        }
+    };
+
+
+    const saveProjectNameTarea = (moduloId,tareaId, tareaName) => {
+
+console.log("ide modulo:"+moduloId);
+        console.log("ide tarea:"+moduloId);
+        console.log("lo que viene :"+tareaName);
+
+        // URL de la API para actualizar el proyecto
+        const apiUrl = `http://localhost:8080/api/modulos/${moduloId}/tareas/actualizar/${tareaId}`;
+//http://localhost:8080/api/modulos/1/tareas/actualizar/34
+        // Datos a enviar en el cuerpo de la solicitud (PATCH)
+        const data = {
+            nombre: tareaName
+        };
+
+        // Realizar solicitud PATCH con Axios
+        axios.patch(apiUrl, data)
+            .then((response) => {
+                // Si la solicitud es exitosa, muestra en la consola
+                fetchProyectos();
+
+                // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
+                setEditTareaId(null);  // Termina la edición
+                setPopoverVisibleTarea(true);  // Reabre el Popover si es necesario
+
+            })
+            .catch((error) => {
+                // Si la solicitud falla, muestra en la consola
+                console.error(`Error al actualizar el tarea con ID: ${moduloId}. Error:`, error.response?.data || error.message);
+            });
+    };
+
+
+    const handleEditarTaskTarea = (tareaId,nombreTarea) => {
+        startEditingTarea({ id: tareaId, nombre: nombreTarea });
+    };
+
+
+
+    //OPCIONESW DE TRES PUNTOS TAREA
+    const getContentTarea = (tareaId, nombreTarea,moduloId) => (
+
+        <>
+
+            <div onClick={() => handleEditarTaskTarea(tareaId,nombreTarea)} style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
+                    <EditOutlined style={{marginRight: 8}}/>
+                    <span>Editar nombre</span>
+                </Row>
+            </div>
+
+
+
+            {/* Separador vertical */}
+            <Divider type="horizontal" style={{ backgroundColor: '#d9d9d9', padding:0, marginTop:6,marginBottom:6 }} />
+
+
+
+            <div onClick={() => handleDeleteTarea(tareaId,nombreTarea,moduloId)}  style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5, color: "red"}}>
+                    <DeleteOutlined style={{marginRight: 8}}/> {/* Ícono de eliminar */}
+                    <span>Eliminar tarea</span>
+                </Row>
+            </div>
+        </>
+    );
+
+    //CAMBIAR NOMBRE SUBTAREA
+
+    const [editsubTareaId, setEditsubTareaId] = useState(null); // Guarda el proyecto que está siendo editado
+    const [subtareaName, setsubTareaName] = useState(''); // Nombre temporal durante la edición
+    const [popoverVisiblesubTarea, setPopoverVisiblesubTarea] = useState(false); // Estado para controlar la visibilidad del Popover
+
+    // Inicia la edición y oculta el Popover
+    const startEditingsubTarea = (subtarea) => {
+        setEditsubTareaId(subtarea.id);
+        setsubTareaName(subtarea.nombre);
+        setPopoverVisiblesubTarea(false); // Oculta el Popover cuando empieza la edición
+    };
+
+    // Maneja la visibilidad del Popover solo si no estamos editando
+    const handleVisibleChangeST = (visible, rowId) => {
+        if (rowId !== editsubTareaId) { // Si no estamos editando este proyecto, mostrar el Popover
+            setPopoverVisiblesubTarea(visible);
+        }
+    };
+
+
+    const saveProjectNamesubTarea = (tareaId,subtareaId, subtareaName) => {
+
+        console.log("ide modulo:"+tareaId);
+        console.log("ide tarea:"+subtareaId);
+        console.log("lo que viene :"+tareaName);
+
+        // URL de la API para actualizar el proyecto
+        const apiUrl = `http://localhost:8080/api/tareas/${tareaId}/subTareas/actualizar/${subtareaId}`;
+//http://localhost:8080/api/tareas/8/subTareas/actualizar/10
+        // Datos a enviar en el cuerpo de la solicitud (PATCH)
+        const data = {
+            nombre: subtareaName
+        };
+
+        // Realizar solicitud PATCH con Axios
+        axios.patch(apiUrl, data)
+            .then((response) => {
+                // Si la solicitud es exitosa, muestra en la consola
+                fetchProyectos();
+
+                // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
+                setEditsubTareaId(null);  // Termina la edición
+                setPopoverVisiblesubTarea(true);  // Reabre el Popover si es necesario
+
+            })
+            .catch((error) => {
+                // Si la solicitud falla, muestra en la consola
+                console.error(`Error al actualizar el tarea con ID: ${moduloId}. Error:`, error.response?.data || error.message);
+            });
+    };
+
+
+    const handleEditarTasksubTarea = (subtareaId,nombresubTarea) => {
+        startEditingsubTarea({ id: subtareaId, nombre: nombresubTarea });
+    };
+
+
+
+    //OPCIONESW DE TRES PUNTOS MODULO
+    const getContentsubTarea = (subtareaId, nombresubTarea, tareaId) => (
+
+        <>
+
+            <div onClick={() => handleEditarTasksubTarea(subtareaId,nombresubTarea)} style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5}}>
+                    <EditOutlined style={{marginRight: 8}}/>
+                    <span>Editar nombre</span>
+                </Row>
+            </div>
+
+
+
+            {/* Separador vertical */}
+            <Divider type="horizontal" style={{ backgroundColor: '#d9d9d9', padding:0, marginTop:6,marginBottom:6 }} />
+
+
+
+            <div onClick={() => handleDeletesubtarea(subtareaId,nombresubTarea,tareaId)}  style={{cursor: 'pointer'}}>
+                <Row align="middle" style={{padding: 4, borderRadius: 5, color: "red"}}>
+                    <DeleteOutlined style={{marginRight: 8}}/> {/* Ícono de eliminar */}
+                    <span>Eliminar subtarea</span>
+                </Row>
+            </div>
+        </>
+    );
+
+
+
+    //FOCUS DE POPER
+    const [focusedProjectId, setFocusedProjectId] = useState(null); // Mantiene el ID del proyecto que tiene el Popover visible
+
+    const handleVisibleChange = (visible, rowId) => {
+        setFocusedProjectId(visible ? rowId : null);
+    };
+
+    //ACTIVIDADES DE FECHA POR SUBATAREA
+    const sortedTimelineItemsSubtarea = [
+        {
+            color: 'green',
+            user: selectedsubTarea?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedsubTarea?.createAt,
+            formattedDate: selectedsubTarea?.createAt ? dayjs(selectedsubTarea.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedsubTarea?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedsubTarea?.modifyAt,
+            formattedDate: selectedsubTarea?.modifyAt ? dayjs(selectedsubTarea.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+    //ACTIVIDADES DE FECHA POR TAREA
+    const sortedTimelineItemsTarea = [
+        {
+            color: 'green',
+            user: selectedTarea?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedTarea?.createAt,
+            formattedDate: selectedTarea?.createAt ? dayjs(selectedTarea.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedTarea?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedTarea?.modifyAt,
+            formattedDate: selectedTarea?.modifyAt ? dayjs(selectedTarea.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+//ACTIVIDADES DE FECHA POR MODULO
+    const sortedTimelineItemsModulo = [
+        {
+            color: 'green',
+            user: selectedModule?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedModule?.createAt,
+            formattedDate: selectedModule?.createAt ? dayjs(selectedModule.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedModule?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedModule?.modifyAt,
+            formattedDate: selectedModule?.modifyAt ? dayjs(selectedModule.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+
+
+    //ACTIVIDADES PROYETCO POR FECHA
+    const sortedTimelineItems = [
+        {
+            color: 'green',
+            user: selectedProject?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedProject?.createAt,
+            formattedDate: selectedProject?.createAt ? dayjs(selectedProject.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedProject?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedProject?.modifyAt,
+            formattedDate: selectedProject?.modifyAt ? dayjs(selectedProject.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+        {
+            color: 'rgb(0, 21, 41)',
+            user: selectedProject?.archivarDelete || 'Usuario no disponible',
+            action: 'archivó',
+            date: selectedProject?.archivarAt,
+            formattedDate: selectedProject?.archivarAt ? dayjs(selectedProject.archivarAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: 'red',
+            user: selectedProject?.userDelete || 'Usuario no disponible',
+            action: 'eliminó',
+            date: selectedProject?.deleteAt,
+            formattedDate: selectedProject?.deleteAt ? dayjs(selectedProject.deleteAt).format('YYYY-MM-DD HH:mm:ss') : null
+        }
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
 //TAPS
     const onChange = (key) => {
@@ -391,6 +1430,44 @@ function ProyectoList() {
     };
 
 
+    //AXIOS ARCHIVAR PROYECTO
+    const eliminarProyectos = async (id, nombreProyecto) => {
+        // Muestra una alerta de confirmación con el nombre del proyecto
+        const result = await Swal.fire({
+            title: `¿Está seguro de eliminar el proyecto "${nombreProyecto}"?`,
+            text: 'Una vez eliminado, no podrá recuperarlo fácilmente.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await axios.patch(`http://localhost:8080/api/proyectos/${id}/eliminar`, null, {
+
+                });
+
+                // Captura y muestra el mensaje de éxito desde el backend
+                if (response.data.mensaje) {
+                    Swal.fire('Eliminado', response.data.mensaje, 'success');
+                }
+
+                // Actualiza el estado de tus proyectos si es necesario
+                setProyectos((prevProyectos) => prevProyectos.filter(proyecto => proyecto.id !== id));
+
+                // Llama a handleCancel si deseas realizar alguna acción adicional
+                handleCancel();
+
+            } catch (error) {
+                console.error('Error al eliminar el proyecto:', error);
+
+                // Muestra un mensaje de error
+                Swal.fire('Error', 'Hubo un problema al eliminar el proyecto.', 'error');
+            }
+        }
+    };
+
 //AXIOS ARCHIVAR PROYECTO
     const archivarProyecto = async (id, nombreProyecto) => {
         // Muestra una alerta de confirmación con el nombre del proyecto
@@ -408,16 +1485,21 @@ function ProyectoList() {
                 const response = await axios.put(`http://localhost:8080/api/proyectos/${id}/estado`, null, {
                     params: { nuevoEstado: 'ARCHIVADO' }
                 });
-                console.log('Proyecto archivado:', response.data);
+
+                // Captura y muestra el mensaje de éxito desde el backend
+                if (response.data.mensaje) {
+                    Swal.fire('Archivado', response.data.mensaje, 'success');
+                }
 
                 // Actualiza el estado de tus proyectos si es necesario
                 setProyectos((prevProyectos) => prevProyectos.filter(proyecto => proyecto.id !== id));
 
-                // Muestra un mensaje de éxito
-                Swal.fire('Archivado', 'El proyecto ha sido archivado.', 'success');
+                // Llama a handleCancel si deseas realizar alguna acción adicional
+                handleCancel();
 
             } catch (error) {
                 console.error('Error al archivar el proyecto:', error);
+
                 // Muestra un mensaje de error
                 Swal.fire('Error', 'Hubo un problema al archivar el proyecto.', 'error');
             }
@@ -872,26 +1954,33 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             // Encuentra el proyecto por su ID
             const proyecto = proyectos.find(p => p.id === id);
 
+
             // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
             if (proyecto) {
-                const modulo = proyecto.modulos.find(m => m.id === moduloId);
+                // Actualiza el estado con el proyecto seleccionado
+                setSelectedProject(proyecto);
 
-                // Si se encuentra el módulo, actualiza el estado con ese módulo
-                if (modulo) {
+                // Si se encuentra el proyecto, busca el módulo dentro de ese proyecto
+                if (proyecto) {
+                    const modulo = proyecto.modulos.find(m => m.id === moduloId);
+
+                    // Si se encuentra el módulo, actualiza el estado con ese módulo
+                    if (modulo) {
                         setSelectedModule(modulo)
-                    const  tarea=modulo.tareas.find(t=>t.id===tareaId);
-                    if(tarea){
+                        const tarea = modulo.tareas.find(t => t.id === tareaId);
+                        if (tarea) {
 
-                        setSelectedTarea(tarea);
-                    }else {
-                        console.error("tarea no encontrado");
+                            setSelectedTarea(tarea);
+                        } else {
+                            console.error("tarea no encontrado");
+                        }
+
+                    } else {
+                        console.error("Módulo no encontrado");
                     }
-
                 } else {
-                    console.error("Módulo no encontrado");
+                    console.error("Proyecto no encontrado");
                 }
-            } else {
-                console.error("Proyecto no encontrado");
             }
         }
 
@@ -1314,11 +2403,11 @@ console.log("entro aqui---------------")
                          }}
 
                     >
-                        <Col span={11}
+                        <Col span={12}
                         >
                             <div>Nombre de proyecto</div>
                         </Col>
-                        <Col span={4}>
+                        <Col span={3}>
                             <div className="task-item__assignee">Persona asignado</div>
                         </Col>
                         <Col span={2}>
@@ -1353,7 +2442,7 @@ console.log("entro aqui---------------")
                                 onMouseLeave={handleMouseLeave}
 
                             >
-                                <Col span={11}>
+                                <Col span={12}>
                                     <div style={{ display: 'flex', alignItems: 'center' }}>
                                         <Button
                                             type="text"
@@ -1370,53 +2459,76 @@ console.log("entro aqui---------------")
                                                 border: '2px solid black',
                                             }}
                                         />
-                                        <Tooltip title="Ver proyecto">
-                                            <a
-                                                style={{
-                                                    marginLeft: 5,
-                                                    fontWeight: 500,
-                                                    textDecoration: 'none',
-                                                    color: 'inherit',
-                                                    fontSize: 14,
-                                                    transition: 'color 0.3s', // Añade una transición suave
-                                                }}
-                                                onClick={() => showModal('verProyecto', row.id)}
-                                                onMouseEnter={(e) => (e.currentTarget.style.color = '#534dc9')} // Cambia el color al pasar el mouse
-                                                onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')} // Restaura el color al salir
-                                            >
-                                                {row.nombre}
-                                            </a>
-                                        </Tooltip>
-                                        {expandedRows[row.id] && (
-                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight:5 }}>
-                                                <Dropdown
-                                                    menu={{
-                                                        items,
+
+                                            {editProjectId === row.id ? (
+                                                // Cuando estamos editando, muestra el Input
+                                                <Input
+                                                    value={projectName}
+                                                    onChange={(e) => setProjectName(e.target.value)}
+                                                    onBlur={() => saveProjectName(row.id,projectName)} // Guarda al hacer clic fuera
+                                                    onPressEnter={() => saveProjectName(row.id,projectName)} // Guarda al presionar Enter
+                                                    style={{
+                                                        marginLeft: 5,
+                                                        fontWeight: 500,
+                                                        fontSize: 14,
+                                                        width: '72%',
                                                     }}
-                                                    placement="topLeft"
-                                                    arrow
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                <Tooltip title={row.nombre}>
+
+                                                <a
+                                                    style={{
+                                                        marginLeft: 5,
+                                                        fontWeight: 500,
+                                                        textDecoration: 'none',
+                                                        color: 'inherit',
+                                                        fontSize: 14,
+                                                        transition: 'color 0.3s',
+                                                    }}
+                                                   // Comienza la edición al hacer clic
+                                                    onClick={() => showModal('verProyecto', row.id)}
+                                                    onMouseEnter={(e) => (e.currentTarget.style.color = '#534dc9')}
+                                                    onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
+                                                >
+                                                    {row.nombre}
+                                                </a>
+                                                </Tooltip>
+                                            )}
+
+                                        {expandedRows[row.id] && (
+                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight:0 }}>
+
+
+
+                                                <Popover
+                                                    content={getContent(row.id, row.nombre)}
+                                                    trigger="click"
+                                                    onVisibleChange={(visible) => handleVisibleChangeP(visible, row.id)}
+
                                                 >
                                                     <Button
-                                                        type="link"
-                                                        icon={<EllipsisOutlined style={{ marginLeft: 5, fontSize: 17, fontWeight: 800 }} />}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
-                                                            e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                        type="text"
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            fontSize: '18px',
+                                                            borderRadius: '4px',
+                                                            backgroundColor: focusedProjectId === row.id ? '#e0e0e0' : 'transparent',
                                                         }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
-                                                            e.currentTarget.style.color = '656f7d'; // Restaura el color del texto al salir
-                                                        }}
-                                                    />
-                                                </Dropdown>
+                                                    >
+                                                        <EllipsisOutlined />
+                                                    </Button>
+                                                </Popover>
 
 
-                                                    <Button
+
+                                                <Button
                                                         style={{
                                                             color: '#656f7d',
                                                             backgroundColor: 'transparent', // Color de fondo predeterminado
                                                             transition: 'background-color 0.3s',
-                                                            paddingLeft:20
+                                                            padding: '12px 14px',
                                                             // Suave transición
                                                         }}
                                                         icon={<PlusOutlined />}
@@ -1445,7 +2557,7 @@ console.log("entro aqui---------------")
 
 
 
-                                <Col span={4}>
+                                <Col span={3}>
                                     {/* Generar avatares de los usuarios del proyecto */}
                                     <div style={{ display: 'flex', alignItems: 'center', position: 'relative', height: '22px', width: '30px', paddingTop:10 }}> {/* Reduce la altura aquí */}
                                         {row.usuarios.length > 0 ? (
@@ -1484,54 +2596,101 @@ console.log("entro aqui---------------")
                                         )}
                                     </div>
                                 </Col>
+                                <Col key={row.id} style={{ paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                    {isDatePickerVisible[row.id] ? (
+
+                                        <>
+
+                                            <DatePicker
+                                                open={isDatePickerVisible[row.id]}
+                                                // Pasamos row.fechaInicio a cellRender
+                                                onChange={(date, dateString) => handleDateChange(date, dateString, row.id)}
+                                                onOpenChange={(open) => !open && setIsDatePickerVisible(prev => ({ ...prev, [row.id]: false }))} // Cierra el DatePicker si se cierra
+                                                style={{ width: '80px', padding:0 }} // Aumenta el ancho del input
+
+                                                size="small"  // Reduce el tamaño del DatePicker
+                                                format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                defaultValue={dayjs(row.fechaInicio, "YYYY-MM-DD")}
+                                                allowClear={false}  // Desactiva el ícono de la "x"
+                                                suffixIcon={null} // Oculta el icono de calendario
+
+                                            />
 
 
 
 
-
-
-
-                                <Col style={{paddingTop: '8px', paddingLeft: 10, color: '#055706'}}
-                                     span={2}>
-
-                                                    <span style={{
-                                                        fontSize: '14px',
-                                                        paddingLeft: 0,
-                                                        margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                                     {row.fechaInicio} < /span>
-
-
+                                        </>
+                                    ) : (
+                                        <span
+                                            style={{
+                                                fontSize: '14px',
+                                                paddingLeft: 0,
+                                                margin: 0,
+                                                fontWeight: '400',
+                                                cursor: 'pointer',
+                                            }}
+                                            onClick={() => handleSpanClick(row.fechaInicio, row.id)}
+                                        >
+                    {fechaInicioActual[row.id] || row.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                    )}
                                 </Col>
 
-                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
+                                <Col style={{paddingTop: '8px', paddingLeft: 4}}
                                      span={2}>
-
-                                                    <span style={{
-                                                        fontSize: '14px',
-                                                        paddingLeft: 0,
-                                                        margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
+                                    {row.fechaAmpliada ? (
+                                        <span style={{
+                                            fontSize: '14px',
+                                            paddingLeft: 0,
+                                            margin: 0,
+                                            fontWeight: '400',
+                                            color: 'red'
+                                        }}>
                                                      {row.fechaFin} < /span>
 
+                                        ): (
+                                        <span style={{
+                                            fontSize: '14px',
+                                            paddingLeft: 0,
+                                            margin: 0,
+                                            fontWeight: '400',
+                                            color: '#055706'
+                                        }}>
+                                                     {row.fechaFin} < /span>
+                                    )}
 
                                 </Col>
-                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                         span={2}>
-    
-                                                        <span style={{
-                                                            fontSize: '14px',
-                                                            paddingLeft: 0,
-                                                            margin: 0,
-                                                            fontWeight: '400'
-                                                        }}>
-                                                                <CalendarOutlined/>
-                                                          < /span>
-    
-    
-                                    </Col>
+                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}} span={2}>
+                                    {/* Verifica si fechaAmpliada es null o está vacía */}
+                                    {row.fechaAmpliada ? (
+                                        // Si hay una fecha, muestra la fecha
+                                        <>
+          <span
+              style={{
+                  fontSize: '14px',
+                  paddingLeft: 0,
+                  margin: 0,
+                  fontWeight: '400',
+              }}
+          >
+
+          </span>
+                                            <span>{row.fechaAmpliada}</span>
+                                        </>
+                                    ) : (
+                                        // Si no hay fecha, muestra solo el icono de calendario
+                                        <span
+                                            style={{
+                                                fontSize: '14px',
+                                                paddingLeft: 0,
+                                                margin: 0,
+                                                fontWeight: '400',
+                                            }}
+                                        >
+          <CalendarOutlined />
+        </span>
+                                    )}
+                                </Col>
 
                                 <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
                                      onMouseEnter={() => handleMouseEnter(row.id)}
@@ -1607,7 +2766,7 @@ console.log("entro aqui---------------")
                                         onMouseLeave={handleMouseLeavemodulo}
 
                                     >
-                                        <Col span={11}>
+                                        <Col span={12}>
                                             <div style={{display: 'flex', alignItems: 'center'}}>
                                                 <Button
                                                     type="text"
@@ -1628,50 +2787,62 @@ console.log("entro aqui---------------")
                                                         border: '2px solid black',
                                                     }}
                                                 />
-                                                <Tooltip title="Ver modulo">
-                                                    <a
-
+                                                {editModuloId === modulo.id ? (
+                                                    // Cuando estamos editando, muestra el Input
+                                                    <Input
+                                                        value={moduloName}
+                                                        onChange={(e) => seModuloName(e.target.value)}
+                                                        onBlur={() => saveProjectNameModulo(row.id,modulo.id,moduloName)} // Guarda al hacer clic fuera
+                                                        onPressEnter={() => saveProjectNameModulo(row.id,modulo.id,moduloName)} // Guarda al presionar Enter
                                                         style={{
-
                                                             marginLeft: 5,
-
-                                                            textDecoration: 'none',
-                                                            color: 'inherit'
+                                                            fontWeight: 500,
+                                                            fontSize: 14,
+                                                            width: '72%',
                                                         }}
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <Tooltip title={modulo.nombre}>
 
-                                                        onClick={() => showModal('verModulo', row.id, modulo.id)}
-                                                    >
-
-                                                        {modulo.nombre}
-                                                    </a>
-                                                </Tooltip>
+                                                        <a
+                                                            style={{
+                                                                marginLeft: 5,
+                                                                fontWeight: 500,
+                                                                textDecoration: 'none',
+                                                                color: 'inherit',
+                                                                fontSize: 14,
+                                                                transition: 'color 0.3s',
+                                                            }}
+                                                            // Comienza la edición al hacer clic
+                                                            onClick={() => showModal('verModulo', row.id, modulo.id)}
+                                                            onMouseEnter={(e) => (e.currentTarget.style.color = '#534dc9')}
+                                                            onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
+                                                        >
+                                                            {modulo.nombre}
+                                                        </a>
+                                                    </Tooltip>
+                                                )}
 
                                                 <div
-                                                    style={{display: 'flex', alignItems: 'center', marginLeft: 'auto'}}>
-                                                    <Dropdown
-                                                        menu={{
-                                                            items,
-                                                        }}
-                                                        placement="topLeft"
-                                                        arrow
+                                                    style={{display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight:7}}>
+                                                    <Popover
+                                                        content={getContentModulo( row.id, modulo.nombre,modulo.id)}
+                                                        trigger="click"
+                                                        onVisibleChange={(visible) => handleVisibleChangeM(visible, modulo.id)}
                                                     >
-                                                        <Button style={{paddingRight:20}}
-                                                            type="link"
-                                                            icon={<EllipsisOutlined style={{
-                                                                marginLeft: 5,
-                                                                fontSize: 17,
-                                                                fontWeight: 800
-                                                            }}/>}
-                                                            onMouseEnter={(e) => {
-                                                                e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
-                                                                e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                        <Button
+                                                            type="text"
+                                                            style={{
+                                                                padding: '4px 8px',
+                                                                fontSize: '18px',
+                                                                borderRadius: '4px',
+                                                                backgroundColor: focusedProjectId === row.id ? '#e0e0e0' : 'transparent',
                                                             }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
-                                                                e.currentTarget.style.color = '656f7d'; // Restaura el color del texto al salir
-                                                            }}
-                                                        />
-                                                    </Dropdown>
+                                                        >
+                                                            <EllipsisOutlined />
+                                                        </Button>
+                                                    </Popover>
                                                     <Tooltip title="kamban">
                                                         <Button
                                                             icon={<InsertRowBelowOutlined/>}
@@ -1716,7 +2887,7 @@ console.log("entro aqui---------------")
                                         </Col>
 
 
-                                        <Col span={4}>
+                                        <Col span={3}>
                                             {/* Generar avatares de los usuarios del proyecto */}
                                             <div style={{
                                                 display: 'flex',
@@ -1762,43 +2933,101 @@ console.log("entro aqui---------------")
                                                 )}
                                             </div>
                                         </Col>
-                                        <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                             span={2}>
+                                        <Col key={row.id} style={{  paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                            {isDatePickerVisibleModulo[modulo.id] ? (
 
-                                                    <span style={{
+                                                <>
+
+                                                    <DatePicker
+                                                        open={isDatePickerVisibleModulo[modulo.id]}
+                                                        // Pasamos row.fechaInicio a cellRender
+                                                        onChange={(date, dateString) => handleDateChangeModulo(date, dateString, modulo.id,row.id)}
+                                                        onOpenChange={(open) => !open && setIsDatePickerVisibleModulo(prev => ({ ...prev, [modulo.id]: false }))} // Cierra el DatePicker si se cierra
+                                                        style={{ width: '75px', padding:0 }} // Aumenta el ancho del input
+
+                                                        size="small"  // Reduce el tamaño del DatePicker
+                                                        format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                        defaultValue={dayjs(modulo.fechaInicio, "YYYY-MM-DD")}
+                                                        allowClear={false}  // Desactiva el ícono de la "x"
+                                                        suffixIcon={null} // Oculta el icono de calendario
+
+                                                    />
+
+
+
+
+                                                </>
+                                            ) : (
+                                                <span
+                                                    style={{
                                                         fontSize: '14px',
-                                                        paddingLeft: 5,
+                                                        padding: 0,
                                                         margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                                     {modulo.fechaInicio} < /span>
-
-
+                                                        fontWeight: '400',
+                                                        cursor: 'pointer',
+                                                        color: new Date(fechaInicioActualModulo[modulo.id] || modulo.fechaInicio) < new Date(row.fechaInicio)
+                                                            ? '#fcba03' // Cambia el color a rojo cuando está tachado
+                                                            : 'inherit',
+                                                        textDecoration: new Date(fechaInicioActualModulo[modulo.id] || modulo.fechaInicio) < new Date(row.fechaInicio)
+                                                            ? 'line-through' // Si la fecha es mayor, se aplica tachado
+                                                            : 'none', // Si no, se mantiene normal
+                                                    }}
+                                                    onClick={() => handleSpanClickModulo(modulo.fechaInicio, modulo.id)}
+                                                >
+                    {fechaInicioActualModulo[modulo.id] || modulo.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                            )}
                                         </Col>
-                                        <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                             span={2}>
+                                        <Col key={row.id} style={{  paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                            {isDatePickerVisibleModuloFin[modulo.id] ? (
 
-                                                    <span style={{
+                                                <>
+
+                                                    <DatePicker
+                                                        open={isDatePickerVisibleModuloFin[modulo.id]}
+                                                        // Pasamos row.fechaInicio a cellRender
+                                                        onChange={(date, dateString) => handleDateChangeModuloFin(date, dateString, modulo.id,row.id)}
+                                                        onOpenChange={(open) => !open && setIsDatePickerVisibleModuloFin(prev => ({ ...prev, [modulo.id]: false }))} // Cierra el DatePicker si se cierra
+                                                        style={{ width: '75px', padding:0 }} // Aumenta el ancho del input
+
+                                                        size="small"  // Reduce el tamaño del DatePicker
+                                                        format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                        defaultValue={dayjs(modulo.fechaFin, "YYYY-MM-DD")}
+                                                        allowClear={false}  // Desactiva el ícono de la "x"
+                                                        suffixIcon={null} // Oculta el icono de calendario
+
+                                                    />
+
+
+
+
+                                                </>
+                                            ) : (
+                                                <span
+                                                    style={{
                                                         fontSize: '14px',
-                                                        paddingLeft: 5,
+                                                        padding: 0,
                                                         margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                                     {modulo.fechaFin} < /span>
-
-
+                                                        fontWeight: '400',
+                                                        cursor: 'pointer',
+                                                        color: new Date(fechaInicioActualModuloFin[modulo.id] || modulo.fechaFin) > new Date(row.fechaAmpliada || row.fechaFin)
+                                                            ? '#fcba03' // Cambia el color a rojo cuando está tachado
+                                                            : 'inherit',
+                                                        textDecoration: new Date(fechaInicioActualModuloFin[modulo.id] || modulo.fechaFin) > new Date(row.fechaAmpliada || row.fechaFin)
+                                                            ? 'line-through' // Si la fecha es mayor, se aplica tachado
+                                                            : 'none', // Si no, se mantiene normal
+                                                    }}
+                                                    onClick={() => handleSpanClickModuloFin(modulo.fechaFin, modulo.id)}
+                                                >
+                    {fechaInicioActualModuloFin[modulo.id] || modulo.fechaFin} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                            )}
                                         </Col>
+
                                         <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
                                              span={2}>
 
-                                                        <span style={{
-                                                            fontSize: '14px',
-                                                            paddingLeft: 0,
-                                                            margin: 0,
-                                                            fontWeight: '400'
-                                                        }}>
-                                                                <CalendarOutlined/>
-                                                          < /span>
+
 
 
                                         </Col>
@@ -1881,7 +3110,8 @@ console.log("entro aqui---------------")
                                                 onMouseEnter={() => handleMouseEntertarea(tarea.id)}
                                                 onMouseLeave={handleMouseLeavetarea}
                                             >
-                                                <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
+                                                <Col span={12}
+                                                     style={{display: 'flex', alignItems: 'center', paddingLeft: 16}}>
                                                     <Button
                                                         type="text"
                                                         size="small"
@@ -1889,72 +3119,122 @@ console.log("entro aqui---------------")
                                                             e.stopPropagation(); // Evita que el click propague al Row
                                                             toggleCollapseTarea(row.id, modulo.id, tarea.id);
                                                         }}
-                                                        icon={expandedModules[`${row.id}-${modulo.id}-${tarea.id}`] ? <CaretUpOutlined /> : <CaretDownOutlined />}
+                                                        icon={expandedModules[`${row.id}-${modulo.id}-${tarea.id}`] ?
+                                                            <CaretUpOutlined/> : <CaretDownOutlined/>}
                                                     />
                                                     <FileTextOutlined style={{
                                                         backgroundColor: row.backgroundProyecto,
                                                         color: 'black',
                                                         marginTop: '7px',
-                                                        fontSize:19,
+                                                        fontSize: 19,
                                                         marginRight: '4px' // Espacio entre el icono y el texto
-                                                    }} />
-
-
-                                                    <Tooltip title={tarea.nombre}>
-                                                        <a
-
+                                                    }}/>
+                                                    {editTareaId === tarea.id ? (
+                                                        <Input
+                                                            value={tareaName}
+                                                            onChange={(e) => setTareaName(e.target.value)}
+                                                            onBlur={() => saveProjectNameTarea(modulo.id, tarea.id, tareaName)} // Guarda al hacer clic fuera
+                                                            onPressEnter={() => saveProjectNameTarea(modulo.id, tarea.id, tareaName)} // Guarda al presionar Enter
                                                             style={{
-
                                                                 marginLeft: 5,
-
-                                                                textDecoration: 'none',
-                                                                color: 'inherit',
-                                                                paddingTop:6
+                                                                fontWeight: 500,
+                                                                fontSize: 14,
+                                                                width: '72%',
                                                             }}
-                                                            onClick={() => showModal('verTarea', row.id, modulo.id, tarea.id)}
-                                                        >
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <Tooltip title={tarea.nombre}>
 
-                                                            {truncateText(tarea.nombre)} {/* Usa la función aquí */}
-                                                        </a>
-                                                    </Tooltip>
-                                                    <Tooltip title="kamban">
+                                                            <a
+                                                                style={{
+                                                                    marginLeft: 5,
+                                                                    fontWeight: 500,
+                                                                    textDecoration: 'none',
+                                                                    color: 'inherit',
+                                                                    fontSize: 14,
+                                                                    transition: 'color 0.3s',
+                                                                }}
+                                                                // Comienza la edición al hacer clic
+                                                                onClick={() => showModal('verTarea', row.id, modulo.id, tarea.id)}
+                                                                onMouseEnter={(e) => (e.currentTarget.style.color = '#534dc9')}
+                                                                onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
+                                                            >
+
+                                                                {truncateText(tarea.nombre)}
+                                                            </a>
+                                                        </Tooltip>
+                                                    )}
+
+                                                    <div
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            marginLeft: 'auto',
+                                                            marginRight: 7
+                                                        }}>
+                                                        <Popover
+                                                            content={getContentTarea(tarea.id, tarea.nombre, modulo.id)}
+                                                            trigger="click"
+                                                            onVisibleChange={(visible) => handleVisibleChangeT(visible, tarea.id)}
+                                                        >
+                                                            <Button
+                                                                type="text"
+                                                                style={{
+                                                                    padding: '4px 8px',
+                                                                    fontSize: '18px',
+                                                                    borderRadius: '4px',
+                                                                    backgroundColor: focusedProjectId === tarea.id ? '#e0e0e0' : 'transparent',
+                                                                }}
+                                                            >
+                                                                <EllipsisOutlined/>
+                                                            </Button>
+                                                        </Popover>
+
+                                                        <Tooltip title="kamban">
+                                                            <Button
+                                                                icon={<InsertRowBelowOutlined/>}
+                                                                size="small"
+                                                                type="link"
+                                                                onClick={() => handleButtonClickSub(row.id, modulo.id, tarea.id)}  // Redirige al hacer clic
+                                                                style={{
+                                                                    marginLeft: 'auto',
+                                                                    paddingRight: 10,
+                                                                    paddingTop: 6
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+
                                                         <Button
-                                                            icon={<InsertRowBelowOutlined />}
+                                                            style={{
+                                                                color: '#656f7d',
+                                                                backgroundColor: 'transparent', // Color de fondo predeterminado
+                                                                transition: 'background-color 0.3s' // Suave transición
+                                                                , marginRight: 15,
+
+                                                            }}
+                                                            icon={<PlusOutlined/>}
                                                             size="small"
                                                             type="link"
-                                                            onClick={() => handleButtonClickSub(row.id,modulo.id,tarea.id)}  // Redirige al hacer clic
-                                                            style={{ marginLeft: 'auto', paddingRight:10 , paddingTop:6}}
-                                                        />
-                                                    </Tooltip>
+                                                            onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
+                                                                e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
+                                                                e.currentTarget.style.color = '#656f7d'; // Restaura el color del texto
+                                                            }}
+                                                        >
+                                                        </Button>
 
-                                                    <Button
-                                                        style={{
-                                                            color: '#656f7d',
-                                                            backgroundColor: 'transparent', // Color de fondo predeterminado
-                                                            transition: 'background-color 0.3s' // Suave transición
-                                                            ,marginRight:15,
-
-                                                        }}
-                                                        icon={<PlusOutlined />}
-                                                        size="small"
-                                                        type="link"
-                                                        onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#dce0e8'; // Cambia el color de fondo al pasar el mouse
-                                                            e.currentTarget.style.color = '#000000'; // Cambia el color del texto si es necesario
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = 'transparent'; // Restaura el color de fondo al salir
-                                                            e.currentTarget.style.color = '#656f7d'; // Restaura el color del texto
-                                                        }}
-                                                    >
-                                                    </Button>
+                                                    </div>
 
 
                                                 </Col>
 
 
-                                                <Col span={4}>
+                                                <Col span={3}>
                                                     {/* Generar avatares de los usuarios del proyecto */}
                                                     <div style={{
                                                         display: 'flex',
@@ -2000,44 +3280,101 @@ console.log("entro aqui---------------")
                                                         )}
                                                     </div>
                                                 </Col>
-                                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                                     span={2}>
+                                                <Col key={row.id} style={{  paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                                    {isDatePickerVisibleTareaFechaInicio[tarea.id] ? (
 
-                                                    <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-                                                     {tarea.fechaInicio} < /span>
+                                                        <>
+
+                                                            <DatePicker
+                                                                open={isDatePickerVisibleTareaFechaInicio[tarea.id]}
+                                                                // Pasamos row.fechaInicio a cellRender
+                                                                onChange={(date, dateString) => handleDateChangeTareaFechaInicio(date, dateString, tarea.id,modulo.id)}
+                                                                onOpenChange={(open) => !open && setIsDatePickerVisibleTareaFechaInicio(prev => ({ ...prev, [tarea.id]: false }))} // Cierra el DatePicker si se cierra
+                                                                style={{ width: '75px', padding:0 }} // Aumenta el ancho del input
+
+                                                                size="small"  // Reduce el tamaño del DatePicker
+                                                                format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                                defaultValue={dayjs(tarea.fechaInicio, "YYYY-MM-DD")}
+                                                                allowClear={false}  // Desactiva el ícono de la "x"
+                                                                suffixIcon={null} // Oculta el icono de calendario
+
+                                                            />
 
 
+
+
+                                                        </>
+                                                    ) : (
+                                                        <span
+                                                            style={{
+                                                                fontSize: '14px',
+                                                                padding: 0,
+                                                                margin: 0,
+                                                                fontWeight: '400',
+                                                                cursor: 'pointer',
+                                                                color: new Date(fechaInicioActualTareaFechaInicio[tarea.id] || tarea.fechaInicio) < new Date(modulo.fechaInicio)
+                                                                    ? '#fcba03' // Cambia el color a rojo cuando está tachado
+                                                                    : 'inherit',
+                                                                textDecoration: new Date(fechaInicioActualTareaFechaInicio[tarea.id] || tarea.fechaInicio) < new Date(modulo.fechaInicio)
+                                                                    ? 'line-through' // Si la fecha es mayor, se aplica tachado
+                                                                    : 'none', // Si no, se mantiene normal
+                                                            }}
+                                                            onClick={() => handleSpanClickTareaFechaInicio(tarea.fechaInicio, tarea.id)}
+                                                        >
+                    {fechaInicioActualTareaFechaInicio[tarea.id] || tarea.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                                    )}
                                                 </Col>
 
-                                                <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                                     span={2}>
+                                                <Col key={row.id} style={{  paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                                    {isDatePickerVisibleTareaFechaFin[tarea.id] ? (
 
-                                                    <span style={{
-                                                        fontSize: '14px',
-                                                        paddingLeft: 5,
-                                                        margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                                     {tarea.fechaFin} < /span>
+                                                        <>
+
+                                                            <DatePicker
+                                                                open={isDatePickerVisibleTareaFechaFin[tarea.id]}
+                                                                // Pasamos row.fechaInicio a cellRender
+                                                                onChange={(date, dateString) => handleDateChangeTareaFechaFin(date, dateString, tarea.id,modulo.id)}
+                                                                onOpenChange={(open) => !open && setIsDatePickerVisibleTareaFechaFin(prev => ({ ...prev, [tarea.id]: false }))} // Cierra el DatePicker si se cierra
+                                                                style={{ width: '75px', padding:0 }} // Aumenta el ancho del input
+
+                                                                size="small"  // Reduce el tamaño del DatePicker
+                                                                format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                                defaultValue={dayjs(tarea.fechaFin, "YYYY-MM-DD")}
+                                                                allowClear={false}  // Desactiva el ícono de la "x"
+                                                                suffixIcon={null} // Oculta el icono de calendario
+
+                                                            />
 
 
+
+
+                                                        </>
+                                                    ) : (
+                                                        <span
+                                                            style={{
+                                                                fontSize: '14px',
+                                                                padding: 0,
+                                                                margin: 0,
+                                                                fontWeight: '400',
+                                                                cursor: 'pointer',
+                                                                color: new Date(fechaInicioActualTareaFechaFin[tarea.id] || tarea.fechaFin) > new Date(modulo.fechaFin)
+                                                                    ? '#fcba03' // Cambia el color a rojo cuando está tachado
+                                                                    : 'inherit',
+                                                                textDecoration: new Date(fechaInicioActualTareaFechaFin[tarea.id] || tarea.fechaFin) > new Date(modulo.fechaFin)
+                                                                    ? 'line-through' // Si la fecha es mayor, se aplica tachado
+                                                                    : 'none', // Si no, se mantiene normal
+                                                            }}
+                                                            onClick={() => handleSpanClickTareaFechaFin(tarea.fechaFin, tarea.id)}
+                                                        >
+                    {fechaInicioActualTareaFechaFin[tarea.id] || tarea.fechaFin} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                                    )}
                                                 </Col>
                                                 <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
                                                      span={2}>
 
-                                                        <span style={{
-                                                            fontSize: '14px',
-                                                            paddingLeft: 0,
-                                                            margin: 0,
-                                                            fontWeight: '400'
-                                                        }}>
-                                                                <CalendarOutlined/>
-                                                          < /span>
+
 
 
                                                 </Col>
@@ -2102,9 +3439,23 @@ console.log("entro aqui---------------")
                                                 </Col>
                                             </Row>
 
+                                            <DragDropContext onDragEnd={onDragEnd}>
+                                                {expandedTasks[`${row.id}-${modulo.id}-${tarea.id}`] && tarea.subtareas?.length > 0 && (
 
-                                            {expandedTasks[`${row.id}-${modulo.id}-${tarea.id}`] && tarea.subtareas?.map((subtarea) => (
-                                                <Row key={subtarea.id}
+                                                    <Droppable key={row.id} droppableId={row.id.toString()}>
+
+
+                                                    {(droppableProvided) => (
+                                                            <div ref={droppableProvided.innerRef} {...droppableProvided.droppableProps}>
+
+                                                                {tarea.subtareas.map((subtarea, index) => (
+                                                                    <Draggable key={subtarea.id} draggableId={`subtarea-${subtarea.id}`} index={index}>
+                                                                        {(draggableProvided) => (
+
+                                                <Row
+                                                    ref={draggableProvided.innerRef}
+                                                    {...draggableProvided.draggableProps}
+                                                    {...draggableProvided.dragHandleProps}
                                                      style={{
                                                          marginLeft: '20px',
                                                          padding:0,
@@ -2120,9 +3471,13 @@ console.log("entro aqui---------------")
 
                                                 >
 
-                                                    <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft:50 }}>
+                                                    <Col span={12} style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        paddingLeft: 50
+                                                    }}>
                                                         <div style={{
-                                                            marginTop:6,
+                                                            marginTop: 6,
                                                             width: '20px', // Ajusta el tamaño del círculo
                                                             height: '20px',
                                                             borderRadius: '50%',
@@ -2131,28 +3486,73 @@ console.log("entro aqui---------------")
                                                         }}>
 
                                                         </div>
-                                                        <Tooltip title= {subtarea.nombre}>
-                                                            <a
-
+                                                        {editsubTareaId === subtarea.id ? (
+                                                            <Input
+                                                                value={subtareaName}
+                                                                onChange={(e) => setsubTareaName(e.target.value)}
+                                                                onBlur={() => saveProjectNamesubTarea(tarea.id, subtarea.id, subtareaName)} // Guarda al hacer clic fuera
+                                                                onPressEnter={() => saveProjectNamesubTarea(tarea.id, subtarea.id, subtareaName)} // Guarda al presionar Enter
                                                                 style={{
-                                                                    paddingTop:6,
                                                                     marginLeft: 5,
-
-                                                                    textDecoration: 'none',
-                                                                    color: 'inherit'
+                                                                    fontWeight: 500,
+                                                                    fontSize: 14,
+                                                                    width: '72%',
                                                                 }}
-                                                                onClick={() => showModal('verSubtarea', row.id, modulo.id, tarea.id, subtarea.id)}
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <Tooltip title={subtarea.nombre}>
+
+                                                                <a
+                                                                    style={{
+                                                                        marginLeft: 5,
+                                                                        fontWeight: 500,
+                                                                        textDecoration: 'none',
+                                                                        color: 'inherit',
+                                                                        fontSize: 14,
+                                                                        transition: 'color 0.3s',
+                                                                    }}
+                                                                    // Comienza la edición al hacer clic
+                                                                    onClick={() => showModal('verSubtarea', row.id, modulo.id, tarea.id, subtarea.id)}
+                                                                    onMouseEnter={(e) => (e.currentTarget.style.color = '#534dc9')}
+                                                                    onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
+                                                                >
+
+                                                                    {truncateText(subtarea.nombre)}
+                                                                </a>
+                                                            </Tooltip>
+                                                        )}
+
+                                                        <div
+                                                            style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                marginLeft: 'auto',
+                                                                marginRight: 20
+                                                            }}>
+                                                            <Popover
+                                                                content={getContentsubTarea(subtarea.id, subtarea.nombre, tarea.id)}
+                                                                trigger="click"
+                                                                onVisibleChange={(visible) => handleVisibleChangeST(visible, subtarea.id)}
                                                             >
-
-
-                                                                {truncateText(subtarea.nombre)}
-                                                            </a>
-                                                        </Tooltip>
-                                                        {/* Elimina el margen superior e inferior del párrafo */}
+                                                                <Button
+                                                                    type="text"
+                                                                    style={{
+                                                                        padding: '4px 8px',
+                                                                        fontSize: '18px',
+                                                                        borderRadius: '4px',
+                                                                        backgroundColor: focusedProjectId === subtarea.id ? '#e0e0e0' : 'transparent',
+                                                                    }}
+                                                                >
+                                                                    <EllipsisOutlined/>
+                                                                </Button>
+                                                            </Popover>
+                                                        </div>
+                                                            {/* Elimina el margen superior e inferior del párrafo */}
                                                     </Col>
 
 
-                                                    <Col span={4}>
+                                                    <Col span={3}>
                                                         {/* Generar avatares de los usuarios del proyecto */}
                                                         <div style={{
                                                             display: 'flex',
@@ -2172,7 +3572,7 @@ console.log("entro aqui---------------")
                                                                             key={usuario.id}
                                                                             title={`${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}`}
                                                                         >
-                                                                            <Avatar
+                                                                        <Avatar
                                                                                 size={27} // Ajusta el tamaño aquí
                                                                                 style={{
                                                                                     backgroundColor,
@@ -2198,45 +3598,103 @@ console.log("entro aqui---------------")
                                                             )}
                                                         </div>
                                                     </Col>
-                                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                                         span={2}>
+                                                    <Col key={row.id} style={{  paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                                        {isDatePickerVisiblesubtareaFechaInicio[subtarea.id] ? (
 
-                                                    <span style={{
-                                                        fontSize: '14px',
-                                                        paddingLeft: 5,
-                                                        margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                                     {subtarea.fechaInicio} < /span>
+                                                            <>
+
+                                                                <DatePicker
+                                                                    open={isDatePickerVisiblesubtareaFechaInicio[subtarea.id]}
+                                                                    // Pasamos row.fechaInicio a cellRender
+                                                                    onChange={(date, dateString) => handleDateChangesubtareaFechaInicio(date, dateString, subtarea.id,tarea.id)}
+                                                                    onOpenChange={(open) => !open && setIsDatePickerVisiblesubtareaFechaInicio(prev => ({ ...prev, [subtarea.id]: false }))} // Cierra el DatePicker si se cierra
+                                                                    style={{ width: '75px', padding:0 }} // Aumenta el ancho del input
+
+                                                                    size="small"  // Reduce el tamaño del DatePicker
+                                                                    format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                                    defaultValue={dayjs(subtarea.fechaInicio, "YYYY-MM-DD")}
+                                                                    allowClear={false}  // Desactiva el ícono de la "x"
+                                                                    suffixIcon={null} // Oculta el icono de calendario
+
+                                                                />
 
 
+
+
+                                                            </>
+                                                        ) : (
+                                                            <span
+                                                                style={{
+                                                                    fontSize: '14px',
+                                                                    padding: 0,
+                                                                    margin: 0,
+                                                                    fontWeight: '400',
+                                                                    cursor: 'pointer',
+                                                                    color: new Date(fechaInicioActualsubtareaFechaInicio[subtarea.id] || subtarea.fechaInicio) < new Date(tarea.fechaInicio)
+                                                                        ? '#fcba03' // Cambia el color a rojo cuando está tachado
+                                                                        : 'inherit',
+                                                                    textDecoration: new Date(fechaInicioActualsubtareaFechaInicio[subtarea.id] || subtarea.fechaInicio) < new Date(tarea.fechaInicio)
+                                                                        ? 'line-through' // Si la fecha es mayor, se aplica tachado
+                                                                        : 'none', // Si no, se mantiene normal
+                                                                }}
+                                                                onClick={() => handleSpanClicksubtareaFechaInicio(subtarea.fechaInicio, subtarea.id)}
+                                                            >
+                    {fechaInicioActualsubtareaFechaInicio[subtarea.id] || subtarea.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                                        )}
                                                     </Col>
 
+                                                    <Col key={row.id} style={{  paddingTop: '8px', paddingLeft: 10, color: '#055706' }} span={2}>
+                                                        {isDatePickerVisiblesubtareaFechaFin[subtarea.id] ? (
 
-                                                    <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
-                                                         span={2}>
+                                                            <>
 
-                                                    <span style={{
-                                                        fontSize: '14px',
-                                                        paddingLeft: 5,
-                                                        margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                                     {subtarea.fechaFin} < /span>
+                                                                <DatePicker
+                                                                    open={isDatePickerVisiblesubtareaFechaFin[subtarea.id]}
+                                                                    // Pasamos row.fechaInicio a cellRender
+                                                                    onChange={(date, dateString) => handleDateChangesubtareaFechaFin(date, dateString, subtarea.id,tarea.id)}
+                                                                    onOpenChange={(open) => !open && setIsDatePickerVisiblesubtareaFechaFin(prev => ({ ...prev, [subtarea.id]: false }))} // Cierra el DatePicker si se cierra
+                                                                    style={{ width: '75px', padding:0 }} // Aumenta el ancho del input
+
+                                                                    size="small"  // Reduce el tamaño del DatePicker
+                                                                    format="YYYY-MM-DD" // Establece un formato compacto para la fecha
+                                                                    defaultValue={dayjs(subtarea.fechaFin, "YYYY-MM-DD")}
+                                                                    allowClear={false}  // Desactiva el ícono de la "x"
+                                                                    suffixIcon={null} // Oculta el icono de calendario
+
+                                                                />
 
 
+
+
+                                                            </>
+                                                        ) : (
+                                                            <span
+                                                                style={{
+                                                                    fontSize: '14px',
+                                                                    padding: 0,
+                                                                    margin: 0,
+                                                                    fontWeight: '400',
+                                                                    cursor: 'pointer',
+                                                                    color: new Date(fechaInicioActualsubtareaFechaFin[subtarea.id] || subtarea.fechaFin) > new Date(tarea.fechaFin)
+                                                                        ? '#fcba03' // Cambia el color a rojo cuando está tachado
+                                                                        : 'inherit',
+                                                                    textDecoration: new Date(fechaInicioActualsubtareaFechaFin[subtarea.id] || subtarea.fechaFin) > new Date(tarea.fechaFin)
+                                                                        ? 'line-through' // Si la fecha es mayor, se aplica tachado
+                                                                        : 'none', // Si no, se mantiene normal
+
+
+                                                                }}
+                                                                onClick={() => handleSpanClicksubtareaFechaFin(subtarea.fechaFin, subtarea.id)}
+                                                            >
+                    {fechaInicioActualsubtareaFechaFin[subtarea.id] || subtarea.fechaFin} {/* Muestra la fecha seleccionada o la predeterminada */}
+                </span>
+                                                        )}
                                                     </Col>
                                                     <Col style={{paddingTop: '8px', paddingLeft: 4, color: '#055706'}}
                                                          span={2}>
 
-                                                        <span style={{
-                                                            fontSize: '14px',
-                                                            paddingLeft: 0,
-                                                            margin: 0,
-                                                            fontWeight: '400'
-                                                        }}>
-                                                                <CalendarOutlined />
-                                                          < /span>
+
 
 
                                                     </Col>
@@ -2299,8 +3757,16 @@ console.log("entro aqui---------------")
         </span>
                                                         )}
                                                     </Col>
+
                                                 </Row>
+                                                                )}
+                                                            </Draggable>
                                             ))}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
+                                                )}
+                                            </DragDropContext>
                                         </React.Fragment>
                                     ))}
                                 </React.Fragment>
@@ -2409,6 +3875,7 @@ console.log("entro aqui---------------")
                                                     border: 'none'
                                                 }}
                                                 icon={<InboxOutlined style={{fontSize: '17px', color: '#ffffff'}}/>}
+                                                onClick={() => archivarProyecto(selectedProject.id, selectedProject.nombre)}
                                             >
                                                 Archivar
                                             </Button>
@@ -2423,6 +3890,7 @@ console.log("entro aqui---------------")
                                             <Button
                                                 style={{border: 'none', background: 'transparent', padding: '3px'}}
                                                 icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                                onClick={()=>eliminarProyectos(selectedProject.id, selectedProject.nombre)}
                                             />
                                             </Tooltip>
 
@@ -2467,31 +3935,57 @@ console.log("entro aqui---------------")
 
                 <div>
 
-                    <p
+                    <span
                         style={{
 
                             padding: '10px',
                             backgroundColor: '#f0f2f5',
                             borderRadius: '5px',
                             display: 'flex', // Usar flex para alinear el ícono y el texto
-                            alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
+                            alignItems: 'flex-start', // Alinear el ícono al inicio (parte superior),
+                            color: '#656f7d'
+
+
                         }}
                     >
                     <MessageOutlined
-                                           style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                       {selectedProject.descripcion}
-                                   </p>
+                                           style={{marginRight: '8px', alignSelf: 'flex-start',color: '#656f7d'}}/>
+                       <span> El estado del proyecto se actualizará automáticamente a
+                        <span style={{
+                            background: 'linear-gradient(45deg, blue, red)',
+                            backgroundClip: 'text',
+                            color: 'transparent',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                            marginRight: 5,
+                            marginLeft: 5
+                        }}>
+    COMPLETADA
+</span>
+                        ,cuando todos los  módulos tengan el estado        <span style={{
+                               background: 'linear-gradient(45deg, blue, red)',
+                               backgroundClip: 'text',
+                               color: 'transparent',
+                               fontWeight: 'bold',
+                               fontSize: '12px',
+                               marginRight: 5,
+                               marginLeft: 5
+                           }}>
+    COMPLETADA
+</span> </span>
 
-                                   <div
-                                       style={{
-                                           display: 'flex',
-                                           alignItems: 'initial',
-                                           justifyContent: "space-between",
-                                           marginTop: 20,
+                    </span>
+
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'initial',
+                            justifyContent: "space-between",
+                            marginTop: 20,
 
 
-                                       }}>
-                                       <div style={{
+                        }}>
+                    <div style={{
                                            display: 'flex',
                                            flexDirection: 'column',
                                            gap: '16px',
@@ -2534,58 +4028,76 @@ console.log("entro aqui---------------")
                                                            margin: 0,
                                                            fontWeight: '400'
                                                        }}>
-        {new Date(new Date(selectedProject.fechaInicio).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        })}
+        {selectedProject.fechaInicio}
     </span>
                                                    </p>
                                                </div>
-                                               <div style={{
-                                                   display: 'flex',
-                                                   alignItems: 'center',
-                                                   gap: '8px',
-                                                   marginTop: 5,
-                                                   color: '#656f7d'
-                                               }}>
-                                                   <CalendarOutlined/>
+                                               {selectedProject.fechaAmpliada ? (
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: 'red'
+                                                   }}>
+                                                       <CalendarOutlined/>
 
-                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                       Fecha fin:
-                                                       <span style={{
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           Fecha fin:
+                                                           <span style={{
+                                                               fontSize: '14px',
+                                                               paddingLeft: 5,
+                                                               margin: 0,
+                                                               fontWeight: '400'
+                                                           }}>
+        {selectedProject.fechaFin}
+    </span>
+                                                       </p>
+
+                                                   </div>
+                                                   ): (
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <CalendarOutlined/>
+
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           Fecha fin:
+                                                           <span style={{
+                                                               fontSize: '14px',
+                                                               paddingLeft: 5,
+                                                               margin: 0,
+                                                               fontWeight: '400'
+                                                           }}>
+        {selectedProject.fechaFin}
+    </span>
+                                                       </p>
+
+                                                   </div>
+                                               )}
+
+
+                                               {selectedProject.fechaAmpliada ? (
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: 'red'
+                                                   }}>
+                                                       <HourglassOutlined/>
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           <span> Duración: </span><span style={{
                                                            fontSize: '14px',
                                                            paddingLeft: 5,
                                                            margin: 0,
-                                                           fontWeight: '400'
+                                                           fontWeight: '400',
+
                                                        }}>
-        {new Date(new Date(selectedProject.fechaFin).toISOString().slice(0, -1)).toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-        })}
-    </span>
-                                                   </p>
-
-                                               </div>
-
-
-                                               <div style={{
-                                                   display: 'flex',
-                                                   alignItems: 'center',
-                                                   gap: '8px',
-                                                   marginTop: 5,
-                                                   color: '#656f7d'
-                                               }}>
-                                                   <HourglassOutlined/>
-                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
-                                                       <span> Duración: </span><span style={{
-                                                       fontSize: '14px',
-                                                       paddingLeft: 5,
-                                                       margin: 0,
-                                                       fontWeight: '400',
-
-                                                   }}>
                                         <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
             {
                 Math.ceil(
@@ -2595,12 +4107,98 @@ console.log("entro aqui---------------")
         </span>
                                     </span>
 
-                                                   </p>
+                                                       </p>
 
-                                               </div>
+                                                   </div>
+                                                   ): (
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <HourglassOutlined/>
+                                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                           <span> Duración: </span><span style={{
+                                                           fontSize: '14px',
+                                                           paddingLeft: 5,
+                                                           margin: 0,
+                                                           fontWeight: '400',
+
+                                                       }}>
+                                        <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
+            {
+                Math.ceil(
+                    (new Date(selectedProject.fechaFin) - new Date(selectedProject.fechaInicio)) / (1000 * 60 * 60 * 24)
+                )
+            } días
+        </span>
+                                    </span>
+
+                                                       </p>
+
+                                                   </div>
+
+                                               )}
+
+                                               {selectedProject.fechaAmpliada && (
+                                                   <div style={{
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '8px',
+                                                       marginTop: 5,
+                                                       color: '#656f7d'
+                                                   }}>
+                                                       <CalendarOutlined />
+
+                                                       <p style={{ fontSize: '14px', margin: 0, fontWeight: '600' }}>
+                                                           Fecha ampliada:
+                                                           <span style={{
+                                                               fontSize: '14px',
+                                                               paddingLeft: 4,
+                                                               margin: 0,
+                                                               fontWeight: '400'
+                                                           }}>
+                {selectedProject.fechaAmpliada}
+            </span>
+                                                       </p>
+                                                   </div>
+                                               )}
 
 
                                            </div>
+
+                                           {selectedProject.fechaAmpliada && (
+                                           <div style={{
+                                               display: 'flex',
+                                               alignItems: 'center',
+                                               gap: '8px',
+                                               marginTop: 0,
+                                               color: '#656f7d'
+                                           }}>
+                                               <HourglassOutlined/>
+                                               <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+                                                   <span> Dias apliacion: </span><span style={{
+                                                   fontSize: '14px',
+                                                   paddingLeft: 5,
+                                                   margin: 0,
+                                                   fontWeight: '400',
+
+                                               }}>
+                                        <span style={{fontSize: '14px', paddingLeft: 5, margin: 0, fontWeight: '400'}}>
+            {
+                Math.ceil(
+                    (new Date(selectedProject.fechaAmpliada) - new Date(selectedProject.fechaFin)) / (1000 * 60 * 60 * 24)
+                )
+            } días
+        </span>
+                                    </span>
+
+                                               </p>
+
+                                           </div>
+                                               )}
 
 
                                        </div>
@@ -2630,7 +4228,7 @@ console.log("entro aqui---------------")
                                                        onChange={handleUserChange}
                                                        onBlur={handleUpdateUsers}
                                                    >
-                                                       {usuarios.map(({value, label, emoji, desc}) => (
+                                                   {usuarios.map(({value, label, emoji, desc}) => (
                                                            <Option key={value} value={value}>
                                                                <Space>
                                                                    <span role="img" aria-label={label}>{emoji}</span>
@@ -2677,9 +4275,16 @@ console.log("entro aqui---------------")
 
                     <div style={{marginTop: 20}}>
 
+                        <h3 style={{borderBottom: '1px solid #f0f3f7'}}>Descripcion</h3>
+                        <div> <p  style={{color:" #656f7d"}}>{selectedProject.descripcion}</p>
+
+                        </div>
+                    </div>
+
+                    <div style={{marginTop: 20}}>
 
 
-                        <Tabs defaultActiveKey="1" items={itemsTap} onChange={onChange}/>
+                    <Tabs defaultActiveKey="1" items={itemsTap} onChange={onChange}/>
 
 
                     </div>
@@ -2702,11 +4307,26 @@ console.log("entro aqui---------------")
 
                                        </p>
                                            <InputNumber
-                                               min={0}               // Establece un valor mínimo, opcional
-                                               max={100}             // Establece un valor máximo, opcional
-                                               defaultValue={1}      // Valor inicial
-                                               onChange={(value) => console.log(value)} // Maneja cambios en el valor
+                                               min={1}                // Establece el valor mínimo como 1
+                                               max={100}              // Establece el valor máximo como 100
+                                               value={dias}           // Vincula el valor con el estado
+                                               onChange={handleChangeDias} // Maneja el cambio solo para valores positivos
                                            />
+
+                                           <Button
+                                               style={{
+                                                   padding: '3px 7px',
+                                                   backgroundColor: '#001529',
+                                                   borderRadius: 5,
+                                                   color: '#ffffff',
+                                                   display: 'flex',
+                                                   alignItems: 'center',
+                                                   border: 'none'
+                                               }}
+                                               onClick={() => ampliarFechaProyecto(selectedProject.id, selectedProject.fechaFin, dias)} // Usa el valor de "dias"
+                                           >
+                                               Aplicar
+                                           </Button>
 
                                    </div>
 
@@ -2720,71 +4340,25 @@ console.log("entro aqui---------------")
 
                        </Col>
         <Col span={9} style={{overflowY:"auto", height:450, paddingRight:10, backgroundColor:'#fbfbfc'}}>
-                           <h2 style={{marginTop:10, marginBottom:20}}>Actividades</h2>
-                           <Timeline style={{paddingLeft: 20}}
-                                     items={[
+                           <h2 style={{marginTop:10, marginBottom:20, marginLeft:10}}>Actividades</h2>
 
-                                         {
-                                             color:'green',
-                                             children: (
-                                                 <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedProject.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedProject.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+            <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItems.map(item => ({
+                color: item.color,
+                children: (
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar size="small" style={{ marginRight: '4px' }}>
+                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+            </Avatar>
+            <span style={{ color: '#4f5762', fontWeight: 500, fontSize:13,textDecoration: 'underline'}}>
+                {item.user}
             </span>
-                                             ),
-                                         },
-
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                         {
-                                             color: 'red',
-                                             children: 'Eliminado solved 2015-09-01',
-                                         },
-                                     ]}
-                           />
+            <span style={{ marginRight: 6, marginLeft: 6 }}>{item.action}</span>
+            <span style={{ color: '#4f5762', fontWeight: 500, fontSize:13 }}>
+                {item.formattedDate}
+            </span>
+        </span>
+                ),
+            }))} />
                            </Col>
                    </Row>
 
@@ -2889,31 +4463,44 @@ console.log("entro aqui---------------")
                         >
                             <DatePicker/>
                         </Form.Item>
-
-
                         <Form.Item
                             name="fechaFin"
                             label="Fecha fin"
                             rules={[
-                                {required: true, message: 'Por favor, selecciona una fecha'},
+                                { required: true, message: 'Por favor, selecciona una fecha' },
                                 {
                                     validator(_, value) {
-                                        // Convertimos selectedProject.fechaInicio a un objeto Date
-                                        const projectStart = new Date(selectedProject.fechaFin);
-                                        projectStart.setDate(projectStart.getDate() + 1);
-                                        // Validamos que value exista y sea mayor a projectStart
-                                        if (!value || new Date(value).getTime() < projectStart.getTime()) {
-                                            return Promise.resolve();
+                                        // Validar que value no sea nulo ni vacío
+                                        if (!value) {
+                                            return Promise.reject(new Error('La fecha fin es obligatoria'));
                                         }
-                                        projectStart.setDate(projectStart.getDate() - 1);
 
-                                        // Mensaje de error si la fecha no es posterior
-                                        return Promise.reject(new Error(`La fecha fin debe ser menor o igual ${projectStart.toISOString().split('T')[0]}`));
-                                    },
+                                        // Si selectedProject.fechaAmpliada existe, se usa como la fecha de referencia
+                                        const projectStart = selectedProject.fechaAmpliada
+                                            ? new Date(selectedProject.fechaAmpliada)
+                                            : new Date(selectedProject.fechaFin);
+
+                                        // Se asegura de que la fecha de fin sea posterior a la fecha de inicio + 1 día
+                                        projectStart.setDate(projectStart.getDate() + 1);  // Sumar 1 día a la fecha de inicio
+
+                                        // Comprobamos que la fecha fin proporcionada sea mayor o igual a projectStart
+                                        if (new Date(value).getTime() >= projectStart.getTime()) {
+                                            // Restar un día para mostrar en el mensaje de error
+                                            projectStart.setDate(projectStart.getDate() - 1);
+
+                                            return Promise.reject(
+                                                new Error(`La fecha fin debe ser mayor o igual a ${projectStart.toISOString().split('T')[0]}`)
+                                            );
+                                        }
+
+                                        return Promise.resolve();
+                                    }
+
                                 },
                             ]}
                         >
-                            <DatePicker/>
+
+                        <DatePicker/>
                         </Form.Item>
 
 
@@ -2974,6 +4561,7 @@ console.log("entro aqui---------------")
                                     <Tooltip title={"Eliminar modulo"}>
                                         <Button
                                             style={{border: 'none', background: 'transparent', padding: '3px'}}
+                                            onClick={() => handleDeleteModulo(selectedProject.id,selectedModule.nombre,selectedModule.id)}
                                             icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
                                         />
                                     </Tooltip>
@@ -3223,61 +4811,26 @@ console.log("entro aqui---------------")
                         </Col>
 
                            <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
-                            <h2>Actividades</h2>
-                            <Timeline style={{paddingLeft: 20}}
-                                      items={[
-
-                                          {
-                                              color:'green',
-                                              children: (
-                                                  <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedModule.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedModule.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+                            <h2 style={{marginLeft:6}}>Actividades</h2>
+                               <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItemsModulo.map(item => ({
+                                   color: item.color,
+                                   children: (
+                                       <span style={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar size="small" style={{ marginRight: '4px' }}>
+                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+            </Avatar>
+            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+                {item.user}
             </span>
-                                              ),
-                                          },
+            <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
+            <span style={{ color: '#4f5762', fontWeight: 600 }}>
+                {item.formattedDate}
+            </span>
+        </span>
+                                   ),
+                               }))} />
 
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                      ]}
-
-                            />
-                        </Col>
+                           </Col>
 
 
 
@@ -3315,17 +4868,17 @@ console.log("entro aqui---------------")
                             <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
 
                                 <div>
-                                <span style={{
-                                    backgroundColor: `${selectedProject.backgroundProyecto}`,
-                                    padding: '4px 8px',
-                                    color: '#ffffff',
-                                    borderRadius: '4px'
-                                }}>
-                    T
-                </span>
-                                    <spa>
+                           <span style={{
+                               backgroundColor: selectedProject ? selectedProject.backgroundProyecto : '#000', // Usa un color por defecto si selectedProject es null
+                               padding: '4px 8px',
+                               color: '#ffffff',
+                               borderRadius: '4px'
+                           }}>
+    T
+</span>
+                                    <span>
                                         <BookOutlined style={{fontSize: '17px', color: '#656f7d', marginLeft: 8}}/>
-                                    </spa>
+                                    </span>
 
                                     <span style={{fontWeight: 600, color: '#656f7d', fontSize: '17px', marginLeft: 8}}>
                                     /
@@ -3343,13 +4896,13 @@ console.log("entro aqui---------------")
                                 <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 30}}>
 
 
-
                                     <div style={{display: 'flex', gap: '3px'}}>
 
                                         <Tooltip title={"Eliminar tarea"}>
                                             <Button
                                                 style={{border: 'none', background: 'transparent', padding: '3px'}}
                                                 icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                                onClick={() => handleDeleteTarea(selectedTarea.id,selectedTarea.nombre,selectedModule.id)}
                                             />
                                         </Tooltip>
 
@@ -3569,63 +5122,24 @@ console.log("entro aqui---------------")
 
         </Col>
         <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
-            <h2>Actividades</h2>
-            <Timeline style={{paddingLeft: 20}}
-                      items={[
-
-                          {
-                              color: 'green',
-                              children: (
-                                  <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedTarea.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedTarea.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+            <h2 style={{marginLeft:6}}>Actividades</h2>
+            <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItemsTarea.map(item => ({
+                color: item.color,
+                children: (
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar size="small" style={{ marginRight: '4px' }}>
+                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+            </Avatar>
+            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+                {item.user}
             </span>
-                              ),
-                          },
-
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                          {
-                              color: 'red',
-                              children: 'Eliminado solved 2015-09-01',
-                          },
-                      ]}
-            />
+            <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
+            <span style={{ color: '#4f5762', fontWeight: 600 }}>
+                {item.formattedDate}
+            </span>
+        </span>
+                ),
+            }))} />
         </Col>
 
 
@@ -3789,6 +5303,7 @@ console.log("entro aqui---------------")
                                                     style={{border: 'none', background: 'transparent', padding: '3px'}}
                                                     icon={<DeleteOutlined
                                                         style={{fontSize: '17px', color: '#ff4d4f'}}/>}
+                                                    onClick={() => handleDeletesubtarea(selectedsubTarea.id,selectedsubTarea.nombre,selectedTarea.id)}
                                                 />
                                             </Tooltip>
 
@@ -4004,65 +5519,30 @@ console.log("entro aqui---------------")
 
                                     </div>
 
-                                  
+
 
                                 </div>
 
                             </Col>
                             <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
                                 <h2>Actividades</h2>
-                                <Timeline style={{paddingLeft: 20}}
-                                      items={[
-
-                                          {
-                                              color: 'green',
-                                              children: (
-                                                  <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedsubTarea.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedsubTarea.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+                                <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItemsSubtarea.map(item => ({
+                                    color: item.color,
+                                    children: (
+                                        <span style={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar size="small" style={{ marginRight: '4px' }}>
+                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+            </Avatar>
+            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+                {item.user}
             </span>
-                                              ),
-                                          },
-
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                          {
-                                              color: 'red',
-                                              children: 'Eliminado solved 2015-09-01',
-                                          },
-                                      ]}
-                            />
+            <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
+            <span style={{ color: '#4f5762', fontWeight: 600 }}>
+                {item.formattedDate}
+            </span>
+        </span>
+                                    ),
+                                }))} />
                         </Col>
 
                     </Row>

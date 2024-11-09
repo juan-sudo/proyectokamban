@@ -4,6 +4,7 @@ import com.codigo.msregistro.application.services.ModuloService;
 import com.codigo.msregistro.application.services.SubTareaService;
 import com.codigo.msregistro.application.services.TareaService;
 import com.codigo.msregistro.domain.aggregates.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tareas/{tareaId}/subTareas")
+@CrossOrigin(origins = "http://localhost:5173")
 public class SubTareaController {
 
     @Autowired
@@ -31,8 +33,86 @@ public class SubTareaController {
 
     private final Logger log = LoggerFactory.getLogger(SubTareaController.class);
 
-    @DeleteMapping("/delete/{idTarea}")
-    public ResponseEntity<String> deleteTareaByID(@PathVariable Long tareaId, @PathVariable Long idTarea) {
+    //ACTUALIZAR NOMBRE FECHA FIN
+    @PatchMapping("/actualizarFechaFin/{subtareaId}")
+    public ResponseEntity<?> actualizarSubatreaFechaFin(@PathVariable Long tareaId, @PathVariable Long subtareaId, @RequestBody Subtarea subtarea) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Subtarea tareaActualizado = subTareaService.actualizarsubTareaFechaFin(tareaId, subtareaId, subtarea);
+
+            response.put("mensaje", "Subtarea actualizado con éxito");
+            response.put("id", tareaActualizado.getId().toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (EntityNotFoundException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+        } catch (IllegalArgumentException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el subtarea: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    //ACTUALIZAR FECHA INICIO SUBTAREA
+    @PatchMapping("/actualizarFechaInicio/{subtareaId}")
+    public ResponseEntity<?> actualizarSubatreaFechaInicio(@PathVariable Long tareaId, @PathVariable Long subtareaId, @RequestBody Subtarea subtarea) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Subtarea tareaActualizado = subTareaService.actualizarsubTareaFechaInicio(tareaId, subtareaId, subtarea);
+
+            response.put("mensaje", "Subtarea actualizado con éxito");
+            response.put("id", tareaActualizado.getId().toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (EntityNotFoundException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+        } catch (IllegalArgumentException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el subtarea: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    //ACTUALIZAR NOMBRE SUBTAREA
+    @PatchMapping("/actualizar/{subtareaId}")
+    public ResponseEntity<?> actualizarSubatrea(@PathVariable Long tareaId, @PathVariable Long subtareaId, @RequestBody Subtarea subtarea) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Subtarea tareaActualizado = subTareaService.actualizarsubTareaNombre(tareaId, subtareaId, subtarea);
+
+            response.put("mensaje", "Subtarea actualizado con éxito");
+            response.put("id", tareaActualizado.getId().toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (EntityNotFoundException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+
+        } catch (IllegalArgumentException e) {
+            response.put("mensaje", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            response.put("mensaje", "Error al actualizar el módulo: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @DeleteMapping("/delete/{subtareaId}")
+    public ResponseEntity<String> deleteTareaByID(@PathVariable Long tareaId, @PathVariable Long subtareaId) {
 
         log.info("estas aqui");
         // Verifica si el módulo existe
@@ -42,10 +122,10 @@ public class SubTareaController {
         }
 
         // Verifica si la tarea existe
-        Optional<Subtarea> tareaOpt = subTareaService.obtenerTareaPorId(idTarea);
+        Optional<Subtarea> tareaOpt = subTareaService.obtenerTareaPorId(subtareaId);
         if (tareaOpt.isPresent()) {
             // Elimina la tarea si existe
-            subTareaService.deleteSubTarea(idTarea);
+            subTareaService.deleteSubTarea(subtareaId);
             return ResponseEntity.ok("Subtarea eliminada exitosamente");
         } else {
             return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra la tarea
