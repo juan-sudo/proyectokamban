@@ -5263,7 +5263,8 @@ console.log("entro aqui---------------")
 
                                     <div>
  <span style={{
-     backgroundColor: `${selectedProject.backgroundProyecto}`,
+     backgroundColor:  'red',
+
      padding: '4px 8px',
      color: '#ffffff',
      borderRadius: '4px'
