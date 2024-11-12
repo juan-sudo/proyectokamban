@@ -171,7 +171,7 @@ button.ant-btn-text:hover {
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Espacio entre las filas de tareas */
+  gap: 14px; /* Espacio entre las filas de tareas */
   padding: 10px;
   background-color: #ffffff; /* Fondo claro para la lista */
 }

@@ -22,6 +22,17 @@ public class ProyectoController {
 
     private final ProyectoService proyectoService;
 
+    //ACTUALIZAR POSICISION
+    @PutMapping("/actualizar-posicion")
+    public ResponseEntity<Proyecto> actualizarPosicion(@RequestParam Long idProyecto, @RequestParam int idPosicionPoner) {
+        Proyecto proyectoActualizado = proyectoService.moverProyectoAPosicion(idProyecto, idPosicionPoner);
+        if (proyectoActualizado != null) {
+            return ResponseEntity.ok(proyectoActualizado);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
     //ACTULZIAR FECHA UNICIo
 
     @PatchMapping("/actualizarFechaInicio/{idProyecto}")

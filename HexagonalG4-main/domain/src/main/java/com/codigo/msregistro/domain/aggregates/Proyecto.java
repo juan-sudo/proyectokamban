@@ -65,6 +65,10 @@ public class Proyecto {
     @Column(name = "background_proyecto", length = 7)
     private String backgroundProyecto;
 
+    @NotNull
+    @Column(name = "id_proyecto_orden")
+    private Long idProyectoOrden;
+
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prioridad_id") // Columna que almacena la relación

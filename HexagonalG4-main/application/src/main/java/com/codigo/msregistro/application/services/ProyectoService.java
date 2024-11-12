@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.codigo.msregistro.infraestructure.repositories.ProyectoRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.Date;
@@ -27,6 +28,58 @@ public class ProyectoService {
     private final UsuarioRepository usuarioRepository;
 
     private final PrioridadRepository prioridadRepository;
+
+    @Transactional
+    public Proyecto moverProyectoAPosicion(Long idProyecto, int nuevaPosicion) {
+        // Incrementar la posición de todos los proyectos con id_proyecto_orden >= nuevaPosicion
+        proyectoRepository.incrementarPosiciones(nuevaPosicion);
+
+        // Actualizar la posición del proyecto con el id especificado
+        proyectoRepository.actualizarPosicionProyecto(idProyecto, nuevaPosicion);
+
+        // Retornar el proyecto actualizado
+        return proyectoRepository.findById(idProyecto).orElse(null);
+    }
+
+//CAMBIO DE POSICION
+// Método para actualizar la posición de un proyecto en la lista
+//public Proyecto actualizarPosicion(Long idPocisionJalar, Long idPosicionPoner) {
+//
+//    // Obtener el proyecto que deseas mover (según idProyectoOrden)
+//    Proyecto proyectoMover = proyectoRepository.findByIdProyectoOrden(idPocisionJalar);
+//
+//
+//    if (proyectoMover != null) {
+//        Long currentOrder = proyectoMover.getIdProyectoOrden();
+//
+//        // Si la nueva posición es la misma que la actual, no hay nada que hacer
+//        if (currentOrder.equals(idPosicionPoner)) {
+//            return proyectoMover;
+//        }
+//
+//        // Obtener todos los proyectos y ordenarlos por idProyectoOrden
+//        List<Proyecto> proyectos = proyectoRepository.findAll();
+//        proyectos.sort(Comparator.comparingLong(Proyecto::getIdProyectoOrden));
+//
+//        // Remover el proyecto a mover de la lista
+//        proyectos.remove(proyectoMover);
+//
+//        // Insertar el proyecto en la nueva posición
+//        int nuevaPosicion = Math.toIntExact(idPosicionPoner - 1); // Convertir Long a int y ajustar posición (índice de la lista)
+//        proyectos.add(nuevaPosicion, proyectoMover);
+//
+//        // Asignar nuevos valores de idProyectoOrden según la posición en la lista
+//        for (int i = 0; i < proyectos.size(); i++) {
+//            proyectos.get(i).setIdProyectoOrden((long) (i + 1)); // Asignar orden a partir de 1
+//            proyectoRepository.save(proyectos.get(i)); // Guardar cada proyecto con su nuevo orden
+//        }
+//
+//        // Devolver el proyecto movido con su nueva posición
+//        return proyectoMover;
+//    }
+//
+//    return null; // Si no se encuentra el proyecto, retornar null
+//}
 
 
     //ACTUALIZR NOMBRE PROYECTO
@@ -122,6 +175,17 @@ public class ProyectoService {
         proyecto.setBackgroundProyecto(generarColorAleatorio());
         proyecto.setUserCreate("salomon santa perez");
         proyecto.setCreateAt(new Date());
+
+        // Obtener el valor actual más alto de idProyectoOrden
+        Long maxIdProyectoOrden = proyectoRepository.findMaxIdProyectoOrden();
+
+        // Incrementar idProyectoOrden o reiniciar si se alcanza el máximo de Long
+        if (maxIdProyectoOrden == null || maxIdProyectoOrden.equals(Long.MAX_VALUE)) {
+            proyecto.setIdProyectoOrden(1L);
+        } else {
+            proyecto.setIdProyectoOrden(maxIdProyectoOrden + 1);
+        }
+
         return proyectoRepository.save(proyecto);
     }
 
@@ -157,11 +221,14 @@ public class ProyectoService {
         return false;
     }
 
+
     public List<Proyecto> listarProyectosNoArchivados() {
-        // Obtener los proyectos no archivados en orden descendente
+        // Obtener los proyectos no archivados sin eliminar y ordenarlos por idProyectoOrden en orden ascendente
         List<Proyecto> proyectos = proyectoRepository.findByEstadoNotAndEliminadoFalse(
-                EstadoProyecto.ARCHIVADO, Sort.by(Sort.Direction.DESC, "id")
+                EstadoProyecto.ARCHIVADO,
+                Sort.by(Sort.Direction.ASC, "idProyectoOrden")
         );
+
 
         // Ordenar los módulos, tareas y subtareas dentro de cada proyecto en orden descendente
         proyectos.forEach(proyecto -> {

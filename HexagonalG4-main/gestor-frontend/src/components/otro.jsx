@@ -48,6 +48,7 @@ import {
     FlagOutlined
 
 } from '@ant-design/icons';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 const pearlescentColors = [
     '#f4f1de', '#e07a5f', '#3d405b', '#81b29a', '#f2cc8f',
@@ -73,6 +74,8 @@ function Otro() {
     const [selectedsubTarea, setSelectedsubTarea] = useState(null); // proyecto seleccionado
     const [personas, setPersonas] = useState([]);
     const [selectedValues, setSelectedValues] = useState([]);
+    const [proyectosState, setProyectosState] = useState(proyectos);
+
 
     useEffect(() => {
 
@@ -80,6 +83,10 @@ function Otro() {
         fetchPersonas();
         console.log("aqui"+proyectos)
     }, []);
+
+    useEffect(() => {
+        setProyectosState(proyectos);
+    }, [proyectos]);
 
     const fetchProyectos = async () => {
         try {
@@ -97,6 +104,22 @@ function Otro() {
         }
     };
 
+
+
+    //const [proyectosState, setProyectosState] = useState(proyectos);
+    const onDragEnd = (result) => {
+        const { source, destination } = result;
+
+        // Salir si no hay un destino válido
+        if (!destination) return;
+
+        // Reordenar la lista de proyectos
+        const reorderedProyectos = Array.from(proyectosState);
+        const [movedProyecto] = reorderedProyectos.splice(source.index, 1);
+        reorderedProyectos.splice(destination.index, 0, movedProyecto);
+
+        setProyectosState(reorderedProyectos);
+    };
     const fetchPersonas = async () => {
         try {
             const response = await axios.get(`${backendUrl}/ms-registro/v1/persona`);
@@ -748,9 +771,22 @@ function Otro() {
                             </Col>
                         </Row>
 
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <Droppable droppableId="proyectos" type="ROW">
+                                {(provided) => (
+                                    <div {...provided.droppableProps} ref={provided.innerRef}>
 
-                        {proyectos.map((row) => (
-                            <React.Fragment key={row.id}>
+
+                                        {proyectosState.map((row, index) => (
+
+                                            <Draggable key={row.id} draggableId={row.id.toString()} index={index}>
+                                                {(provided, snapshot) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                    >
+
                                 <Row
                                     gutter={[16, 16]}
                                     style={{
@@ -870,361 +906,18 @@ function Otro() {
                                         )}
                                     </Col>
                                 </Row>
-
-                                {/* Mostrar los módulos debajo del proyecto */}
-                                {expandedRows[row.id] && row.modulos?.map((modulo) => (
-                                    <React.Fragment key={modulo.id}>
-                                        <Row
-                                            style={{
-                                                marginLeft: '20px',
-                                                cursor: 'pointer',
-                                                minWidth: '600px',
-                                                backgroundColor: hoveredRowmodulo === modulo.id ? '#e0e0e0' : '',
-                                            }}
-                                            onMouseEnter={() => handleMouseEntermodulo(modulo.id)}
-                                            onMouseLeave={handleMouseLeavemodulo}
-
-                                        >
-                                            <Col span={11}>
-                                                <div style={{display: 'flex', alignItems: 'center'}}>
-                                                    <Button
-                                                        type="text"
-                                                        size="small"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation(); // Evita que el clic se propague al Row
-                                                            toggleCollapseModulo(row.id, modulo.id);
-                                                        }}
-                                                        icon={expandedModules[modulo.id] ? <CaretUpOutlined/> :
-                                                            <CaretDownOutlined/>}
-                                                    />
-                                                    <FolderOutlined
-                                                        style={{
-                                                            backgroundColor: row.color,
-                                                            color: 'black',
-                                                            padding: '5px',
-                                                            borderRadius: '50%',
-                                                            border: '2px solid black',
-                                                        }}
-                                                    />
-                                                    <Tooltip title="Ver modulo">
-                                                    <a
-
-                                                        style={{
-
-                                                            marginLeft: 5,
-
-                                                            textDecoration: 'none',
-                                                            color: 'inherit'
-                                                        }}
-                                                        onClick={() => showModal('verModulo', row.id, modulo.id)}
-                                                    >
-
-                                                        {modulo.nombre}
-                                                    </a>
-                                                    </Tooltip>
-                                                    {/* Mostrar el botón solo si el módulo está expandido */}
-                                                    {!expandedModules[modulo.id] && (
-                                                        <Tooltip title="Añadir tarea">
-                                                            <Button
-                                                                icon={<PlusOutlined/>}
-                                                                size="small"
-                                                                type="link"
-                                                                onClick={() => showModal('AñadirTarea', row.id, modulo.id)}
-                                                            />
-                                                        </Tooltip>
-                                                    )}
-                                                </div>
-                                            </Col>
-
-                                            <Col span={3}>
-                                                <Avatar icon={<UserAddOutlined/>}/>
-                                                <Avatar icon={<UserAddOutlined/>}/>
-                                            </Col>
-                                            <Col style={{ paddingTop: '8px' }} span={3}>
-                                                <span style={{
-                                                    fontSize: '14px',
-                                                    paddingLeft: 5,
-                                                    margin: 0,
-                                                    fontWeight: '400'
-                                                }}>
-                                       {new Date(modulo.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                            </Col>
-                                            <Col style={{ paddingTop: '8px' }} span={3}>
-                                                   <span style={{
-                                                       fontSize: '14px',
-                                                       paddingLeft: 5,
-                                                       margin: 0,
-                                                       fontWeight: '400'
-                                                   }}>
-                                       {new Date(modulo.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                            </Col>
-                                            <Col span={4}>
-                                                <Avatar icon={<FlagOutlined/>}/>
-
-                                                {hoveredRowmodulo === modulo.id && (
-                                                    <>
-                                                        <Tooltip title="Editar proyecto">
-                                                            <a onClick={() => setModalVisible(true)}
-                                                               style={{cursor: 'pointer'}}>
-                                                                <Avatar
-                                                                    icon={<EditOutlined />}
-                                                                    style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                />
-                                                            </a>
-                                                        </Tooltip>
-                                                        <Tooltip title="Archivar proyecto">
-                                                            <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                <Avatar
-                                                                    icon={<SaveOutlined />}
-                                                                    style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                />
-                                                            </a>
-                                                        </Tooltip>
-                                                    </>
+                                                    </div>
                                                 )}
-                                            </Col>
-                                        </Row>
-                                        {expandedModules[`${row.id}-${modulo.id}`] && modulo.tareas?.map((tarea) => (
-                                            <React.Fragment key={tarea.id}>
-                                                <Row
-                                                    style={{
-                                                        marginLeft: '20px',
-                                                        padding:0,
-                                                        borderBottom: '1px solid #d9d9d9',
-                                                        cursor: 'pointer',
-                                                        backgroundColor: hoveredRowtarea === tarea.id ? '#e0e0e0' : '',
-                                                        boxSizing: 'border-box', // Para incluir padding y border en el tamaño
-
-                                                    }}
-
-                                                    onMouseEnter={() => handleMouseEntertarea(tarea.id)}
-                                                    onMouseLeave={handleMouseLeavetarea}
-                                                >
-                                                    <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft: 16 }}>
-                                                        <Button
-                                                            type="text"
-                                                            size="small"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation(); // Evita que el click propague al Row
-                                                                toggleCollapseTarea(row.id, modulo.id, tarea.id);
-                                                            }}
-                                                            icon={expandedModules[`${row.id}-${modulo.id}-${tarea.id}`] ? <CaretUpOutlined /> : <CaretDownOutlined />}
-                                                        />
-                                                        <FileTextOutlined style={{
-                                                            backgroundColor: row.color,
-                                                            color: 'black',
-                                                            padding: '5px',
-                                                            marginRight: '4px' // Espacio entre el icono y el texto
-                                                        }} />
+                                            </Draggable>
 
 
-                                                        <Tooltip title="Ver tarea">
-                                                            <a
 
-                                                                style={{
-
-                                                                    marginLeft: 5,
-
-                                                                    textDecoration: 'none',
-                                                                    color: 'inherit'
-                                                                }}
-                                                                onClick={() => showModal('verTarea', row.id, modulo.id, tarea.id)}
-                                                            >
-
-                                                                {tarea.nombre}
-                                                            </a>
-                                                        </Tooltip>
-                                                        <Tooltip title="Añadir subtarea">
-                                                            <Button
-                                                                icon={<PlusOutlined/>}
-                                                                size="small"
-                                                                type="link"
-                                                                onClick={() => showModal('AñadirSubtarea', row.id, modulo.id, tarea.id)}
-                                                                //onClick={() => showModal('tarea', proyecto.id, modulo.id)}
-                                                            />
-                                                        </Tooltip>
-                                                    </Col>
-
-                                                    <Col span={3}> <Avatar icon={<UserAddOutlined />} /></Col>
-                                                    <Col style={{ paddingTop: '8px' }} span={3}>
-                                                          <span style={{
-                                                              fontSize: '14px',
-                                                              paddingLeft: 5,
-                                                              margin: 0,
-                                                              fontWeight: '400'
-                                                          }}>
-                                       {new Date(tarea.fechaInicio).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                                    </Col>
-                                                    <Col style={{ paddingTop: '8px' }} span={3}><span style={{
-                                                        fontSize: '14px',
-                                                        paddingLeft: 5,
-                                                        margin: 0,
-                                                        fontWeight: '400'
-                                                    }}>
-                                       {new Date(tarea.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span></Col>
-                                                    <Col span={4}>
-
-                                                        <Avatar icon={<FlagOutlined/>}/>
-                                                        {hoveredRowtarea === tarea.id && (
-                                                            <>
-                                                                <Tooltip title="Editar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)}
-                                                                       style={{cursor: 'pointer'}}>
-                                                                        <Avatar
-                                                                            icon={<EditOutlined />}
-                                                                            style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                                <Tooltip title="Archivar proyecto">
-                                                                    <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                        <Avatar
-                                                                            icon={<SaveOutlined />}
-                                                                            style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                        />
-                                                                    </a>
-                                                                </Tooltip>
-                                                            </>
-                                                        )}
-                                                    </Col>
-                                                </Row>
-
-
-                                                {expandedModules[`${row.id}-${modulo.id}-${tarea.id}`] && tarea.subtareas?.map((subtarea) => (
-                                                    <Row key={subtarea.id}
-                                                         style={{
-                                                             marginLeft: '20px',
-                                                             padding:0,
-
-                                                             borderBottom: '1px solid #d9d9d9',
-                                                             cursor: 'pointer',
-                                                             backgroundColor: hoveredRowsubtarea === subtarea.id ? '#e0e0e0' : '',
-                                                             boxSizing: 'border-box', // Para incluir padding y border en el tamaño
-                                                         }}
-
-                                                         onMouseEnter={() => handleMouseEntersubtarea(subtarea.id)}
-                                                         onMouseLeave={handleMouseLeavesubtarea}
-
-                                                    >
-
-                                                        <Col span={11} style={{ display: 'flex', alignItems: 'center', paddingLeft:50 }}>
-                                                            <div style={{
-                                                                width: '20px', // Ajusta el tamaño del círculo
-                                                                height: '20px',
-                                                                borderRadius: '50%',
-                                                                backgroundColor: row.color, // Cambia el color según tus necesidades
-                                                                marginRight: '8px' // Espacio entre el círculo y el texto
-                                                            }}></div>
-                                                            <Tooltip title="Ver subTarea">
-                                                                <a
-
-                                                                    style={{
-
-                                                                        marginLeft: 5,
-
-                                                                        textDecoration: 'none',
-                                                                        color: 'inherit'
-                                                                    }}
-                                                                    onClick={() => showModal('verSubtarea', row.id, modulo.id, tarea.id, subtarea.id)}
-                                                                >
-
-                                                                    {subtarea.nombre}
-                                                                </a>
-                                                            </Tooltip>
-                                                            {/* Elimina el margen superior e inferior del párrafo */}
-                                                        </Col>
-
-                                                        <Col span={3}>
-                                                            <Avatar icon={<UserAddOutlined />} />
-                                                        </Col>
-                                                        <Col style={{ paddingTop: '8px' }} span={3}>
-                                                        <span style={{
-                                                            fontSize: '14px',
-                                                            paddingLeft: 5,
-                                                             // Ajusta este valor según lo que necesites
-                                                            margin: 0,
-                                                            fontWeight: '400'
-                                                        }}>
-                                                            {new Date(subtarea.fechaInicio).toLocaleDateString('es-ES', {
-                                                                day: '2-digit',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </span>
-                                                        </Col>
-                                                        <Col style={{ paddingTop: '8px' }} span={3}>
-                                                            <span style={{
-                                                                fontSize: '14px',
-                                                                paddingLeft: 5,
-                                                                margin: 0,
-                                                                fontWeight: '400'
-                                                            }}>
-                                       {new Date(subtarea.fechaFin).toLocaleDateString('es-ES', {
-                                           day: '2-digit',
-                                           month: 'short',
-                                           year: 'numeric'
-                                       })}
-
-                                    </span>
-                                                        </Col>
-                                                        <Col>
-                                                            <Avatar icon={<FlagOutlined/>}/>
-
-                                                            {hoveredRowsubtarea === subtarea.id && (
-                                                                <>
-                                                                    <Tooltip title="Editar proyecto">
-                                                                        <a onClick={() => setModalVisible(true)}
-                                                                           style={{cursor: 'pointer'}}>
-                                                                            <Avatar
-                                                                                icon={<EditOutlined />}
-                                                                                style={{ marginLeft: '0', backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                            />
-                                                                        </a>
-                                                                    </Tooltip>
-                                                                    <Tooltip title="Archivar proyecto">
-                                                                        <a onClick={() => setModalVisible(true)} style={{ cursor: 'pointer' }}>
-                                                                            <Avatar
-                                                                                icon={<SaveOutlined />}
-                                                                                style={{ backgroundColor: 'transparent', color: '#2c2c30' }}
-                                                                            />
-                                                                        </a>
-                                                                    </Tooltip>
-                                                                </>
-                                                            )}
-                                                        </Col>
-
-                                                    </Row>
-                                                ))}
-                                            </React.Fragment>
-                                        ))}
-                                    </React.Fragment>
-                                ))}
-                            </React.Fragment>
                         ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
 
 
                     </>
