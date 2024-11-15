@@ -211,7 +211,7 @@ function ProyectoList() {
             );
 
             await fetchProyectos(token);
-            console.log('Fecha actualizada correctamente', response.data);
+            console.log('Fecha actualizada sa', response.data);
         }
         catch (error) {
             console.error('Error al actualizar la fecha', error);
@@ -255,13 +255,18 @@ function ProyectoList() {
     // Función para actualizar la fecha en la API
     const actualizarFechaInicioAPIModulo = async (moduloId, fechaInicio,proyectoId) => {
         try {
-            console.log("token fecha incio modulo hola"+token)
+            console.log("token a modulo"+token)
             ///api/proyectos/{proyectoId}/modulos/actualizarFechaInicio/{moduloId}
-            const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/actualizarFechaInicio/${moduloId}`, {
+            const response = await axios.patch(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/actualizarFechaInicio/${moduloId}`, {
                 fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
 
-            });
-            await fetchProyectos();
+            }
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                });
+            await fetchProyectos(token);
             console.log('Fecha actualizada correctamente', response.data);
         } catch (error) {
             console.error('Error al actualizar la fecha', error);
@@ -305,12 +310,17 @@ function ProyectoList() {
     const actualizarFechaInicioAPIModuloFin = async (moduloId, fechaFin,proyectoId) => {
         try {
             ///api/proyectos/{proyectoId}/modulos/actualizarFechaInicio/{moduloId}
-            const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/actualizarFechaFin/${moduloId}`, {
+            const response = await axios.patch(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/actualizarFechaFin/${moduloId}`, {
                 fechaFin: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
 
-            });
-            await fetchProyectos();
-            console.log('Fecha actualizada correctamente', response.data);
+            }
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                });
+            await fetchProyectos(token);
+            console.log('Fecha fin actualizada correctamente', response.data);
         } catch (error) {
             console.error('Error al actualizar la fecha', error);
         }
@@ -356,8 +366,13 @@ function ProyectoList() {
             const response = await axios.patch(`http://localhost:8080/api/modulos/${moduloId}/tareas/actualizarFechaInicio/${tareaId}`, {
                 fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
 
-            });
-            await fetchProyectos();
+            }
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                });
+            await fetchProyectos(token);
             console.log('Fecha actualizada correctamente', response.data);
         } catch (error) {
             console.error('Error al actualizar la fecha', error);
@@ -404,8 +419,13 @@ function ProyectoList() {
             const response = await axios.patch(`http://localhost:8080/api/modulos/${moduloId}/tareas/actualizarFechaFin/${tareaId}`, {
                 fechaFin: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
 
-            });
-            await fetchProyectos();
+            }
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                });
+            await fetchProyectos(token);
             console.log('Fecha actualizada correctamente', response.data);
         } catch (error) {
             console.error('Error al actualizar la fecha', error);
@@ -649,8 +669,12 @@ function ProyectoList() {
         // Si el usuario confirma, se procede a eliminar
         if (result.isConfirmed) {
             try {
-                const response = await axios.delete(`/api/modulos/${moduloId}/tareas/delete/${idTarea}`);
-                ///api/modulos/{moduloId}/tareas/delete/{idTarea}
+                const response = await axios.delete(`/api/modulos/${moduloId}/tareas/delete/${idTarea}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                });
+
 
                 if (response.status === 200) {
                     Swal.fire(
@@ -865,12 +889,13 @@ function ProyectoList() {
         }
     };
 
+    //ADITAR NOMBRE MODULO
 
     const saveProjectNameModulo = (rowId,moduloId, projectName) => {
 
 
         // URL de la API para actualizar el proyecto
-        const apiUrl = `http://localhost:8080/api/proyectos/${rowId}/modulos/actualizar/${moduloId}`;
+        const apiUrl = `http://localhost:8080/api/proyectosmodulo/${rowId}/modulos/actualizar/${moduloId}`;
 
         // Datos a enviar en el cuerpo de la solicitud (PATCH)
         const data = {
@@ -878,10 +903,14 @@ function ProyectoList() {
         };
 
         // Realizar solicitud PATCH con Axios
-        axios.patch(apiUrl, data)
+        axios.patch(apiUrl, data, {
+            headers: {
+                'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+            }
+        })
             .then((response) => {
                 // Si la solicitud es exitosa, muestra en la consola
-                fetchProyectos();
+                fetchProyectos(token);
 
                 // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
                 setEditModuloId(null);  // Termina la edición
@@ -936,10 +965,14 @@ console.log("ide modulo:"+moduloId);
         };
 
         // Realizar solicitud PATCH con Axios
-        axios.patch(apiUrl, data)
+        axios.patch(apiUrl, data, {
+            headers: {
+                'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+            }
+        })
             .then((response) => {
                 // Si la solicitud es exitosa, muestra en la consola
-                fetchProyectos();
+                fetchProyectos(token);
 
                 // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
                 setEditTareaId(null);  // Termina la edición
@@ -1261,6 +1294,7 @@ console.log("ide modulo:"+moduloId);
     };
 
 
+    //ACTUALIZR PRIORIDAD PROYECTO
     const handleChange = async (value, projectId) => {
 
 
@@ -1299,13 +1333,14 @@ console.log("ide modulo:"+moduloId);
     };
 
 
+    //ACTUAZIAR PRIORIDA MODULO
     const handleChangeModulo = async (value, moduloId, proyectoId) => {
         if (value === 'none') {
             setSelectedOptionModulo(null);
 
             // Aquí llamas a la API para establecer la prioridad a null
             try {
-                const response = await axios.put(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}/prioridad`);
+                const response = await axios.put(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/prioridad`);
                 console.log("Prioridad actualizada a null:", response.data);
                 await fetchProyectos();
             } catch (error) {
@@ -1316,7 +1351,7 @@ console.log("ide modulo:"+moduloId);
             setSelectedOptionModulo(selected);
 
             try {
-                const response = await axios.put(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}/prioridad/${selected.value}`);
+                const response = await axios.put(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/prioridad/${selected.value}`);
                 console.log("Prioridad actualizada:", response.data);
                 await fetchProyectos();
             } catch (error) {
@@ -1626,7 +1661,7 @@ console.log("ide modulo:"+moduloId);
 
         removedUserIds.forEach(async (userId) => {
             try {
-                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios/${userId}`
+                await axios.delete(`http://localhost:8080/api/proyectosmodulo/${selectedProject.id}/modulos/${selectedModule.id}/usuarios/${userId}`
                     , {
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -1653,7 +1688,7 @@ console.log("ide modulo:"+moduloId);
 
         try {
 
-            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios`, selectedModuloUserIds
+            await axios.put(`http://localhost:8080/api/proyectosmodulo/${selectedProject.id}/modulos/${selectedModule.id}/usuarios`, selectedModuloUserIds
                 , {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -2138,7 +2173,7 @@ console.log("entro aqui---------------")
                 url = `${backendUrl}/api/proyectos`;
             }
             else if (modalType === 'AñadirModulo') {
-                url = `${backendUrl}/api/proyectos/${selectedItemId}/modulos`;
+                url = `${backendUrl}/api/proyectosmodulo/${selectedItemId}/modulos`;
                 try {
 
                     Swal.fire({

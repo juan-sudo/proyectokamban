@@ -35,7 +35,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/autenticacion/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasAnyAuthority(Role.GESTOR.name())
                         .requestMatchers("/api/proyectos/**").hasAnyAuthority(Role.DESARROLLADOR.name())
-                        .requestMatchers("/api/proyectos/{proyectoId}/modulos/**").hasAnyAuthority(Role.DESARROLLADOR.name())
+                        .requestMatchers("/api/proyectosmodulo/**").hasAnyAuthority(Role.DESARROLLADOR.name())
                         .requestMatchers("/api/modulos/**").hasAnyAuthority(Role.DESARROLLADOR.name())
                         .requestMatchers("/api/tareas/**").hasAnyAuthority(Role.DESARROLLADOR.name())
                         .anyRequest().authenticated())

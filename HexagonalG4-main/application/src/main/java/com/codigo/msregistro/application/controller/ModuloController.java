@@ -15,7 +15,7 @@ import com.codigo.msregistro.application.services.ModuloService;
 import com.codigo.msregistro.application.services.ProyectoService;
 
 @RestController
-@RequestMapping("/api/proyectos/{proyectoId}/modulos")
+@RequestMapping("/api/proyectosmodulo/{proyectoId}/modulos")
 public class ModuloController {
 
     private final ModuloService moduloService;
