@@ -3,6 +3,9 @@
   margin-left: 180px; /* Reduce el margen izquierdo para acercar el contenido */
   padding-right: 20px; /* Asegura que haya algo de espacio en el lado derecho */
 }
+.ant-layout-content{
+  margin: 10px !important;
+}
 
 /* Alineación correcta de los proyectos */
 .ant-tree .ant-tree-node-content-wrapper {
@@ -171,7 +174,7 @@ button.ant-btn-text:hover {
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 14px; /* Espacio entre las filas de tareas */
+ /* Espacio entre las filas de tareas */
   padding: 10px;
   background-color: #ffffff; /* Fondo claro para la lista */
 }
@@ -240,6 +243,28 @@ button.ant-btn-text:hover {
   display: none !important;
 }
 
+
+/* LOGIN */
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f2f5;
+
+
+  }
+
+.login-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-form-button {
+  width: 100%;
+}
 
 
 

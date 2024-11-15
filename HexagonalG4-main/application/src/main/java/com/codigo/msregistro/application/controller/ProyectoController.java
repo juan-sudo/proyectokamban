@@ -1,7 +1,6 @@
 package com.codigo.msregistro.application.controller;
 
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
-import com.codigo.msregistro.domain.aggregates.Usuario;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,11 +12,8 @@ import java.util.stream.Collectors;
 import com.codigo.msregistro.application.services.ProyectoService;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
 
-import javax.management.ObjectName;
-
 @RestController
 @RequestMapping("/api/proyectos")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ProyectoController {
 
     private final ProyectoService proyectoService;

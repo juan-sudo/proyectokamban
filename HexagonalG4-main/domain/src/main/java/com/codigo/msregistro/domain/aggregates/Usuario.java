@@ -1,15 +1,22 @@
 package com.codigo.msregistro.domain.aggregates;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;  // Importación correcta de JPA
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -17,7 +24,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Entity // Marca la clase como una entidad JPA
 @Table(name = "usuarios") // Define el nombre de la tabla en la base de datos
-public class Usuario {
+public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Genera automáticamente el ID
@@ -52,8 +59,7 @@ public class Usuario {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
-    @NotNull
-    @NotBlank
+
     @Column(name = "direccion", length = 255)
     private String direccion;
 
@@ -68,7 +74,6 @@ public class Usuario {
     private String genero;
 
     @NotNull
-    @NotBlank
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     private Date fechaRegistro;
 
@@ -78,9 +83,50 @@ public class Usuario {
     private String backgroundUser;
 
     @NotNull
-    @NotBlank
     private Boolean activo;
 
-    @Enumerated(EnumType.STRING) // Almacenar el enum como un string en la base de datos
-    private RolUsuario rol; // Enum para roles (definirlo por separado)
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "usuario_rol",
+            joinColumns = @JoinColumn(name = "id_usuario"),
+            inverseJoinColumns = @JoinColumn(name = "id_rol"))
+    private Set<Rol> roles = new HashSet<>();
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(rol -> new SimpleGrantedAuthority(rol.getNombreRol()))
+                .collect(Collectors.toList());
+    }
+
+    public Set<String> getRolesNames() {
+        return roles.stream().map(Rol::getNombreRol).collect(Collectors.toSet());
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+
 }

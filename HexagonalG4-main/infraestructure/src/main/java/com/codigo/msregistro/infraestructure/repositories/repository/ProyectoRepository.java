@@ -1,4 +1,4 @@
-package com.codigo.msregistro.infraestructure.repositories;
+package com.codigo.msregistro.infraestructure.repositories.repository;
 
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
 import com.codigo.msregistro.domain.aggregates.Proyecto;
@@ -12,6 +12,7 @@ import java.util.List;
 
 @Repository
 public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
+
     @Query("SELECT MAX(p.idProyectoOrden) FROM Proyecto p")
     Long findMaxIdProyectoOrden();
 
@@ -24,7 +25,7 @@ public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
     List<Proyecto> findByEliminadoTrue();
 
     // Método para listar proyectos cuyo estado es diferente de ARCHIVADO y eliminado es false
-    List<Proyecto> findByEstadoNotAndEliminadoFalse(EstadoProyecto estado,Sort sort);
+    List<Proyecto> findByEstadoNotAndEliminadoFalse(EstadoProyecto estado, Sort sort);
 
 
     // Método para listar proyectos cuyo estado es ARCHIVADO

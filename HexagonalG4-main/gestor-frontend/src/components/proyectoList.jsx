@@ -106,23 +106,27 @@ function ProyectoList() {
     const [editingSubtareaId, setEditingSubtareaId] = useState(null);
     const [proyectosState, setProyectosState] = useState(proyectos);
     const [proyectosStateSubtarea, setProyectosStateSubtarea] = useState(proyectos);
-
-
+    // Obtener el token del localStorage y configurar el estado
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
 
     useEffect(() => {
-
-        fetchProyectos();
-        fetchUsuario();
-        fetchPrioridad();
-
-
-
-    }, []);
+        // Actualizar el estado de autenticación si el token cambia
+        if (token) {
+            setIsAuthenticated(true);
+            fetchProyectos(token);
+            fetchUsuario(token);
+            fetchPrioridad(token);
+        } else {
+            setIsAuthenticated(false);
+        }
+    }, [token]);
 
     useEffect(() => {
         setProyectosState(proyectos);
     }, [proyectos]);
+
 
 
     // Función para truncar el texto
@@ -195,13 +199,21 @@ function ProyectoList() {
     // Función para actualizar la fecha en la API
     const actualizarFechaInicioAPI = async (id, fechaInicio) => {
         try {
-            const response = await axios.patch(`http://localhost:8080/api/proyectos/actualizarFechaInicio/${id}`, {
-                fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
+            const response = await axios.patch(
+                `http://localhost:8080/api/proyectos/actualizarFechaInicio/${id}`,
+                { fechaInicio: fechaInicio },  // Enviamos la nueva fecha en formato YYYY-MM-DD
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}` // Incluye el token en el encabezado de autorización
+                    },
+                    withCredentials: true  // Incluye las credenciales si es necesario
+                }
+            );
 
-            });
-            await fetchProyectos();
+            await fetchProyectos(token);
             console.log('Fecha actualizada correctamente', response.data);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error al actualizar la fecha', error);
         }
     };
@@ -243,6 +255,7 @@ function ProyectoList() {
     // Función para actualizar la fecha en la API
     const actualizarFechaInicioAPIModulo = async (moduloId, fechaInicio,proyectoId) => {
         try {
+            console.log("token fecha incio modulo hola"+token)
             ///api/proyectos/{proyectoId}/modulos/actualizarFechaInicio/{moduloId}
             const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/actualizarFechaInicio/${moduloId}`, {
                 fechaInicio: fechaInicio, // Enviamos la nueva fecha en formato YYYY-MM-DD
@@ -737,11 +750,18 @@ function ProyectoList() {
             nombre: projectName
         };
 
+        // Configuración de la solicitud, incluyendo el encabezado de autorización
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}` // Incluye el token aquí
+            },
+            withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+        };
         // Realizar solicitud PATCH con Axios
-        axios.patch(apiUrl, data)
+        axios.patch(apiUrl, data,config)
             .then((response) => {
                 // Si la solicitud es exitosa, muestra en la consola
-                fetchProyectos();
+                fetchProyectos(token);
 
                 // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
                 setEditProjectId(null);  // Termina la edición
@@ -1242,12 +1262,17 @@ console.log("ide modulo:"+moduloId);
 
 
     const handleChange = async (value, projectId) => {
+
+
         if (value === 'none') {
             setSelectedOption(null);
 
-            // Aquí llamas a la API para establecer la prioridad a null
             try {
-                const response = await axios.put(`http://localhost:8080/api/proyectos/${projectId}/prioridad`);
+                // Llamar a la API para establecer la prioridad a null
+                const response = await axios.put(
+                    `http://localhost:8080/api/proyectos/${projectId}/prioridad`
+
+                );
                 console.log("Prioridad actualizada a null:", response.data);
                 await fetchProyectos();
             } catch (error) {
@@ -1258,14 +1283,18 @@ console.log("ide modulo:"+moduloId);
             setSelectedOption(selected);
 
             try {
-                // Usa el ID del proyecto y el ID de prioridad
-                const response = await axios.put(`http://localhost:8080/api/proyectos/${projectId}/prioridad/${selected.value}`);
+                // Usar el ID del proyecto y el ID de la prioridad seleccionada
+                const response = await axios.put(
+                    `http://localhost:8080/api/proyectos/${projectId}/prioridad/${selected.value}`
+
+                );
                 console.log("Prioridad actualizada:", response.data);
                 await fetchProyectos();
             } catch (error) {
                 console.error("Error al actualizar la prioridad:", error);
             }
         }
+
         setEditingId(null); // Cambiar aquí para finalizar la edición
     };
 
@@ -1442,9 +1471,19 @@ console.log("ide modulo:"+moduloId);
 
     //OBTENE PROYECTOS
 
-    const fetchProyectos = async () => {
+    const fetchProyectos = async (token) => {
         try {
-            const response = await axios.get(`${backendUrl}/api/proyectos/no-archivados`);
+
+
+            const response = await axios.get(`http://localhost:8080/api/proyectos/no-archivados`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                })
+
+
+
             console.log("Respuesta de la API:", response.data);
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
@@ -1468,9 +1507,17 @@ console.log("ide modulo:"+moduloId);
 
 // OBTENER  USUARIOS
 
-    const fetchUsuario = async () => {
+    const fetchUsuario = async (token) => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/usuarios`);
+            console.log(token)
+            const response = await axios.get(`http://localhost:8080/api/usuarios`
+            ,{
+                headers: {
+                    'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+            });
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
@@ -1488,9 +1535,17 @@ console.log("ide modulo:"+moduloId);
         }
     };
 
-    const fetchPrioridad = async () => {
+    const fetchPrioridad = async (token) => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/prioridad`);
+            console.log(token)
+            const response = await axios.get(`http://localhost:8080/api/prioridad`
+            ,{
+                headers: {
+                    'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+            });
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -1515,9 +1570,15 @@ console.log("ide modulo:"+moduloId);
         // Eliminar usuarios desasignados del proyecto
         removedUserIds.forEach(async (userId) => {
             try {
-                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios/${userId}`);
+                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios/${userId}`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                    });
                // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
-                await fetchProyectos();
+                await fetchProyectos(token);
 
             } catch (error) {
                 message.error(`Error al eliminar el usuario ${userId} del proyecto`);
@@ -1528,14 +1589,19 @@ console.log("ide modulo:"+moduloId);
         setSelectedUserIds(newUserIds);
     };
 
+
 //ACTUALIZAR USUARIO PROYECTO
     const handleUpdateUsers = async () => {
         try {
-            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios`, selectedUserIds);
-            //message.success('Usuarios actualizados correctamente');
-            // Actualizar el estado del proyecto para reflejar los usuarios asignados
-            // Vuelve a obtener todos los proyectos para reflejar los cambios
-            await fetchProyectos();
+            console.log("token"+token)
+            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/usuarios`, selectedUserIds, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+            });
+
+            await fetchProyectos(token);
 
             const updatedUsuarios = usuarios
                 .filter(persona => selectedUserIds.includes(persona.value))
@@ -1546,7 +1612,7 @@ console.log("ide modulo:"+moduloId);
                 usuarios: updatedUsuarios
             }));
         } catch (error) {
-            message.error('Error al actualizar los usuarios');
+
             console.error('Error:', error);
         }
     };
@@ -1560,11 +1626,18 @@ console.log("ide modulo:"+moduloId);
 
         removedUserIds.forEach(async (userId) => {
             try {
-                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios/${userId}`);
+                await axios.delete(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios/${userId}`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                    });
+
                 //http://localhost:8080/api/proyectos/1/modulos/2/usuarios/5
                 // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
 
-                await fetchProyectos();
+                await fetchProyectos(token);
 
             } catch (error) {
              //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
@@ -1580,9 +1653,15 @@ console.log("ide modulo:"+moduloId);
 
         try {
 
-            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios`, selectedModuloUserIds);
+            await axios.put(`http://localhost:8080/api/proyectos/${selectedProject.id}/modulos/${selectedModule.id}/usuarios`, selectedModuloUserIds
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                });
 
-            await fetchProyectos();
+            await fetchProyectos(token);
 
             const updatedUsuarios = usuarios
                 .filter(persona => selectedUserIds.includes(persona.value))
@@ -1606,12 +1685,18 @@ console.log("ide modulo:"+moduloId);
 
         removedUserIds.forEach(async (userId) => {
             try {
-                await axios.delete(`http://localhost:8080/api/modulos/${selectedModule.id}/tareas/${selectedTarea.id}/usuarios/${userId}`);
+                await axios.delete(`http://localhost:8080/api/modulos/${selectedModule.id}/tareas/${selectedTarea.id}/usuarios/${userId}`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                    });
 
                 //http://localhost:8080/api/modulos/2/tareas/1/usuarios/4
                 // message.success(`Usuario ${userId} eliminado del proyecto correctamente`);
 
-                await fetchProyectos();
+                await fetchProyectos(token);
 
             } catch (error) {
                 //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
@@ -1628,7 +1713,13 @@ setSelectedTareaUserIds(newUserIds)
         try {
 
                 console.log("Usuarios seleccionados:", selectedTareaUserIds);
-            await axios.put(`http://localhost:8080/api/modulos/${selectedModule.id}/tareas/${selectedTarea.id}/usuarios`, selectedTareaUserIds);
+            await axios.put(`http://localhost:8080/api/modulos/${selectedModule.id}/tareas/${selectedTarea.id}/usuarios`, selectedTareaUserIds
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                });
 
             ////http://localhost:8080/api/modulos/2/tareas/1/usuarios
 
@@ -1636,7 +1727,7 @@ setSelectedTareaUserIds(newUserIds)
             //message.success('Usuarios actualizados correctamente');
             // Actualizar el estado del proyecto para reflejar los usuarios asignados
             // Vuelve a obtener todos los proyectos para reflejar los cambios
-            await fetchProyectos();
+            await fetchProyectos(token);
 
             const updatedUsuarios = usuarios
                 .filter(persona => selectedUserIds.includes(persona.value))
@@ -1661,12 +1752,18 @@ setSelectedTareaUserIds(newUserIds)
             removedUserIds.forEach(async (userId) => {
             console.log("select tarea: ")
             try {
-                await axios.delete(`http://localhost:8080/api/tareas/${selectedTarea.id}/subTareas/${selectedsubTarea.id}/usuarios/${userId}`);
+                await axios.delete(`http://localhost:8080/api/tareas/${selectedTarea.id}/subTareas/${selectedsubTarea.id}/usuarios/${userId}`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                    });
 
                 //http://localhost:8080/api/tareas/4/subTareas/4/usuarios/4
 
 
-                await fetchProyectos();
+                await fetchProyectos(token);
 
             } catch (error) {
                 //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
@@ -1683,12 +1780,18 @@ setSelectedTareaUserIds(newUserIds)
         try {
 
             console.log("Usuarios seleccionados:", selectedTareaUserIds);
-            await axios.put(`http://localhost:8080/api/tareas/${selectedTarea.id}/subTareas/${selectedsubTarea.id}/usuarios`, selectedSubTareaUserIds);
+            await axios.put(`http://localhost:8080/api/tareas/${selectedTarea.id}/subTareas/${selectedsubTarea.id}/usuarios`, selectedSubTareaUserIds
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                });
 
             //http://localhost:8080/api/tareas/4/subTareas/4/usuarios
 
 
-            await fetchProyectos();
+            await fetchProyectos(token);
 
             const updatedUsuarios = usuarios
                 .filter(persona => selectedUserIds.includes(persona.value))
@@ -2124,10 +2227,12 @@ console.log("entro aqui---------------")
             try {
                 await axios.post(url, values, {
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Authorization': `Bearer ${token}`
+
                     }
+
                 });
-                fetchProyectos();
+                fetchProyectos(token);
             } catch (error) {
                 console.error("Error creando tarea:", error);
             }

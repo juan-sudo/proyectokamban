@@ -1,11 +1,10 @@
-package com.codigo.msregistro.infraestructure.repositories;
+package com.codigo.msregistro.infraestructure.repositories.repository;
 
-import com.codigo.msregistro.domain.aggregates.Modulo;
+import com.codigo.msregistro.domain.aggregates.Subtarea;
 import com.codigo.msregistro.domain.aggregates.Tarea;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import com.codigo.msregistro.domain.aggregates.Subtarea;
 
 import java.util.List;
 

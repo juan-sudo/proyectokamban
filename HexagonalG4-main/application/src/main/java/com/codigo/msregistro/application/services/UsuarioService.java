@@ -1,10 +1,7 @@
 package com.codigo.msregistro.application.services;
 
-import com.codigo.msregistro.domain.aggregates.Modulo;
 import com.codigo.msregistro.domain.aggregates.RolUsuario;
-import com.codigo.msregistro.domain.aggregates.Tarea;
 import com.codigo.msregistro.domain.aggregates.Usuario;
-import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +25,7 @@ public class UsuarioService {
     public Usuario crearUsuario(Usuario usuario) {
         usuario.setFechaRegistro(new Date());
         usuario.setActivo(true);
-        usuario.setRol(RolUsuario.DESARROLLADOR);
+       // usuario.setRol(RolUsuario.DESARROLLADOR);
         // Asignar color de fondo aleatorio
         usuario.setBackgroundUser(generarColorAleatorio());
 

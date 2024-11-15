@@ -2,10 +2,10 @@ package com.codigo.msregistro.application.services;
 
 import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.*;
-import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
-import com.codigo.msregistro.infraestructure.repositories.SubtareaRepository;
-import com.codigo.msregistro.infraestructure.repositories.TareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import com.codigo.msregistro.infraestructure.repositories.repository.PrioridadRepository;
+import com.codigo.msregistro.infraestructure.repositories.repository.SubtareaRepository;
+import com.codigo.msregistro.infraestructure.repositories.repository.TareaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

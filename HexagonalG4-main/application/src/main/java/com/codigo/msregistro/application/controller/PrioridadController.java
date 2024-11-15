@@ -26,9 +26,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/prioridad")
 public class PrioridadController {
-
-
-
     @Autowired
     private PrioridadService prioridadService;
 

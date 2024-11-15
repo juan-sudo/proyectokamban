@@ -1,6 +1,5 @@
 package com.codigo.msregistro.application.controller;
 
-import com.codigo.msregistro.domain.aggregates.Tarea;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,6 @@ import com.codigo.msregistro.application.services.ProyectoService;
 
 @RestController
 @RequestMapping("/api/proyectos/{proyectoId}/modulos")
-@CrossOrigin(origins = "*")
 public class ModuloController {
 
     private final ModuloService moduloService;
@@ -125,7 +123,7 @@ public class ModuloController {
     }
 
 
-
+//CREAR MODULO
     @PostMapping
     public ResponseEntity<Modulo> crearModulo(@PathVariable Long proyectoId, @RequestBody Modulo modulo) {
         Optional<Proyecto> proyectoOpt = proyectoService.getProyectoById(proyectoId);

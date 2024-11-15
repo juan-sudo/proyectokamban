@@ -22,7 +22,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/modulos/{moduloId}/tareas")
-@CrossOrigin(origins = "http://localhost:5173")
 public class TareaController {
 
     @Autowired

@@ -1,13 +1,8 @@
 package com.codigo.msregistro.application.services;
 
-import com.codigo.msregistro.application.exceptions.ResourceNotFoundException;
 import com.codigo.msregistro.domain.aggregates.Prioridad;
-import com.codigo.msregistro.domain.aggregates.Subtarea;
-import com.codigo.msregistro.domain.aggregates.Tarea;
-import com.codigo.msregistro.domain.aggregates.Usuario;
-import com.codigo.msregistro.infraestructure.repositories.PrioridadRepository;
-import com.codigo.msregistro.infraestructure.repositories.SubtareaRepository;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
+import com.codigo.msregistro.infraestructure.repositories.repository.PrioridadRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
