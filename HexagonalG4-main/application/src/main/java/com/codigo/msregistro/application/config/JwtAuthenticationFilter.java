@@ -34,6 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
+        if (!StringUtils.hasText(tokenExtraidoHeader) || !tokenExtraidoHeader.startsWith("Bearer ")) {
+            System.out.println("Encabezado 'Authorization' faltante o malformado.");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if(StringUtils.isEmpty(tokenExtraidoHeader) || !StringUtils.startsWithIgnoreCase(tokenExtraidoHeader, "Bearer ")){
             filterChain.doFilter(request,response);
             return;

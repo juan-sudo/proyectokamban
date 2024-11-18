@@ -44,24 +44,31 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Usuario signUpUser(SignUpRequest signUpRequest) {
         Usuario usuario = new Usuario();
-        usuario.setNombres(signUpRequest.getNombres());
-        usuario.setApellidoPaterno(signUpRequest.getApellidoPaterno());
-        usuario.setApellidoMaterno(signUpRequest.getApellidoMaterno());
-        usuario.setEmail(signUpRequest.getEmail());
-        usuario.setTelefono(signUpRequest.getTelefono());
-       usuario.setDireccion(signUpRequest.getDireccion());
-       usuario.setFechaNacimiento(signUpRequest.getFechaNacimiento());
-       usuario.setGenero(signUpRequest.getGenero());
-        usuario.setFechaRegistro(new Date());
-        usuario.setActivo(true);
-        usuario.setBackgroundUser(generarColorAleatorio());
 
-        Set<Rol> assginedRoles = new HashSet<>();
-        Rol userRol = rolRepository.findByNombreRol(Role.DESARROLLADOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
-        assginedRoles.add(userRol);
-        usuario.setRoles(assginedRoles);
-        //HASH AL PASSWORD PENDIENTE
-        usuario.setPassword(new BCryptPasswordEncoder().encode(signUpRequest.getPassword()));
+            usuario.setNombres(signUpRequest.getNombres());
+            usuario.setApellidoPaterno(signUpRequest.getApellidoPaterno());
+            usuario.setApellidoMaterno(signUpRequest.getApellidoMaterno());
+            usuario.setEmail(signUpRequest.getEmail());
+            usuario.setTelefono(signUpRequest.getTelefono());
+            usuario.setDireccion(signUpRequest.getDireccion());
+            usuario.setFechaNacimiento(signUpRequest.getFechaNacimiento());
+            usuario.setGenero(signUpRequest.getGenero());
+            usuario.setFechaRegistro(new Date());
+            usuario.setActivo(true);
+            usuario.setBackgroundUser(generarColorAleatorio());
+
+            Set<Rol> assginedRoles = new HashSet<>();
+            Rol userRol = rolRepository.findByNombreRol(Role.DESARROLLADOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
+          //   Rol userRol2 = rolRepository.findByNombreRol(Role.GESTOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
+            assginedRoles.add(userRol);
+            // assginedRoles.add(userRol2);
+            usuario.setRoles(assginedRoles);
+
+            //HASH AL PASSWORD PENDIENTE
+            usuario.setPassword(new BCryptPasswordEncoder().encode(signUpRequest.getPassword()));
+
+
+
         return usuarioRepository.save(usuario);
     }
 
@@ -77,6 +84,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         usuario.setDireccion(signUpRequest.getDireccion());
         usuario.setFechaNacimiento(signUpRequest.getFechaNacimiento());
         usuario.setGenero(signUpRequest.getGenero());
+        usuario.setFechaRegistro(new Date());
+        usuario.setActivo(true);
+        usuario.setBackgroundUser(generarColorAleatorio());
         Set<Rol> assginedRoles = new HashSet<>();
         Rol userRol = rolRepository.findByNombreRol(Role.GESTOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
         Rol userRol2 = rolRepository.findByNombreRol(Role.DESARROLLADOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));

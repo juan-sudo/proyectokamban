@@ -56,7 +56,7 @@ import {
     MoreOutlined,
     BookOutlined,
     AppstoreOutlined,
-    DeleteOutlined,
+    DeleteOutlined,DownloadOutlined,
     InboxOutlined, RightCircleOutlined, ArrowLeftOutlined, ArrowRightOutlined,CaretRightOutlined,HolderOutlined
 
 
@@ -109,7 +109,7 @@ function ProyectoList() {
     // Obtener el token del localStorage y configurar el estado
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [isAuthenticated, setIsAuthenticated] = useState(!!token);
-
+    const [size, setSize] = useState('medium'); // default is 'middle'
 
     useEffect(() => {
         // Actualizar el estado de autenticación si el token cambia
@@ -183,7 +183,7 @@ function ProyectoList() {
 
 
         } else {
-            console.log("entro aqui------------")
+
             setSelectedTareaUserIds([]);
 
         }
@@ -474,8 +474,15 @@ function ProyectoList() {
 
                 fechaFin: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
 
-            });
-            await fetchProyectos();
+            },
+            {
+
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                }
+            }
+            );
+            await fetchProyectos(token);
             console.log('Fecha actualizada correctamente', response.data);
         } catch (error) {
             console.error('Error al actualizar la fecha', error);
@@ -521,11 +528,19 @@ function ProyectoList() {
     const actualizarFechaInicioAPIsubtareaFechaInicio = async (subtareaId, fechaFin,tareaId) => {
         try {
             ////api/tareas/{tareaId}/subTareas/actualizarFechaFin/{subtareaId}
-            const response = await axios.patch(`http://localhost:8080/api/tareas/${tareaId}/subTareas/actualizarFechaInicio/${subtareaId}`, {
+            const response = await axios.patch(
+                `http://localhost:8080/api/tareas/${tareaId}/subTareas/actualizarFechaInicio/${subtareaId}`,
+                {
                 fechaInicio: fechaFin, // Enviamos la nueva fecha en formato YYYY-MM-DD
 
-            });
-            await fetchProyectos();
+            },{
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+            }
+
+            );
+            await fetchProyectos(token);
             console.log('Fecha actualizada correctamente', response.data);
         } catch (error) {
             console.error('Error al actualizar la fecha', error);
@@ -593,11 +608,20 @@ function ProyectoList() {
         // Si el usuario confirma, se procede a enviar la solicitud de ampliación
         if (result.isConfirmed) {
             try {
-                const response = await axios.patch(`http://localhost:8080/api/proyectos/${proyectoId}/ampliar/dias=${dias}`);
+                const response = await axios.patch(
+                    `http://localhost:8080/api/proyectos/${proyectoId}/ampliar/dias=${dias}`,
+                    null
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+
+                );
 
                 if (response.status === 200) {
                     Swal.fire('Ampliado', 'La fecha del proyecto ha sido ampliada correctamente.', 'success');
-                    await fetchProyectos();
+                    await fetchProyectos(token);
                 } else {
                     Swal.fire('Error', 'Hubo un problema al ampliar la fecha del proyecto.', 'error');
                 }
@@ -627,8 +651,17 @@ function ProyectoList() {
         // Si el usuario confirma, se procede a eliminar
         if (result.isConfirmed) {
             try {
-                const response = await axios.delete(`/api/proyectos/${proyectoId}/modulos/delete/${moduloId}`);
-                //api/proyectos/{proyectoId}/modulos/delete/{idModulo}
+                console.log(token)
+                const response = await axios.delete(`/api/proyectosmodulo/${proyectoId}/modulos/delete/${moduloId}`
+                    ,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+
+                );
+
 
                 if (response.status === 200) {
                     Swal.fire(
@@ -637,7 +670,7 @@ function ProyectoList() {
                         'success'
                     );
                     // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
-                    await fetchProyectos();
+                    await fetchProyectos(token);
                     // Llama a handleCancel si deseas realizar alguna acción adicional
                     handleCancel();
                 }
@@ -684,7 +717,7 @@ function ProyectoList() {
                     );
 
                     // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
-                    await fetchProyectos();
+                    await fetchProyectos(token);
 
                     handleCancel();
                 }
@@ -715,7 +748,15 @@ function ProyectoList() {
         // Si el usuario confirma, se procede a eliminar
         if (result.isConfirmed) {
             try {
-                const response = await axios.delete(`/api/tareas/${tareaId}/subTareas/delete/${subtareaId}`);
+                const response = await axios.delete(`/api/tareas/${tareaId}/subTareas/delete/${subtareaId}`
+
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                    );
                 ///api/tareas/{tareaId}/subTareas/delete/{idTarea}
                 if (response.status === 200) {
                     Swal.fire(
@@ -725,7 +766,7 @@ function ProyectoList() {
                     );
                     // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
                     
-                    await fetchProyectos();
+                    await fetchProyectos(token);
                     
                     handleCancel();
                 }
@@ -765,7 +806,7 @@ function ProyectoList() {
 
     const saveProjectName = (rowId, projectName) => {
 
-        console.log("llego hasta ahi")
+        console.log("llego hasta ahi"+token)
         // URL de la API para actualizar el proyecto
         const apiUrl = `http://localhost:8080/api/proyectos/actualizar/${rowId}`;
 
@@ -775,11 +816,11 @@ function ProyectoList() {
         };
 
         // Configuración de la solicitud, incluyendo el encabezado de autorización
+
         const config = {
             headers: {
-                'Authorization': `Bearer ${token}` // Incluye el token aquí
-            },
-            withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                'Authorization': `Bearer ${token}`
+            }
         };
         // Realizar solicitud PATCH con Axios
         axios.patch(apiUrl, data,config)
@@ -1043,23 +1084,31 @@ console.log("ide modulo:"+moduloId);
 
     const saveProjectNamesubTarea = (tareaId,subtareaId, subtareaName) => {
 
-        console.log("ide modulo:"+tareaId);
-        console.log("ide tarea:"+subtareaId);
-        console.log("lo que viene :"+tareaName);
+        console.log("ide tarea:"+tareaId);
+        console.log("ide subatrea:"+subtareaId);
+        console.log("lo que viene :"+subtareaName);
 
         // URL de la API para actualizar el proyecto
         const apiUrl = `http://localhost:8080/api/tareas/${tareaId}/subTareas/actualizar/${subtareaId}`;
+
 //http://localhost:8080/api/tareas/8/subTareas/actualizar/10
         // Datos a enviar en el cuerpo de la solicitud (PATCH)
         const data = {
             nombre: subtareaName
         };
 
+        // Configuración de la solicitud, incluyendo el encabezado de autorización
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+            }
+        };
+
         // Realizar solicitud PATCH con Axios
-        axios.patch(apiUrl, data)
+        axios.patch(apiUrl, data,config)
             .then((response) => {
                 // Si la solicitud es exitosa, muestra en la consola
-                fetchProyectos();
+                fetchProyectos(token);
 
                 // Opcional: Realizar otras acciones después de la actualización, como limpiar los campos
                 setEditsubTareaId(null);  // Termina la edición
@@ -1068,7 +1117,7 @@ console.log("ide modulo:"+moduloId);
             })
             .catch((error) => {
                 // Si la solicitud falla, muestra en la consola
-                console.error(`Error al actualizar el tarea con ID: ${moduloId}. Error:`, error.response?.data || error.message);
+                console.error(`Error al actualizar el tarea con ID: . Error:`, error.response?.data || error.message);
             });
     };
 
@@ -1305,25 +1354,38 @@ console.log("ide modulo:"+moduloId);
                 // Llamar a la API para establecer la prioridad a null
                 const response = await axios.put(
                     `http://localhost:8080/api/proyectos/${projectId}/prioridad`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
 
                 );
                 console.log("Prioridad actualizada a null:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad a null:", error);
             }
         } else {
             const selected = prioridad.find(option => option.value === value);
+            console.log("prioridad selecioando"+selected)
             setSelectedOption(selected);
 
             try {
                 // Usar el ID del proyecto y el ID de la prioridad seleccionada
                 const response = await axios.put(
                     `http://localhost:8080/api/proyectos/${projectId}/prioridad/${selected.value}`
+                    ,null,
+                     {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
 
                 );
                 console.log("Prioridad actualizada:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad:", error);
             }
@@ -1340,20 +1402,36 @@ console.log("ide modulo:"+moduloId);
 
             // Aquí llamas a la API para establecer la prioridad a null
             try {
-                const response = await axios.put(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/prioridad`);
+                const response = await axios.put(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/prioridad`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 console.log("Prioridad actualizada a null:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad a null:", error);
             }
         } else {
             const selected = prioridad.find(option => option.value === value);
+
             setSelectedOptionModulo(selected);
 
             try {
-                const response = await axios.put(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/prioridad/${selected.value}`);
+                const response = await axios.put(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/prioridad/${selected.value}`
+
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 console.log("Prioridad actualizada:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad:", error);
             }
@@ -1369,10 +1447,17 @@ console.log("ide modulo:"+moduloId);
 
             // Aquí llamas a la API para establecer la prioridad a null
             try {
-                const response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad`);
+                const response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 //http://localhost:8080/api/tareas/1/subTareas/1/prioridad
                 console.log("Prioridad actualizada a null:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad a null:", error);
             }
@@ -1381,10 +1466,17 @@ console.log("ide modulo:"+moduloId);
             setSelectedOptionSubtarea(selected);
 
             try {
-                const response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad/${selected.value}`);
+                const response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad/${selected.value}`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 ////http://localhost:8080/api/tareas/1/subTareas/1/prioridad
                 console.log("Prioridad actualizada:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad:", error);
             }
@@ -1398,10 +1490,17 @@ console.log("ide modulo:"+moduloId);
 
             // Aquí llamas a la API para establecer la prioridad a null
             try {
-                const response = await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}/prioridad`);
+                const response = await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}/prioridad`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 //http://localhost:8080/api/modulos/1/tareas/1/prioridad
                 console.log("Prioridad actualizada a null:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad a null:", error);
             }
@@ -1410,10 +1509,17 @@ console.log("ide modulo:"+moduloId);
             setSelectedOptionTarea(selected);
 
             try {
-                const response = await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}/prioridad/${selected.value}`);
+                const response = await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${tareaId}/prioridad/${selected.value}`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 //http://localhost:8080/api/modulos/1/tareas/1/prioridad/1
                 console.log("Prioridad actualizada:", response.data);
-                await fetchProyectos();
+                await fetchProyectos(token);
             } catch (error) {
                 console.error("Error al actualizar la prioridad:", error);
             }
@@ -1442,7 +1548,14 @@ console.log("ide modulo:"+moduloId);
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.patch(`http://localhost:8080/api/proyectos/${id}/eliminar`, null, {
+                const response = await axios.patch(`http://localhost:8080/api/proyectos/${id}/eliminar`,
+                    null
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+
+
 
                 });
 
@@ -1481,7 +1594,11 @@ console.log("ide modulo:"+moduloId);
         if (result.isConfirmed) {
             try {
                 const response = await axios.put(`http://localhost:8080/api/proyectos/${id}/estado`, null, {
-                    params: { nuevoEstado: 'ARCHIVADO' }
+                    params: { nuevoEstado: 'ARCHIVADO' },
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+
                 });
 
                 // Captura y muestra el mensaje de éxito desde el backend
@@ -1510,16 +1627,16 @@ console.log("ide modulo:"+moduloId);
         try {
 
 
-            const response = await axios.get(`http://localhost:8080/api/proyectos/no-archivados`
+
+            const response = await axios.get(
+                `http://localhost:8080/api/proyectos/no-archivados`
                 , {
                     headers: {
                         'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
                     }
-                })
+                }
+                );
 
-
-
-            console.log("Respuesta de la API:", response.data);
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
                     const color = getUniqueColor(proyecto.id);
@@ -1544,15 +1661,14 @@ console.log("ide modulo:"+moduloId);
 
     const fetchUsuario = async (token) => {
         try {
-            console.log(token)
+
             const response = await axios.get(`http://localhost:8080/api/usuarios`
-            ,{
-                headers: {
-                    'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                },
-                withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
-            });
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+                );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
@@ -1572,7 +1688,7 @@ console.log("ide modulo:"+moduloId);
 
     const fetchPrioridad = async (token) => {
         try {
-            console.log(token)
+
             const response = await axios.get(`http://localhost:8080/api/prioridad`
             ,{
                 headers: {
@@ -1581,6 +1697,8 @@ console.log("ide modulo:"+moduloId);
                 },
                 withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
             });
+
+            console.log("prioridades que hay"+response.data)
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -1590,6 +1708,7 @@ console.log("ide modulo:"+moduloId);
                 }));
                 setPrioridad(usuarioValor);
             }
+            console.log("prioridades aquiii"+prioridad)
         } catch (error) {
             console.error("Error al obtener prioridades:", error);
             // Puedes mostrar un mensaje de error si es necesario
@@ -2659,28 +2778,28 @@ console.log("entro aqui---------------")
         <>
 
             <div className="cu-task-list-header__row">
+
                 <div className="cu-task-list-header__row-inner">
-                    {/* Botón para colapsar todas las tareas */}
+                    <div>
+                        <apan style={{marginRight: 7,fontSize:23 ,color:'#656f7d',}}>Todos proyectos</apan>
+                    </div>
+                    <div>
+                        <Button
+                            type="primary"
 
+                            icon={<PlusOutlined/>}
+                            onClick={() => showModal('Añadirproyecto')}
+                            // onClick={() => showModal('proyecto')}
 
-                    {/* Estado de la tarea */}
+                        >
+                            Crear Proyecto
+                        </Button>
+                        <Button style={{marginLeft:10}} variant="outlined" shape="round" icon={<DownloadOutlined />} size={size}>
+                            Exportar
+                        </Button>
 
+                    </div>
 
-                    {/* Opciones de hover */}
-
-
-                    {/* Botón para añadir una nueva tarea */}
-
-                    <Button
-                        type="primary"
-
-                        icon={<PlusOutlined/>}
-                        onClick={() => showModal('Añadirproyecto')}
-                        // onClick={() => showModal('proyecto')}
-                        style={{}}
-                    >
-                        Crear Proyecto
-                    </Button>
 
                 </div>
             </div>

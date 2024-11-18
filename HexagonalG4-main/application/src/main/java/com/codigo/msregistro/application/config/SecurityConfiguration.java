@@ -38,6 +38,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/proyectosmodulo/**").hasAnyAuthority(Role.DESARROLLADOR.name())
                         .requestMatchers("/api/modulos/**").hasAnyAuthority(Role.DESARROLLADOR.name())
                         .requestMatchers("/api/tareas/**").hasAnyAuthority(Role.DESARROLLADOR.name())
+                        .requestMatchers("/api/usuarios/**").hasAnyAuthority(Role.DESARROLLADOR.name())
+                        .requestMatchers("/api/usuariosrol/**").hasAnyAuthority(Role.GESTOR.name())
+
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

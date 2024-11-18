@@ -115,7 +115,9 @@ h1 {
 .cu-task-list-header__row-inner {
   display: flex;
   align-items: center;
-  gap: 10px;
+
+  justify-content: space-between;
+  width: 100%;
 }
 
 .cu-task-list-header__item-label-body-inner {
@@ -175,8 +177,18 @@ button.ant-btn-text:hover {
   display: flex;
   flex-direction: column;
  /* Espacio entre las filas de tareas */
-  padding: 10px;
+  padding: 5px;
   background-color: #ffffff; /* Fondo claro para la lista */
+}
+.registrase {
+  display: flex;
+  flex-direction: column;
+  /* Espacio entre las filas de tareas */
+  padding: 40px;
+  padding-top: 10px;
+  background-color: #ffffff; /* Fondo claro para la lista */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
 }
 
 .task-item {
@@ -250,7 +262,7 @@ button.ant-btn-text:hover {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f2f5;
+
 
 
   }
@@ -258,13 +270,14 @@ button.ant-btn-text:hover {
 .login-card {
   width: 100%;
   max-width: 480px;
-  padding: 24px;
+  padding: 10px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .login-form-button {
   width: 100%;
 }
+
 
 
 

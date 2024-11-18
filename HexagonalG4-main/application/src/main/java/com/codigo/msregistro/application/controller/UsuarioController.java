@@ -18,6 +18,12 @@ import java.util.Optional;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    // Listar todos los usuarios
+    @GetMapping
+    public ResponseEntity<List<Usuario>> listarUsuarios() {
+        List<Usuario> usuarios = usuarioService.listarUsuarios();
+        return new ResponseEntity<>(usuarios, HttpStatus.OK);
+    }
 
     // Crear un nuevo usuario
     @PostMapping
@@ -39,12 +45,6 @@ public class UsuarioController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    // Listar todos los usuarios
-    @GetMapping
-    public ResponseEntity<List<Usuario>> listarUsuarios() {
-        List<Usuario> usuarios = usuarioService.listarUsuarios();
-        return new ResponseEntity<>(usuarios, HttpStatus.OK);
-    }
 
     // Actualizar un usuario
     @PutMapping("/{id}")

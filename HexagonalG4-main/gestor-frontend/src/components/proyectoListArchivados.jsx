@@ -105,18 +105,22 @@ function ProyectoListArchivados() {
     const [editingTareaId, setEditingTareaId] = useState(null);
     const [editingSubtareaId, setEditingSubtareaId] = useState(null);
 
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
 
 
     useEffect(() => {
+        if (token) {
+        fetchProyectos(token);
+        fetchUsuario(token);
+        fetchPrioridad(token);
 
-        fetchProyectos();
-        fetchUsuario();
-        fetchPrioridad();
+        } else {
+            setIsAuthenticated(false);
+        }
 
-
-
-    }, []);
+    }, [token]);
 
     // Función para truncar el texto
     const truncateText = (text) => {
@@ -176,7 +180,7 @@ function ProyectoListArchivados() {
 
 
         } else {
-            console.log("entro aqui------------")
+
             setSelectedTareaUserIds([]);
 
         }
@@ -192,7 +196,7 @@ function ProyectoListArchivados() {
 
 
         } else {
-            console.log("entro aqui------------")
+
             setSelectedSubTareaUserIds([]);
 
         }
@@ -213,7 +217,16 @@ function ProyectoListArchivados() {
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.put(`${backendUrl}/api/proyectos/${id}/restaurar`);
+                console.log(token)
+                const response = await axios.put(
+                    `${backendUrl}/api/proyectos/${id}/restaurar`,
+                    null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
 
                 if (response.data.mensaje) {
                     console.log('Mensaje del servidor:', response.data.mensaje);
@@ -484,10 +497,16 @@ function ProyectoListArchivados() {
 
     //OBTENE PROYECTOS
 
-    const fetchProyectos = async () => {
+    const fetchProyectos = async (token) => {
         try {
-            const response = await axios.get(`${backendUrl}/api/proyectos/archivados`);
-            console.log("Respuesta de la API:", response.data);
+            const response = await axios.get(
+                `${backendUrl}/api/proyectos/archivados`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }  );
+
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
                     const color = getUniqueColor(proyecto.id);
@@ -510,9 +529,16 @@ function ProyectoListArchivados() {
 
 // OBTENER  USUARIOS
 
-    const fetchUsuario = async () => {
+    const fetchUsuario = async (token) => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/usuarios`);
+            const response = await axios.get(
+                `http://localhost:8080/api/usuarios`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
@@ -532,7 +558,15 @@ function ProyectoListArchivados() {
 
     const fetchPrioridad = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/prioridad`);
+            const response = await axios.get(
+                `http://localhost:8080/api/prioridad`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+
+            );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -1040,7 +1074,7 @@ function ProyectoListArchivados() {
     };
 
     const handleOk = () => {
-        console.log("entro aqui---------------")
+
         form.validateFields().then(async (values) => {
             if (values.fechaInicio) {
                 values.fechaInicio = values.fechaInicio.format('YYYY-MM-DD');

@@ -55,7 +55,7 @@ public class Proyecto {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaFin;
 
-    @NotNull
+
     @Column(name = "fecha_ampliada")
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaAmpliada;

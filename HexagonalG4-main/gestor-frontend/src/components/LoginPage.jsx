@@ -24,11 +24,16 @@ const LoginPage = ({ onLogin }) => {
                 const token = response.data.token;  // Aquí capturas el token
 
                 if (token) {
+
                     // Guardamos el token en localStorage para usarlo posteriormente
                     localStorage.setItem('token', token);
                     message.success('Inicio de sesión exitoso');
+                    window.location.reload();  // Recargar la página solo si el token es válido
                     onLogin();  // Actualiza el estado de autenticación
+
+
                 }
+
             })
             .catch(error => {
                 setLoading(false);
@@ -38,7 +43,17 @@ const LoginPage = ({ onLogin }) => {
 
 
     return (
-        <div className="login-container">
+        <div className="login-container"
+
+             style={{
+                 background: 'linear-gradient(to right, RGB(149,200,199), RGB(19,41,45)', // Gradiente de color
+                 backgroundSize: 'cover',
+                 backgroundRepeat: 'no-repeat',
+                 backgroundPosition: 'center',
+             }}
+        >
+
+
             <Card className="login-card">
                 <Title level={3} style={{ textAlign: 'center', fontSize:30, fontWeight:700 }}>Bienvenido</Title>
                 <Form

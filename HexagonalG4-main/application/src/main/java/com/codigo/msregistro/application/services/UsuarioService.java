@@ -1,6 +1,5 @@
 package com.codigo.msregistro.application.services;
 
-import com.codigo.msregistro.domain.aggregates.RolUsuario;
 import com.codigo.msregistro.domain.aggregates.Usuario;
 import com.codigo.msregistro.infraestructure.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,4 +64,6 @@ public class UsuarioService {
         return null; // O lanza una excepción si el usuario no existe
     }
 
+
+    //CAMBIAR ROL
 }

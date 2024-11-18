@@ -4,13 +4,9 @@ import React,{ useEffect, useState } from 'react';
 import "../index.css";
 const { Title } = Typography;
 import { useNavigate } from 'react-router-dom'; // Asegúrate de importar useN
-import {
-    DatePicker,
-
-    Button,
-
-    Row,
-    Col,
+import { GoogleLogin } from 'react-google-login';
+import { gapi } from "gapi-script";
+import {Button, Row, Col,
 
     Input,
     Modal,
@@ -18,15 +14,6 @@ import {
     Select,
     Space, Typography, Divider
 } from 'antd';
-import {
-
-    FolderOutlined,
-
-    UserOutlined,
-
-
-} from '@ant-design/icons';
-import dayjs from 'dayjs';
 import googleIcon from "../assets/googleicon.svg";
 const pearlescentColors = [
     '#f4f1de', '#e07a5f', '#3d405b', '#81b29a', '#f2cc8f',
@@ -47,6 +34,73 @@ function RegistrarUsuario(onLoginR) {
         console.log("aqui"+proyectos)
     }, []);
 
+    useEffect(() => {
+        const initClient = () => {
+            gapi.client.init({
+                clientId: "993732413040-3fja25uipldea5f7ncg3v5cd54vv9ia6.apps.googleusercontent.com",
+                scope: "",
+            });
+        };
+        gapi.load("client:auth2", initClient);
+    }, []);
+
+
+
+    const responseGoogle = async (response) => {
+        if (response.error) {
+            console.error('Error en el login con Google:', response.error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo iniciar sesión con Google.',
+                confirmButtonText: 'OK',
+            });
+        } else {
+            const googleData = {
+                token: response.tokenId,              // Token proporcionado por Google
+                email: response.profileObj.email,     // Email del usuario
+                nombres: response.profileObj.givenName,
+                apellidoPaterno:response.profileObj.familyName// Nombre completo del usuario
+
+            };
+
+            console.log('Datos de Google:', googleData);
+
+            // Registrar los datos de Google en el backend
+            let url = `${backendUrl}/api/v1/autenticacion/signupuser`;
+
+            try {
+                const result = await axios.post(url, googleData, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                // Mostrar mensaje de éxito al registrar
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registro exitoso',
+                    text: 'El usuario se ha registrado correctamente con Google.',
+                    confirmButtonText: 'OK',
+                });
+            } catch (error) {
+                console.error('Error registrando usuario con Google:', error);
+
+                // Obtener mensaje de error del servidor
+                const errorMessage = error.response?.data?.error || 'Ocurrió un error al registrar el usuario con Google.';
+
+                // Mostrar mensaje de error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage,
+                    confirmButtonText: 'OK',
+                });
+            }
+        }
+    };
+
+
 
     const navigate = useNavigate();
 
@@ -65,7 +119,8 @@ function RegistrarUsuario(onLoginR) {
             try {
                 await axios.post(url, values, {
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+
                     }
                 });
                 // Muestra la alerta de éxito
@@ -119,43 +174,24 @@ function RegistrarUsuario(onLoginR) {
     return (
 
         <>
-            <div className="login-container" >
+            <div className="login-container"
+                 style={{
+                     background: 'linear-gradient(to right, RGB(149,200,199), RGB(19,41,45)', // Gradiente de color
+                     backgroundSize: 'cover',
+                     backgroundRepeat: 'no-repeat',
+                     backgroundPosition: 'center',
+                 }}
+            >
 
 
                 {/* Lista de tareas (sin tabla) */}
-                <div className="task-list">
+                <div className="registrase">
 
-                    <div style={{display: 'flex', justifyContent: 'center', width: '100%'}}>
-                        <Title style={{textAlign: 'center'}}>Crea tu cuenta </Title>
+                    <div style={{display: 'flex', justifyContent: 'center', width: '100%', marginBottom:20}}>
+                        <Title style={{textAlign: 'center', fontWeight:700, fontSize:35}}>Regístate ahora en segundos! </Title>
                     </div>
 
 
-                    <Form.Item wrapperCol={{span: 30}}
-                               style={{marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid #f0ede6'}}>
-                        <Button
-                            type="default"
-                            style={{
-                                width: '100%',
-                                backgroundColor: '#fffff',
-                                color: '#373c42',
-                                fontWeight: 500,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                height: '40px', // Ajusta la altura según tus necesidades
-
-                            }}
-
-                        >
-                            <img
-                                src={googleIcon}
-                                alt="Google Icon"
-                                style={{width: '20px', height: '20px'}}
-                            />
-                            Continuar con Google
-                        </Button>
-                    </Form.Item>
 
                     <Row gutter={[16, 16]}
                          style={{
@@ -297,30 +333,78 @@ function RegistrarUsuario(onLoginR) {
 
 
                                 <Row gutter={[16, 16]}>
-                                    <Col span={24}>
+                                    <Col span={6}>
                                         <Form.Item>
                                             <Button
                                                 type="primary"
                                                 onClick={handleOk}
-                                                style={{width: '100%'}} // Esto hace que el botón ocupe todo el ancho disponible
+                                                style={{width: '100%', height:35, fontWeight:500}} // Esto hace que el botón ocupe todo el ancho disponible
                                             >
-                                                Registrarte
+                                                Registrarse
                                             </Button>
+
                                         </Form.Item>
                                     </Col>
+                                    <Col span={8} style={{ textAlign: 'left', marginTop:8 }}>
+                                        <span style={{marginRight:10}}>
+                                            o
+                                        </span>
+    <span style={{color:'#038fde', fontWeight:700}} onClick={() => window.location.href = '/' }>
+        Iniciar sesion
+    </span>
+                                    </Col>
+
                                 </Row>
+
 
 
                                 <Row gutter={[16, 16]}>
-                                    <Col span={24} style={{textAlign: 'center'}}>
-                                        <span onClick={() => window.location.href = '/'} style={{fontSize:19, color:"green"}}>
+                                <Col span={12} style={{textAlign: 'center'}}>
 
-                                            ¿Ya tienes cuenta?
+                                    </Col>
+
+                                    <Col span={12} style={{textAlign: 'center'}}>
+
+
+                                        <div style={{display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems:'center'}}>
+                                             <span style={{color:'#038fde', fontWeight:500}}>
+
+                                         o resgistrate con
 
                                         </span>
+
+                                            <GoogleLogin
+                                                clientId="993732413040-3fja25uipldea5f7ncg3v5cd54vv9ia6.apps.googleusercontent.com" // Tu Client ID de Google
+                                                onSuccess={responseGoogle}
+                                                onFailure={responseGoogle}
+                                                cookiePolicy="single_host_origin"
+                                                render={(renderProps) => (
+                                                    <button
+                                                        onClick={renderProps.onClick}
+                                                        disabled={renderProps.disabled}
+                                                        style={{
+                                                            border: 'none',
+                                                            backgroundColor: 'transparent',
+                                                            cursor: 'pointer',
+                                                            padding: '10px',
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={googleIcon} // Usando tu icono de Google
+                                                            alt="Google Icon"
+                                                            style={{
+                                                                width: '25px', // Puedes ajustar el tamaño del icono
+                                                                height: '25px',
+                                                            }}
+                                                        />
+                                                    </button>
+                                                )}
+                                            />
+                                        </div>
+
+
                                     </Col>
                                 </Row>
-
 
                             </Form>
                         </Col>

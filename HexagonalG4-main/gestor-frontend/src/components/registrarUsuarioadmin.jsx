@@ -22,7 +22,7 @@ const pearlescentColors = [
 
 
 
-function RegistrarUsuario(onLoginR) {
+function RegistrarUsuarioadmin(onLoginR) {
     const [proyectos, setProyectos] = useState([]);
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -112,7 +112,7 @@ function RegistrarUsuario(onLoginR) {
                 values.fechaNacimiento = values.fechaNacimiento.format('YYYY-MM-DD');
             }
 
-            let url = `${backendUrl}/api/v1/autenticacion/signupuser`;
+            let url = `${backendUrl}/api/v1/autenticacion/signupadmin`;
 
             console.log("Datos que se envían:", values);
 
@@ -132,7 +132,7 @@ function RegistrarUsuario(onLoginR) {
                 }).then(() => {
                     // Resetea el formulario y cierra el modal solo si se acepta la alerta
                     form.resetFields();
-                    setIsModalOpen(false);
+
                 });
 
                 //fetchProyectos(); // Descomenta si necesitas esta función
@@ -188,7 +188,7 @@ function RegistrarUsuario(onLoginR) {
                 <div className="registrase">
 
                     <div style={{display: 'flex', justifyContent: 'center', width: '100%', marginBottom:20}}>
-                        <Title style={{textAlign: 'center', fontWeight:700}}>Regístate ahora </Title>
+                        <Title style={{textAlign: 'center', fontWeight:700}}>Registro admin</Title>
                     </div>
 
 
@@ -422,4 +422,4 @@ function RegistrarUsuario(onLoginR) {
 
 }
 
-export default RegistrarUsuario;
+export default RegistrarUsuarioadmin;

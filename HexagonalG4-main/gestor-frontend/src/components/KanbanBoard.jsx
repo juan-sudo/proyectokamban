@@ -83,17 +83,23 @@ const KanbanBoard = () => {
     const [selectedOptionSubtarea, setSelectedOptionSubtarea] = useState(null);
     const [editingSubtareaId, setEditingSubtareaId] = useState(null);
 
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
 
     useEffect(() => {
-        fetchUsuario();
-        fetchTasks();
+        if (token) {
+            setIsAuthenticated(true);
+        fetchUsuario(token);
+        fetchTasks(token);
 
-        fetchPrioridad();
+        fetchPrioridad(token);
 
+        } else {
+            setIsAuthenticated(false);
+        }
+    }, [token]);
 
-
-    }, []);
 
     const showDrawer = (task) => {
         if (!task) {
@@ -107,9 +113,15 @@ const KanbanBoard = () => {
     };
 
 
-    const fetchPrioridad = async () => {
+    const fetchPrioridad = async (token) => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/prioridad`);
+            const response = await axios.get(`http://localhost:8080/api/prioridad`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -159,14 +171,18 @@ const KanbanBoard = () => {
             const values = await form.validateFields();
 
 
-            const url = `${backendUrl}/api/modulos/${moduloId}/tareas/actualizar/${subTareaId}`;
+            const url = `${backendUrl}/api/modulos/${moduloId}/tareas/actualizar/${subTareaId}`
+
+            ;
 
 
-            await axios.put(url, values, {
-                headers: {
-                    'Content-Type': 'application/json'
+            await axios.put(url, values
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
                 }
-            });
+            );
 
             // Aquí actualizas selectedTask para reflejar los nuevos valores
 
@@ -179,7 +195,7 @@ const KanbanBoard = () => {
 
 
             setIsEditing(false);
-            await fetchTasks();
+            await fetchTasks(token);
 
             setIsModalOpen(false);
         } catch (error) {
@@ -339,7 +355,14 @@ const KanbanBoard = () => {
         // Si el usuario confirma, se procede a eliminar
         if (result.isConfirmed) {
             try {
-                const response = await axios.delete(`/api/modulos/${moduloId}/tareas/delete/${taskId}`);
+                const response = await axios.delete(`/api/modulos/${moduloId}/tareas/delete/${taskId}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                    }
+
+                );
                 if (response.status === 200) {
                     Swal.fire(
                         '¡Eliminado!',
@@ -363,7 +386,13 @@ const KanbanBoard = () => {
 
     const fetchUsuario = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/usuarios`);
+            const response = await axios.get(`http://localhost:8080/api/usuarios`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
@@ -430,18 +459,30 @@ const KanbanBoard = () => {
 
 
     // Llamada a la API para obtener las tareas del módulo
-    const fetchTasks = async () => {
+    const fetchTasks = async (token) => {
 
         try {
 
             // Obtener datos del proyecto
-            const projectResponse = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}`);
+            const projectResponse = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
             const projectData = projectResponse.data;
             setProjectData(projectData);
 
 
 
-            const response = await axios.get(`http://localhost:8080/api/proyectos/${proyectoId}/modulos/${moduloId}`);
+            const response = await axios.get(`http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
             const moduleData = response.data;
             setModuleData(moduleData); // Actualiza el estado del módulo
 
@@ -554,7 +595,14 @@ const KanbanBoard = () => {
 
                     try {
                         // Enviar solicitud de creación
-                        const response = await axios.post(url, nuevaTarea);
+                        const response = await axios.post(url, nuevaTarea,
+                            {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
+                            }
+
+                        );
 
                         // Capturar y manejar los datos devueltos
                         const responseData = response.data;
@@ -672,7 +720,13 @@ const KanbanBoard = () => {
         try {
             let response;
             if (value === 'none') {
-                response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad`);
+                response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 console.log("Prioridad actualizada a null:", response.data);
                 // Actualiza selectedTask para reflejar que no hay prioridad
                 setSelectedTask(prev => ({
@@ -681,7 +735,13 @@ const KanbanBoard = () => {
                     prioridad: null // Asegúrate de establecer esto en null
                 }));
             } else {
-                response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad/${value}`);
+                response = await axios.put(`http://localhost:8080/api/tareas/${tareaId}/subTareas/${subtareaId}/prioridad/${value}`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
                 console.log("Prioridad actualizada:", response.data);
                 const newPriority = prioridad.find(option => option.value === value);
                 // Actualiza selectedTask con la nueva prioridad
@@ -823,7 +883,15 @@ const KanbanBoard = () => {
 
             if (nuevoEstado) {
                 try {
-                    await axios.put(`http://localhost:8080/api/modulos/${moduloId}/tareas/${draggableId}/estado?nuevoEstado=${nuevoEstado}`);
+                    await axios.put(
+                        `http://localhost:8080/api/modulos/${moduloId}/tareas/${draggableId}/estado?nuevoEstado=${nuevoEstado}`,
+                        {},
+                        {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                    }
+                    );
                     ///api/tareas/{tareaId}/subTareas/{subtareaId}/estado
                 } catch (error) {
                     console.error('Error actualizando el estado de la tarea:', error);

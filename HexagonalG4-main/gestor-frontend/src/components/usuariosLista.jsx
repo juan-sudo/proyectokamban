@@ -81,12 +81,137 @@ function UsuariosList() {
     const [personas, setPersonas] = useState([]);
     const [selectedValues, setSelectedValues] = useState([]);
     const navigate = useNavigate();
-    useEffect(() => {
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+    const [editingId, setEditingId] = useState(null);
+    const [selectedOption, setSelectedOption] = useState(null); // Estado para
+    const [rol, setRol] = useState([]);
 
-        fetchUsuarios();
+    useEffect(() => {
+       // if (token) {
+
+        fetchUsuarios(token);
+        fetchRoles(token);
 
         console.log("aqui"+usuarios)
-    }, []);
+    }, [token]);
+
+    // Usar un efecto para observar cambios en `rol`
+    useEffect(() => {
+        console.log("aquí -------- cambion:", rol);
+    }, [rol]);
+
+    //const handleDoubleClick = (projectId) => {
+      //  setEditingId(projectId);
+    //};
+
+    const handleDoubleClick = (projectId, roles) => {
+        // Verifica si alguno de los roles contiene "GESTOR"
+        const hasGestor = roles.some(role => role.nombreRol.includes("GESTOR"));
+
+        if (hasGestor) {
+            console.log("No se puede editar debido al rol 'GESTOR'.");
+            return; // No hacer nada si contiene "GESTOR"
+        }
+
+        // Si no contiene "GESTOR", se realiza la acción
+        setEditingId(projectId);
+        console.log("Edición permitida para el proyecto con ID:", projectId);
+    };
+
+
+
+    //ACTUALIZR ROL DE USUARIO
+    const handleChange = async (value, usarioId) => {
+
+
+        if (value === 'none') {
+            setSelectedOption(null);
+
+            try {
+                // Llamar a la API para establecer la prioridad a null
+                const response = await axios.put(
+                    `http://localhost:8080/api/usuariosrol/${usarioId}/roles`
+                    ,null,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+
+                );
+                console.log("usuario actualizada a null:", response.data);
+                await fetchUsuarios(token);
+            } catch (error) {
+                console.error("Error al actualizar la prioridad a null:", error);
+            }
+        } else {
+            const selected = rol.find(option => option.value === value);
+
+            try {
+                // Usar el ID del proyecto y el ID de la prioridad seleccionada
+                const response = await axios.put(
+                    `http://localhost:8080/api/usuariosrol/${usarioId}/roles`
+                    , [selected.value],
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+
+                );
+                console.log("usuario actualizada:", response.data);
+                await fetchUsuarios(token);
+            } catch (error) {
+                console.error("Error al actualizar usuario", error);
+            }
+        }
+
+        setEditingId(null); // Cambiar aquí para finalizar la edición
+    };
+
+
+    //ROLES
+
+    const fetchRoles = async (token) => {
+        try {
+
+            const response = await axios.get(`http://localhost:8080/api/usuariosrol/roles`
+
+                ,{
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
+                });
+
+            console.log("roles que hay:", response.data);
+
+            if (Array.isArray(response.data) && response.data.length > 0) {
+                const usuarioValor = response.data
+                    .filter(rol => rol.nombreRol !== "GESTOR" && rol.nombreRol !== "ADMINISTRADOR")
+                    .map((rol, index) => ({
+                    label: rol.nombreRol || "Sin nombre",
+                    value: rol.id !== undefined ? rol.id : index + 3, // Usa el índice + 1 si el id está indefinido
+                    desc: rol.nombreRol || "Sin descripción",
+                }));
+                setRol(usuarioValor);
+            } else {
+                console.warn("La respuesta del servidor no contiene roles válidos:", response.data);
+            }
+
+            console.log("aqui --------roles: "+rol);
+
+            console.log("rol obyeniedo dato.."+rol)
+
+        } catch (error) {
+            console.error("Error al obtener prioridades:", error);
+            // Puedes mostrar un mensaje de error si es necesario
+        }
+    };
+
+
 
 
 //AXIOS ARCHIVAR PROYECTO
@@ -123,10 +248,16 @@ function UsuariosList() {
     };
 
 
-    const fetchUsuarios = async () => {
+    const fetchUsuarios = async (token) => {
         try {
-            const response = await axios.get(`${backendUrl}/api/usuarios`);
-            console.log("Respuesta de la API:", response.data);
+            const response = await axios.get(`${backendUrl}/api/usuariosrol/todos`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
+            console.log("Respuesta usaurios:", response.data);
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
                     const color = getUniqueColor(proyecto.id);
@@ -142,7 +273,7 @@ function UsuariosList() {
                 setUsuarios(proyectosConColor);
             }
         } catch (error) {
-            console.error("Error al obtener proyectos:", error);
+            console.error("Error al obtener usuarios:", error);
         }
     };
 
@@ -651,7 +782,14 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             // Actualiza el estado en la base de datos
             await axios.put(`http://localhost:8080/api/usuarios/${rowId}/estado`, {
                 activo: checked, // Enviar el nuevo estado
-            });
+            }
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+
+            );
 
             // Actualiza el estado local
             setActiveStates((prevState) => ({
@@ -659,10 +797,9 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                 [rowId]: checked, // Actualiza el estado del usuario específico
             }));
 
-            message.success(`Estado actualizado a ${checked ? 'Activo' : 'Desactivo'}`);
+
         } catch (error) {
-            // Manejo de errores
-            message.error('Error al actualizar el estado en la base de datos');
+           console.log('Error al actualizar el estado en la base de datos');
         }
     };
 
@@ -684,9 +821,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
                  }}>
                 <Col span={24} style={{ padding: '16px', fontSize:23 }}>
-                    <FolderOutlined style={{paddingRight:5,paddingLeft:5}} />
-                    <UsergroupAddOutlined style={{paddingRight:5,paddingLeft:10}} />
-                    <span>Usuarios</span>
+
+                    <span>Todos Usuarios</span>
                 </Col>
             </Row>
 
@@ -722,16 +858,19 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                         >
                             <div>Nombres</div>
                         </Col>
-                        <Col span={6}>
+                        <Col span={4}>
                             <div className="task-item__assignee">Correo</div>
                         </Col>
-                        <Col span={4}>
+                        <Col span={3}>
                             <div className="task-item__due-date">Teléfono</div>
                         </Col>
-                        <Col span={4}>
-                            <div className="task-item__due-date"> Estado</div>
+                        <Col span={5}>
+                            <div className="task-item__due-date">Rol</div>
                         </Col>
                         <Col span={3}>
+                            <div className="task-item__due-date"> Estado</div>
+                        </Col>
+                        <Col span={2}>
                             <div className="task-item__due-date">Acion</div>
                         </Col>
                     </Row>
@@ -750,7 +889,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     backgroundColor: hoveredRow === row.id ? '#e0e0e0' : '',
                                     color:'#2a2e34',
                                     paddingTop:'6px',
-                                    paddingBottom:'6px'
+                                    paddingBottom:'6px',
+
                                 }}
 
                                 onMouseEnter={() => handleMouseEnter(row.id)}
@@ -779,11 +919,11 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                 }}
                                                 onClick={() => showModal('verProyecto', row.id)}
                                             >
-                                                <span>{row.nombres}</span>
-                                                <span style={{paddingLeft:4}}>
+                                                <span  style={{color:'#656f7d'}} >{row.nombres}</span>
+                                                <span style={{paddingLeft:4,color:'#656f7d'}}  >
                                                     {row.apellidoPaterno}
                                                     </span>
-                                                <span style={{paddingLeft:4}}>{row.apellidoMaterno}
+                                                <span style={{paddingLeft:4,color:'#656f7d'}}>{row.apellidoMaterno}
                                                     </span>
                                             </a>
                                         </Tooltip>
@@ -791,24 +931,97 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     </div>
                                 </Col>
 
-                                <Col span={6}>
-                                    <span>{row.email}</span>
+                                <Col span={4}>
+                                    <span style={{color:'#656f7d'}}>{row.email}</span>
                                 </Col>
-                                <Col  span={4}>
+                                <Col  span={3} style={{color:'#656f7d'}}>
                                     <span>{row.telefono}</span>
 
                                 </Col>
-                                <Col span={4}>
+
+                                <Col
+                                    span={5}
+                                    style={{ display: 'flex', alignItems: 'center' }}
+                                    onMouseEnter={() => handleMouseEnter(row.id)}
+                                    onMouseLeave={handleMouseLeave}
+                                    onDoubleClick={() => handleDoubleClick(row.id)}
+                                >
+                                    {editingId === row.id ? (
+                                        <Select
+                                            style={{
+                                                width: '100%',
+                                                boxShadow: 'none',
+                                                transition: 'background-color 0.3s ease, border 0.3s ease',
+                                            }}
+                                            className={`custom-select ${hoveredRow === row.id ? 'hovered-bg' : ''}`}
+                                            value={selectedOption ? selectedOption.value : 'none'}
+                                            onChange={(value) => handleChange(value, row.id)} // Pasar el ID del proyecto
+                                            onBlur={() => setEditingId(null)} // Cambiar aquí
+                                            suffixIcon={null}
+                                            showArrow={false}
+                                            showSearch={false}
+                                            size="small"
+                                        >
+                                            {rol.length > 0 ? (
+                                                rol.map(({ value, label }) => (
+                                                    <Option key={value} value={value}>
+                                                        <Space>
+
+                                                            {label}
+                                                        </Space>
+                                                    </Option>
+                                                ))
+                                            ) : (
+                                                <Option value="none">sin rol disponibles</Option>
+                                            )}
+
+
+                                        </Select>
+                                    ) : (
+                                        <span style={{ cursor: 'pointer' }} onDoubleClick={() => handleDoubleClick(row.id, row.roles)}>
+      {row.roles && row.roles.length > 0 ? (
+          <Space>
+              {
+                  row.roles.some(role => role.nombreRol === "GESTOR") ? (
+                      // Si existe "GESTOR", solo muestra "GESTOR"
+                      <span>{row.roles.find(role => role.nombreRol === "GESTOR").nombreRol}</span>
+                  ) : (
+                      // Si no hay "GESTOR", muestra todos los roles
+                      row.roles.map((role, index) => (
+                          <span key={index} style={{backgroundColor:'#27ba40', color:'#ffffff', fontSize:10, fontWeight:500, padding:2, borderRadius:5}}>
+          {role.nombreRol}
+                              {index < row.roles.length - 1 && ', '} {/* Para separar con comas */}
+        </span>
+                      ))
+                  )
+              }
+          </Space>
+
+      ) : (
+          <Space>
+              <FlagOutlined style={{ fontSize: '16px', color: 'gray' }} />
+              Sin rol
+          </Space>
+      )}
+    </span>
+                                    )}
+                                </Col>
+
+
+
+                                <Col span={3}>
                                     <Switch
                                         checkedChildren="Activo"
                                         unCheckedChildren="Desactivo"
                                         checked={activeStates[row.id]} // Usa el estado individual del usuario
-                                        onChange={(checked) => onChange(checked, row.id)} // Llama a la función cuando cambia el estado
+                                        onChange={(checked) => onChange(checked, row.id)}
+                                        size="default" // Tamaño predeterminado
+                                        // Llama a la función cuando cambia el estado
                                     />
                                 </Col>
 
 
-                                <Col span={3}>
+                                <Col span={2}>
 
                                     <EllipsisOutlined />
 

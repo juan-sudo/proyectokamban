@@ -104,19 +104,23 @@ function ProyectoListPapelera() {
     const [editingModuloId, setEditingModuloId] = useState(null);
     const [editingTareaId, setEditingTareaId] = useState(null);
     const [editingSubtareaId, setEditingSubtareaId] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem('token'));
+    const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
 
 
 
     useEffect(() => {
-
-        fetchProyectos();
-        fetchUsuario();
-        fetchPrioridad();
-
-
-
-    }, []);
+        // Actualizar el estado de autenticación si el token cambia
+        if (token) {
+            setIsAuthenticated(true);
+            fetchProyectos(token);
+            fetchUsuario(token);
+            fetchPrioridad(token);
+        } else {
+            setIsAuthenticated(false);
+        }
+    }, [token]);
 
     // Función para truncar el texto
     const truncateText = (text) => {
@@ -176,7 +180,7 @@ function ProyectoListPapelera() {
 
 
         } else {
-            console.log("entro aqui------------")
+
             setSelectedTareaUserIds([]);
 
         }
@@ -192,7 +196,7 @@ function ProyectoListPapelera() {
 
 
         } else {
-            console.log("entro aqui------------")
+
             setSelectedSubTareaUserIds([]);
 
         }
@@ -213,7 +217,16 @@ function ProyectoListPapelera() {
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.patch(`${backendUrl}/api/proyectos/${id}/restaurar-papelera`);
+                const response = await axios.patch(
+                    `${backendUrl}/api/proyectos/${id}/restaurar-papelera`,
+                    null
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+
+                );
 
                 if (response.data.mensaje) {
                     console.log('Mensaje del servidor:', response.data.mensaje);
@@ -517,10 +530,18 @@ function ProyectoListPapelera() {
 
     //OBTENE PROYECTOS
 
-    const fetchProyectos = async () => {
+    const fetchProyectos = async (token) => {
         try {
-            const response = await axios.get(`${backendUrl}/api/proyectos/eliminados`);
-            console.log("Respuesta de la API:", response.data);
+            const response = await axios.get(
+                `${backendUrl}/api/proyectos/eliminados`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+
+            );
+
             if (Array.isArray(response.data)) {
                 const proyectosConColor = response.data.map((proyecto) => {
                     const color = getUniqueColor(proyecto.id);
@@ -543,9 +564,17 @@ function ProyectoListPapelera() {
 
 // OBTENER  USUARIOS
 
-    const fetchUsuario = async () => {
+    const fetchUsuario = async (token) => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/usuarios`);
+            const response = await axios.get(
+                `http://localhost:8080/api/usuarios`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+
+            );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
@@ -565,7 +594,14 @@ function ProyectoListPapelera() {
 
     const fetchPrioridad = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/prioridad`);
+            const response = await axios.get(
+                `http://localhost:8080/api/prioridad`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -1073,7 +1109,7 @@ function ProyectoListPapelera() {
     };
 
     const handleOk = () => {
-        console.log("entro aqui---------------")
+
         form.validateFields().then(async (values) => {
             if (values.fechaInicio) {
                 values.fechaInicio = values.fechaInicio.format('YYYY-MM-DD');

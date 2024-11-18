@@ -23,6 +23,8 @@ import java.util.List;
 public class AutenticacionController {
     private final AuthenticationService authenticationService;
 
+
+
     @PostMapping("/signupuser")
     public ResponseEntity<Usuario> signUpUser(@RequestBody SignUpRequest signUpRequest){
         return ResponseEntity.ok(authenticationService.signUpUser(signUpRequest));
@@ -37,11 +39,7 @@ public class AutenticacionController {
     public ResponseEntity<AuthenticationResponse> signin(@RequestBody SignInRequest signInRequest){
         return ResponseEntity.ok(authenticationService.signin(signInRequest));
     }
-    @GetMapping("/todos")
-    public ResponseEntity<List<Usuario>> getTodos(){
-        log.info("INFORMACION SE DEVUELVE DESDE MS LOGIN - TODOS");
-        return ResponseEntity.ok(authenticationService.todos());
-    }
+
     @PostMapping("/validateToken")
     public ResponseEntity<Boolean> validateToken(@RequestHeader("validate") String validate){
         return ResponseEntity.ok(authenticationService.validateToken(validate));

@@ -23,5 +23,5 @@ public class Usuario {
     private String email;
 
     @Enumerated(EnumType.STRING) // Almacenar el enum como un string en la base de datos
-    private RolUsuario rol; // Enum para roles (definirlo por separado)
+    private Role rol; // Enum para roles (definirlo por separado)
 }

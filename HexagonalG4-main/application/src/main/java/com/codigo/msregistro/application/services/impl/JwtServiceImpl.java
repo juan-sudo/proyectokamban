@@ -2,6 +2,7 @@ package com.codigo.msregistro.application.services.impl;
 
 
 import com.codigo.msregistro.application.services.JwtService;
+import com.codigo.msregistro.domain.aggregates.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.Set;
 import java.util.function.Function;
 
 @Service
@@ -28,12 +30,25 @@ public class JwtServiceImpl implements JwtService {
     ///Generar un TOKEN
     @Override
     public String generateToken(UserDetails userDetails) {
-        return Jwts.builder().setSubject(userDetails.getUsername())
+       if (!(userDetails instanceof Usuario)) {
+            throw new IllegalArgumentException("El objeto UserDetails no es de tipo Usuario");
+        }
+
+        Usuario usuario = (Usuario) userDetails;
+
+        // Obtener los nombres de los roles
+        Set<String> roles = usuario.getRolesNames();
+        return Jwts.builder().
+                setSubject(userDetails.getUsername())
+                .claim("roles", roles) // Añadir roles al payload
+                .claim("nombreCompleto", usuario.getNombres() + " " + usuario.getApellidoPaterno())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1200000))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+
 
     @Override
     public boolean validateToken(String token, UserDetails userDetails) {

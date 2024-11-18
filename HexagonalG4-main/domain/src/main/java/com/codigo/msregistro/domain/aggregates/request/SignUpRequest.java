@@ -19,4 +19,5 @@ public class SignUpRequest {
     private Date fechaNacimiento;
     private String genero;
 
+
 }
