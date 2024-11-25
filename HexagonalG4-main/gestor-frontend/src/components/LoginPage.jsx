@@ -3,9 +3,6 @@ import {Form, Input, Button, Card, Typography, message, Divider, Row, Col, DateP
 import { UserOutlined, LockOutlined,GoogleOutlined, } from '@ant-design/icons';
 import axios from 'axios';  // Usaremos axios para realizar la solicitud POST
 import '../index.css';
-import googleIcon from '../assets/googleicon.svg';
-import dayjs from "dayjs"; // Asegúrate de que la ruta sea correcta
-
 
 const { Title } = Typography;
 
@@ -64,34 +61,9 @@ const LoginPage = ({ onLogin }) => {
 
                 >
                     {/* Botón para continuar con Google */}
-                    <Form.Item wrapperCol={{ span: 30 }}>
-                        <Button
-                            type="default"
-                            style={{
-                                width: '100%',
-                                backgroundColor: '#fffff',
-                                color: '#373c42',
-                                fontWeight: 500,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                height: '40px', // Ajusta la altura según tus necesidades
 
-                            }}
-
-                        >
-                            <img
-                                src={googleIcon}
-                                alt="Google Icon"
-                                style={{width: '20px', height: '20px'}}
-                            />
-                            Continuar con Google
-                        </Button>
-                    </Form.Item>
                     {/* Línea divisoria */}
-                    <Divider style={{borderColor: '#d9d9d9'}}><span style={{color:'#d9d9d9'}}>o</span></Divider>
-                    <Form.Item
+                   <Form.Item
                         label="Correo Electrónico"
                         name="email"
                         rules={[

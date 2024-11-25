@@ -4,8 +4,7 @@ import React,{ useEffect, useState } from 'react';
 import "../index.css";
 const { Title } = Typography;
 import { useNavigate } from 'react-router-dom'; // Asegúrate de importar useN
-import { GoogleLogin } from 'react-google-login';
-import { gapi } from "gapi-script";
+
 import {Button, Row, Col,
 
     Input,
@@ -34,15 +33,7 @@ function RegistrarUsuarioadmin(onLoginR) {
         console.log("aqui"+proyectos)
     }, []);
 
-    useEffect(() => {
-        const initClient = () => {
-            gapi.client.init({
-                clientId: "993732413040-3fja25uipldea5f7ncg3v5cd54vv9ia6.apps.googleusercontent.com",
-                scope: "",
-            });
-        };
-        gapi.load("client:auth2", initClient);
-    }, []);
+
 
 
 
@@ -365,42 +356,6 @@ function RegistrarUsuarioadmin(onLoginR) {
 
                                     <Col span={12} style={{textAlign: 'center'}}>
 
-
-                                        <div style={{display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems:'center'}}>
-                                             <span style={{color:'#038fde', fontWeight:500}}>
-
-                                         o resgistrate con
-
-                                        </span>
-
-                                            <GoogleLogin
-                                                clientId="993732413040-3fja25uipldea5f7ncg3v5cd54vv9ia6.apps.googleusercontent.com" // Tu Client ID de Google
-                                                onSuccess={responseGoogle}
-                                                onFailure={responseGoogle}
-                                                cookiePolicy="single_host_origin"
-                                                render={(renderProps) => (
-                                                    <button
-                                                        onClick={renderProps.onClick}
-                                                        disabled={renderProps.disabled}
-                                                        style={{
-                                                            border: 'none',
-                                                            backgroundColor: 'transparent',
-                                                            cursor: 'pointer',
-                                                            padding: '10px',
-                                                        }}
-                                                    >
-                                                        <img
-                                                            src={googleIcon} // Usando tu icono de Google
-                                                            alt="Google Icon"
-                                                            style={{
-                                                                width: '25px', // Puedes ajustar el tamaño del icono
-                                                                height: '25px',
-                                                            }}
-                                                        />
-                                                    </button>
-                                                )}
-                                            />
-                                        </div>
 
 
                                     </Col>
