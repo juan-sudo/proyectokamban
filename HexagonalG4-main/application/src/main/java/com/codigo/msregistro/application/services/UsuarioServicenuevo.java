@@ -9,4 +9,6 @@ import java.util.List;
 public interface UsuarioServicenuevo {
     UserDetailsService userDetailService();
     List<Usuario> getUsuarios();
+
+
 }

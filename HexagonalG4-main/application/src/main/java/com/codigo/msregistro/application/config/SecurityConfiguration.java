@@ -34,12 +34,60 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/api/v1/autenticacion/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasAnyAuthority(Role.GESTOR.name())
-                        .requestMatchers("/api/proyectos/**").hasAnyAuthority(Role.DESARROLLADOR.name())
-                        .requestMatchers("/api/proyectosmodulo/**").hasAnyAuthority(Role.DESARROLLADOR.name())
-                        .requestMatchers("/api/modulos/**").hasAnyAuthority(Role.DESARROLLADOR.name())
-                        .requestMatchers("/api/tareas/**").hasAnyAuthority(Role.DESARROLLADOR.name())
-                        .requestMatchers("/api/usuarios/**").hasAnyAuthority(Role.DESARROLLADOR.name())
-                        .requestMatchers("/api/usuariosrol/**").hasAnyAuthority(Role.GESTOR.name())
+                        .requestMatchers("/api/proyectos/**").hasAnyAuthority(
+                                Role.ADMINISTRADOR.name(),
+                                Role.GESTOR.name(),
+                                Role.DESARROLLADOR.name(),
+                                Role.DICENIADOR.name(),
+                                Role.QA.name(),
+                                Role.DEVOPS.name(),
+                                Role.SOPORTE.name()
+                        )
+                        .requestMatchers("/api/proyectosmodulo/**").hasAnyAuthority(
+                                Role.ADMINISTRADOR.name(),
+                                Role.GESTOR.name(),
+                                Role.DESARROLLADOR.name(),
+                                Role.DICENIADOR.name(),
+                                Role.QA.name(),
+                                Role.DEVOPS.name(),
+                                Role.SOPORTE.name()
+                        )
+                        .requestMatchers("/api/modulos/**").hasAnyAuthority(
+                                Role.ADMINISTRADOR.name(),
+                                Role.GESTOR.name(),
+                                Role.DESARROLLADOR.name(),
+                                Role.DICENIADOR.name(),
+                                Role.QA.name(),
+                                Role.DEVOPS.name(),
+                                Role.SOPORTE.name()
+                        )
+                        .requestMatchers("/api/tareas/**").hasAnyAuthority(
+                                Role.ADMINISTRADOR.name(),
+                                Role.GESTOR.name(),
+                                Role.DESARROLLADOR.name(),
+                                Role.DICENIADOR.name(),
+                                Role.QA.name(),
+                                Role.DEVOPS.name(),
+                                Role.SOPORTE.name()
+
+                        )
+                        .requestMatchers("/api/usuarios/**").hasAnyAuthority(
+                                Role.ADMINISTRADOR.name(),
+                                Role.GESTOR.name(),
+                                Role.DESARROLLADOR.name(),
+                                Role.DICENIADOR.name(),
+                                Role.QA.name(),
+                                Role.DEVOPS.name(),
+                                Role.SOPORTE.name()
+
+                        )
+
+
+                        .requestMatchers("/api/usuariosrol/**").hasAnyAuthority(
+                                Role.ADMINISTRADOR.name(),
+                                Role.GESTOR.name()
+
+                        )
 
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

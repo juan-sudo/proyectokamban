@@ -18,7 +18,7 @@ import {
     Form,
     Select,
     Space,
-    Switch
+    Switch, Divider, Tabs, InputNumber, Timeline
 } from 'antd';
 import {
     EditOutlined,
@@ -49,9 +49,7 @@ import {
     FileOutlined,
     FlagOutlined,
     FolderOpenOutlined,
-    UsergroupAddOutlined,
-
-
+    UsergroupAddOutlined, BookOutlined, InboxOutlined, DeleteOutlined,PhoneOutlined, MailOutlined
 
 
 } from '@ant-design/icons';
@@ -75,6 +73,8 @@ function UsuariosList() {
     const [selectedsubTareaId, setSelectedsubTareaId] = useState(null);
     const [form] = Form.useForm();
     const [selectedProject, setSelectedProject] = useState(null); // proyecto seleccionado
+    const [selectedUsuario, setSelectedUsuario] = useState(null); // proyecto seleccionado
+
     const [selectedModule, setSelectedModule] = useState(null); // proyecto seleccionado
     const [selectedTarea, setSelectedTarea] = useState(null); // proyecto seleccionado
     const [selectedsubTarea, setSelectedsubTarea] = useState(null); // proyecto seleccionado
@@ -107,12 +107,12 @@ function UsuariosList() {
 
     const handleDoubleClick = (projectId, roles) => {
         // Verifica si alguno de los roles contiene "GESTOR"
-        const hasGestor = roles.some(role => role.nombreRol.includes("GESTOR"));
+       // const hasGestor = roles.some(role => role.nombreRol.includes("GESTOR"));
 
-        if (hasGestor) {
-            console.log("No se puede editar debido al rol 'GESTOR'.");
-            return; // No hacer nada si contiene "GESTOR"
-        }
+        //if (hasGestor) {
+          //  console.log("No se puede editar debido al rol 'GESTOR'.");
+            //return; // No hacer nada si contiene "GESTOR"
+        //}
 
         // Si no contiene "GESTOR", se realiza la acción
         setEditingId(projectId);
@@ -189,15 +189,16 @@ function UsuariosList() {
             console.log("roles que hay:", response.data);
 
             if (Array.isArray(response.data) && response.data.length > 0) {
-                const usuarioValor = response.data
-                    .filter(rol => rol.nombreRol !== "GESTOR" && rol.nombreRol !== "ADMINISTRADOR")
-                    .map((rol, index) => ({
+                const usuarioValor = response.data.map((rol, index) => ({
                     label: rol.nombreRol || "Sin nombre",
-                    value: rol.id !== undefined ? rol.id : index + 3, // Usa el índice + 1 si el id está indefinido
+                    value: rol.id !== undefined ? rol.id : index + 1, // Usa el índice + 1 si el id está indefinido
                     desc: rol.nombreRol || "Sin descripción",
                 }));
                 setRol(usuarioValor);
-            } else {
+            }
+
+
+            else {
                 console.warn("La respuesta del servidor no contiene roles válidos:", response.data);
             }
 
@@ -208,42 +209,6 @@ function UsuariosList() {
         } catch (error) {
             console.error("Error al obtener prioridades:", error);
             // Puedes mostrar un mensaje de error si es necesario
-        }
-    };
-
-
-
-
-//AXIOS ARCHIVAR PROYECTO
-    const archivarProyecto = async (id, nombreProyecto) => {
-        // Muestra una alerta de confirmación con el nombre del proyecto
-        const result = await Swal.fire({
-            title: `¿Está seguro de archivar el proyecto "${nombreProyecto}"?`,
-            text: 'Una vez archivado, no podrá recuperarlo fácilmente.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, archivar',
-            cancelButtonText: 'Cancelar'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const response = await axios.put(`http://localhost:8080/api/proyectos/${id}/estado`, null, {
-                    params: { nuevoEstado: 'ARCHIVADO' }
-                });
-                console.log('Proyecto archivado:', response.data);
-
-                // Actualiza el estado de tus proyectos si es necesario
-                setUsuarios((prevProyectos) => prevProyectos.filter(proyecto => proyecto.id !== id));
-
-                // Muestra un mensaje de éxito
-                Swal.fire('Archivado', 'El proyecto ha sido archivado.', 'success');
-
-            } catch (error) {
-                console.error('Error al archivar el proyecto:', error);
-                // Muestra un mensaje de error
-                Swal.fire('Error', 'Hubo un problema al archivar el proyecto.', 'error');
-            }
         }
     };
 
@@ -309,12 +274,6 @@ function UsuariosList() {
         return assignedColors[projectId];
     };
 
-    const handleButtonClick = (proyectoId,moduloId) => {
-        console.log(`Navegando a /modulos/${proyectoId}/tareas`);
-       // navigate(`/modulos/${proyectoId}/tareas`); // Elimina '/api' si es innecesario
-navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
-
-    };
 // Cargar el estado inicial desde localStorage
     const getInitialState = () => {
         const storedExpandedRows = localStorage.getItem('expandedRows');
@@ -329,38 +288,6 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
     };
 
 
-    const  handleButtonClickSub = (proyectoId,moduloId,tareaId) => {
-        console.log(`Navegando a /modulos/${proyectoId}/tareas`);
-        // navigate(`/modulos/${proyecto7Id}/tareas`); // Elimina '/api' si es innecesario
-        navigate(`/proyectos/${proyectoId}/modulos/${moduloId}/tarea/${tareaId}`)
-
-    };
-    const options = [
-        {
-            label: 'juan',
-            value: 'juan',
-            emoji: '🇨🇳',
-            desc: 'China',
-        },
-        {
-            label: 'pepe',
-            value: 'pepe',
-            emoji: '🇺🇸',
-            desc: 'pepe',
-        },
-        {
-            label: 'sana',
-            value: 'san',
-            emoji: '🇯🇵',
-            desc: 'san',
-        },
-        {
-            label: 'lo',
-            value: 'lo',
-            emoji: '🇰🇷',
-            desc: 'lo',
-        },
-    ];
 
     const showModal = (typeModal, id = null, moduloId = null, tareaId = null,subtareaId=null) => {
         setModalType(typeModal);
@@ -374,9 +301,9 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         setIsModalOpen(true);
 
         // Lógica para ver proyecto
-        if (typeModal === 'verProyecto' && id) {
-            const proyecto = usuarios.find(p => p.id === id);
-            setSelectedProject(proyecto);
+        if (typeModal === 'verUsuario' && id) {
+            const usuario = usuarios.find(p => p.id === id);
+            setSelectedUsuario(usuario);
         }
 
         // Lógica para añadir proyecto o módulo
@@ -738,45 +665,14 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
         localStorage.setItem(type, JSON.stringify(state));
     };
 
-    const [expandedRows, setExpandedRows] = useState(getInitialState().expandedRows);
-    const [expandedModules, setExpandedModules] = useState(getInitialState().expandedModules);
-    const [expandedTasks, setExpandedTasks] = useState(getInitialState().expandedTasks);
 
 
 
-    // TOGGLE DE PROYECTO
-    const toggleCollapseProyecto = (id) => {
-        setExpandedRows((prev) => {
-            const newState = { ...prev, [id]: !prev[id] };
-            saveStateToLocalStorage('expandedRows', newState);
-            return newState;
-        });
-    };
 
-
-    // TOGGLE DE MODULO
-    const toggleCollapseModulo = (proyectoId, moduloId) => {
-        setExpandedModules((prev) => {
-            const newState = { ...prev, [`${proyectoId}-${moduloId}`]: !prev[`${proyectoId}-${moduloId}`] };
-            saveStateToLocalStorage('expandedModules', newState);
-            return newState;
-        });
-    };
-
-    // TOGGLE DE TAREA
-    const toggleCollapseTarea = (proyectoId, moduloId, tareaId) => {
-        setExpandedTasks((prev) => {
-            const newState = { ...prev, [`${proyectoId}-${moduloId}-${tareaId}`]: !prev[`${proyectoId}-${moduloId}-${tareaId}`] };
-            saveStateToLocalStorage('expandedTasks', newState);
-            return newState;
-        });
-    };
 
     const [activeStates, setActiveStates] = useState({}); // Estado para manejar el estado de cada usuario
 
 
-
-    const [active, setActive] = useState(true); // Estado inicial del Switch
     const onChange = async (checked, rowId) => {
         try {
             // Actualiza el estado en la base de datos
@@ -876,8 +772,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                     </Row>
 
 
-                    {usuarios.map((row,index) => (
-                        <React.Fragment key={row.id}>
+                    {usuarios.map((usuario,index) => (
+                        <React.Fragment key={usuario.id}>
                             <Row
                                 gutter={[16, 16]}
                                 align="middle"
@@ -886,18 +782,18 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     cursor:"pointer",
                                     minWidth: '600px',
                                     transition: 'background-color 0.3s ease',
-                                    backgroundColor: hoveredRow === row.id ? '#e0e0e0' : '',
+                                    backgroundColor: hoveredRow === usuario.id ? '#e0e0e0' : '',
                                     color:'#2a2e34',
                                     paddingTop:'6px',
                                     paddingBottom:'6px',
 
                                 }}
 
-                                onMouseEnter={() => handleMouseEnter(row.id)}
+                                onMouseEnter={() => handleMouseEnter(usuario.id)}
                                 onMouseLeave={handleMouseLeave}
 
                             >
-                                <Col span={1}>
+                                <Col span={1} style={{color:'#656f7d'}}>
                                     {/* Display row number (index + 1) */}
                                     {index + 1}
                                 </Col>
@@ -906,7 +802,7 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
 
 
 
-                                        <Tooltip title="Ver proyecto">
+                                        <Tooltip title="Ver usarios">
 
                                             <a
 
@@ -917,13 +813,13 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                     textDecoration: 'none',
                                                     color: 'inherit'
                                                 }}
-                                                onClick={() => showModal('verProyecto', row.id)}
+                                                onClick={() => showModal('verUsuario', usuario.id)}
                                             >
-                                                <span  style={{color:'#656f7d'}} >{row.nombres}</span>
+                                                <span  style={{color:'#656f7d'}} >{usuario.nombres}</span>
                                                 <span style={{paddingLeft:4,color:'#656f7d'}}  >
-                                                    {row.apellidoPaterno}
+                                                    {usuario.apellidoPaterno}
                                                     </span>
-                                                <span style={{paddingLeft:4,color:'#656f7d'}}>{row.apellidoMaterno}
+                                                <span style={{paddingLeft:4,color:'#656f7d'}}>{usuario.apellidoMaterno}
                                                     </span>
                                             </a>
                                         </Tooltip>
@@ -932,35 +828,38 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                 </Col>
 
                                 <Col span={4}>
-                                    <span style={{color:'#656f7d'}}>{row.email}</span>
+                                    <span style={{color:'#656f7d'}}>{usuario.email}</span>
                                 </Col>
                                 <Col  span={3} style={{color:'#656f7d'}}>
-                                    <span>{row.telefono}</span>
+                                    <span>{usuario.telefono}</span>
 
                                 </Col>
 
                                 <Col
                                     span={5}
                                     style={{ display: 'flex', alignItems: 'center' }}
-                                    onMouseEnter={() => handleMouseEnter(row.id)}
+                                    onMouseEnter={() => handleMouseEnter(usuario.id)}
                                     onMouseLeave={handleMouseLeave}
-                                    onDoubleClick={() => handleDoubleClick(row.id)}
+                                    onDoubleClick={() => handleDoubleClick(usuario.id)}
                                 >
-                                    {editingId === row.id ? (
+                                    {editingId === usuario.id ? (
                                         <Select
                                             style={{
                                                 width: '100%',
                                                 boxShadow: 'none',
                                                 transition: 'background-color 0.3s ease, border 0.3s ease',
+
                                             }}
-                                            className={`custom-select ${hoveredRow === row.id ? 'hovered-bg' : ''}`}
-                                            value={selectedOption ? selectedOption.value : 'none'}
-                                            onChange={(value) => handleChange(value, row.id)} // Pasar el ID del proyecto
+                                            className={`custom-select ${hoveredRow === usuario.id ? 'hovered-bg' : ''}`}
+                                            value={selectedOption ? selectedOption.value : undefined}
+                                            placeholder="Eligir rol" // Configura el texto predeterminado aquí
+                                            onChange={(value) => handleChange(value, usuario.id)} // Pasar el ID del proyecto
                                             onBlur={() => setEditingId(null)} // Cambiar aquí
                                             suffixIcon={null}
                                             showArrow={false}
                                             showSearch={false}
                                             size="small"
+
                                         >
                                             {rol.length > 0 ? (
                                                 rol.map(({ value, label }) => (
@@ -972,30 +871,33 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                                     </Option>
                                                 ))
                                             ) : (
-                                                <Option value="none">sin rol disponibles</Option>
+                                                <Option value="Eligir rol">sin rol disponibles</Option>
                                             )}
 
 
                                         </Select>
                                     ) : (
-                                        <span style={{ cursor: 'pointer' }} onDoubleClick={() => handleDoubleClick(row.id, row.roles)}>
-      {row.roles && row.roles.length > 0 ? (
+                                        <span style={{ cursor: 'pointer' }} onDoubleClick={() => handleDoubleClick(usuario.id, usuario.roles)}>
+      {usuario.roles && usuario.roles.length > 0 ? (
           <Space>
-              {
-                  row.roles.some(role => role.nombreRol === "GESTOR") ? (
-                      // Si existe "GESTOR", solo muestra "GESTOR"
-                      <span>{row.roles.find(role => role.nombreRol === "GESTOR").nombreRol}</span>
-                  ) : (
-                      // Si no hay "GESTOR", muestra todos los roles
-                      row.roles.map((role, index) => (
-                          <span key={index} style={{backgroundColor:'#27ba40', color:'#ffffff', fontSize:10, fontWeight:500, padding:2, borderRadius:5}}>
-          {role.nombreRol}
-                              {index < row.roles.length - 1 && ', '} {/* Para separar con comas */}
-        </span>
-                      ))
-                  )
-              }
+              {usuario.roles.map((role, index) => (
+                  <span
+                      key={index}
+                      style={{
+                          backgroundColor: '#27ba40',
+                          color: '#ffffff',
+                          fontSize: 10,
+                          fontWeight: 500,
+                          padding: 2,
+                          borderRadius: 5,
+                      }}
+                  >
+      {role.nombreRol}
+                      {index < usuario.roles.length - 1 && ', '} {/* Para separar con comas */}
+    </span>
+              ))}
           </Space>
+
 
       ) : (
           <Space>
@@ -1013,8 +915,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                                     <Switch
                                         checkedChildren="Activo"
                                         unCheckedChildren="Desactivo"
-                                        checked={activeStates[row.id]} // Usa el estado individual del usuario
-                                        onChange={(checked) => onChange(checked, row.id)}
+                                        checked={activeStates[usuario.id]} // Usa el estado individual del usuario
+                                        onChange={(checked) => onChange(checked, usuario.id)}
                                         size="default" // Tamaño predeterminado
                                         // Llama a la función cuando cambia el estado
                                     />
@@ -1036,6 +938,130 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
                 </>
 
             </div>
+
+            <Modal
+                style={{
+                    top: 20,
+                }}
+                title={
+                    modalType === 'verUsuario' ? (
+                            <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+
+                              </span>
+                        ) :
+                        modalType === 'editarProyecto' ? 'Editar Proyecto' :
+                            modalType === 'Añadirproyecto' ? 'Crear Proyecto' :   'Crear Item'
+                }
+                visible={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}
+                footer={modalType === 'verUsuario' [
+                    <Button key="cancel" onClick={handleCancel}>Cancelar</Button>,
+                    <Button key="ok" type="primary" onClick={handleOk}>Guardar</Button>
+                ]}
+                width={modalType === 'verUsuario'  ? 600 : undefined}
+                //  bodyStyle={{  borderBottom: '1px solid #d9d9d9',borderTop: '1px solid #d9d9d9', borderRadius: '8px' }} // Estilo del cuerpo del modal
+
+
+            >
+                {/* Contenido según el modalType */}
+
+                {
+                    modalType === 'verUsuario' && selectedUsuario && (
+                        <>
+                            <Row justify="center" align="middle" > {/* Centrado vertical y horizontal */}
+                                <Col span={24} style={{ textAlign: 'center' }}> {/* Centrado horizontal */}
+
+                                    <Avatar
+                                        size={120} // Tamaño del avatar
+                                        icon={<UserOutlined style={{color:'#327fa8'}} />} // Ícono predeterminado
+                                        style={{ marginBottom: 16, backgroundColor: '#f5f5f5', color: '#555' }} // Opcional: estilo personalizado
+                                    />
+                                    <div strong style={{ fontSize: '18px', display: 'block', marginBottom: 8 }}>
+                                        {`${selectedUsuario.nombres} ${selectedUsuario.apellidoPaterno} ${selectedUsuario.apellidoMaterno}`}
+                                    </div>
+
+                                </Col>
+
+                            </Row>
+
+                            <Row justify="start" align="middle" style={{marginTop:20}} > {/* Centrado vertical y horizontal */}
+                                <Col span={12} style={{  display: 'flex', alignItems: 'center', justifyContent: 'flex-start'  }}> {/* Teléfono */}
+                                    <Tooltip title="Teléfono">
+
+                                    <PhoneOutlined style={{ fontSize: '18px', color: '#c4cbcf', marginRight: 8 }} /> {/* Ícono de teléfono */}
+                                    <span style={{ fontSize: '16px', color: '#333' }}>{selectedUsuario.telefono}</span>
+                                    </Tooltip>
+                                </Col>
+                                <Col span={12} style={{  display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}> {/* Email */}
+                                    <Tooltip title="Email">
+                                    <MailOutlined style={{ fontSize: '18px', color: '#c4cbcf', marginRight: 8 }} /> {/* Ícono de email */}
+                                    <span style={{ fontSize: '16px', color: '#333' }}>{selectedUsuario.email}</span>
+                                    </Tooltip>
+                                    </Col>
+                            </Row>
+                            <Row justify="start" align="middle" style={{marginTop:20}} > {/* Centrado vertical y alineado a la izquierda */}
+                                <Col span={12} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}> {/* Género */}
+                                    <Tooltip title="Género">
+                                        <UserOutlined style={{
+                                            fontSize: '18px',
+                                            color: '#c4cbcf',
+                                            marginRight: 8
+                                        }}/> {/* Ícono de género */}
+                                        <span style={{fontSize: '16px', color: '#333'}}>
+    {selectedUsuario.genero === 'M' ? 'Masculino' : selectedUsuario.genero === 'F' ? 'Femenino' : 'No especificado'}
+</span>
+
+                                    </Tooltip>
+                                </Col>
+                                <Col span={12}
+                                     style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-start'}}> {/* Fecha de registro */}
+                                    <Tooltip title="Fecha registro">
+                                    <CalendarOutlined style={{ fontSize: '18px', color: '#c4cbcf', marginRight: 8 }} /> {/* Ícono de fecha */}
+                                    <span style={{ fontSize: '16px', color: '#333' }}>{selectedUsuario.fechaRegistro}</span>
+                                </Tooltip>
+                                </Col>
+                            </Row>
+
+
+                        </>
+                    )
+                }
+
+                {modalType === 'editarProyecto' && (
+                    <Form form={form} layout="vertical">
+                        <Form.Item
+                            name="nombre"
+                            label="Nombre"
+                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
+                        >
+                            <Input/>
+                        </Form.Item>
+                        <Form.Item
+                            name="descripcion"
+                            label="Descripción"
+                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
+                        >
+                            <Input.TextArea/>
+                        </Form.Item>
+                        <Form.Item
+                            name="estado"
+                            label="Estado"
+                            rules={[{required: true, message: 'Por favor selecciona un estado'}]}
+                        >
+                            <Select>
+                                <Select.Option value="PENDIENTE">Pendiente</Select.Option>
+                                <Select.Option value="EN_PROGRESO">En Progreso</Select.Option>
+                                <Select.Option value="COMPLETADO">Completado</Select.Option>
+                            </Select>
+                        </Form.Item>
+                    </Form>
+                )}
+
+
+
+            </Modal>
+
 
 
 

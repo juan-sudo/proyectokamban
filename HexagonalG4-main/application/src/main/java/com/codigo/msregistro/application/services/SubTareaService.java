@@ -23,6 +23,8 @@ public class SubTareaService {
     private final PrioridadRepository prioridadRepository;
     private final UsuarioRepository usuarioRepository;
 
+    private final AuthService authService;  // Inyección del servicio AuthService
+
 
 
     //ACTUALIZAR FECHA INCIO SUBTAREA
@@ -45,7 +47,7 @@ public class SubTareaService {
 
                     // Actualizar los campos del módulo
                     subtareaActual.setFechaFin(subtarea.getFechaFin());
-                    subtareaActual.setUserModify("quiii santa perez");
+                    subtareaActual.setUserModify(authService.obtenerNombreYApellido());
                     subtareaActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -82,7 +84,7 @@ public class SubTareaService {
 
                     // Actualizar los campos del módulo
                     subtareaActual.setFechaInicio(subtarea.getFechaInicio());
-                    subtareaActual.setUserModify("quiii santa perez");
+                    subtareaActual.setUserModify(authService.obtenerNombreYApellido());
                     subtareaActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -118,7 +120,7 @@ public class SubTareaService {
 
                     // Actualizar los campos del módulo
                     subtareaActual.setNombre(subtarea.getNombre());
-                    subtareaActual.setUserModify("quiii santa perez");
+                    subtareaActual.setUserModify(authService.obtenerNombreYApellido());
                     subtareaActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -146,7 +148,7 @@ public class SubTareaService {
 
     // Crear una nueva tarea
     public Subtarea crearTarea(Subtarea tarea) {
-        tarea.setUserCreate("salomon santa perez");
+        tarea.setUserCreate(authService.obtenerNombreYApellido());
         tarea.setCreateAt(new Date());
         return subtareaRepository.save(tarea);
     }
@@ -212,7 +214,7 @@ public class SubTareaService {
 
         // Agregar los nuevos usuarios a subtarea
         subtaera.getUsuarios().addAll(nuevosUsuarios);
-        subtaera.setUserModify("martha tita jura");
+        subtaera.setUserModify(authService.obtenerNombreYApellido());
         subtaera.setModifyAt(new Date());
 
 

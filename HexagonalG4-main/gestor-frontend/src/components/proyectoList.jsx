@@ -111,18 +111,31 @@ function ProyectoList() {
     const [isAuthenticated, setIsAuthenticated] = useState(!!token);
     const [size, setSize] = useState('medium'); // default is 'middle'
 
+    const [loading, setLoading] = useState(true);  // Estado para controlar la carga
+
+
+    const [usuarioActivo, setUsuarioActivo] = useState(null); // default is 'middle'
+
     useEffect(() => {
         // Actualizar el estado de autenticación si el token cambia
         if (token) {
             setIsAuthenticated(true);
             fetchProyectos(token);
             fetchUsuario(token);
+           // console.log("Usuarios en el principia: " + JSON.stringify(usuarios.rolesUsuario, null, 2));
             fetchPrioridad(token);
+            fetchUsuarioAutenticado(token);
+           // console.log("usairo autenticado"+usuarioActivo)
+
         } else {
             setIsAuthenticated(false);
         }
     }, [token]);
 
+    // Este useEffect se ejecutará cuando 'usuarioActivo' cambie
+    useEffect(() => {
+        console.log("usuario autenticado", usuarioActivo);
+    }, [usuarioActivo]);
     useEffect(() => {
         setProyectosState(proyectos);
     }, [proyectos]);
@@ -132,7 +145,7 @@ function ProyectoList() {
     // Función para truncar el texto
     const truncateText = (text) => {
         return _.truncate(text, {
-            length: 55, // Longitud máxima (incluye los puntos suspensivos)
+            length: 50, // Longitud máxima (incluye los puntos suspensivos)
             separator: ' '
         });
     };
@@ -748,14 +761,14 @@ function ProyectoList() {
         // Si el usuario confirma, se procede a eliminar
         if (result.isConfirmed) {
             try {
-                const response = await axios.delete(`/api/tareas/${tareaId}/subTareas/delete/${subtareaId}`
-
-                    ,null,
+                const response = await axios.delete(`/api/tareas/${tareaId}/subTareas/delete/${subtareaId}`,
                     {
                         headers: {
                             'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
                         }
                     }
+
+
                     );
                 ///api/tareas/{tareaId}/subTareas/delete/{idTarea}
                 if (response.status === 200) {
@@ -1654,8 +1667,41 @@ console.log("ide modulo:"+moduloId);
             }
         } catch (error) {
             console.error("Error al obtener proyectos:", error);
+        }  finally {
+            setLoading(false);  // Una vez terminada la solicitud, cambiar loading a false
         }
     };
+
+    //USAURIOS AUTENTICADO
+
+    const fetchUsuarioAutenticado = async (token) => {
+        try {
+
+
+
+            const response = await axios.get(
+                `http://localhost:8080/api/usuarios/getCurrentUser`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
+
+            console.log("Datos recibidos autenticado:", JSON.stringify(response.data.usuario, null, 2));
+
+
+            if (response.data.usuario) {
+                setUsuarioActivo(response.data.usuario);
+            } else {
+                console.error("El campo 'usuario' no está presente en la respuesta.");
+            }
+        } catch (error) {
+            console.error("Error al obtener proyectos:", error);
+        }
+    };
+
+
 
 // OBTENER  USUARIOS
 
@@ -1668,7 +1714,12 @@ console.log("ide modulo:"+moduloId);
                         'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
                     }
                 }
+
                 );
+
+
+
+            //console.log("loq ue viene de bd: " + JSON.stringify(response.data, null, 2));
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(usuario => ({
                     label: usuario.nombres,
@@ -1677,9 +1728,21 @@ console.log("ide modulo:"+moduloId);
                         size={20}
                         icon={<UserAddOutlined />} />,
                     desc: usuario.nombres+" "+usuario.apellidoPaterno+" "+usuario.apellidoMaterno,
+
+
+
+
+                    //rolesUsuario: usuario.roles.some(role => role.nombreRol === "GESTOR") ? "GESTOR" : role.nombreRol,
+
                 }));
                 setUsuario(usuarioValor);
+
+               // setRolUsuario()
+
+
+
             }
+
         } catch (error) {
             console.error("Error al obtener usuarios:", error);
             //message.error('No se pudieron cargar las personas.');
@@ -2783,7 +2846,10 @@ console.log("entro aqui---------------")
                     <div>
                         <apan style={{marginRight: 7,fontSize:23 ,color:'#656f7d',}}>Todos proyectos</apan>
                     </div>
-                    <div>
+                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+
+                        <div style={{marginRight:10}}>
                         <Button
                             type="primary"
 
@@ -2794,11 +2860,17 @@ console.log("entro aqui---------------")
                         >
                             Crear Proyecto
                         </Button>
-                        <Button style={{marginLeft:10}} variant="outlined" shape="round" icon={<DownloadOutlined />} size={size}>
-                            Exportar
-                        </Button>
+
 
                     </div>
+
+                    ):(
+                        <div >
+
+                        </div>
+                    )
+
+                    }
 
 
                 </div>
@@ -2848,7 +2920,11 @@ console.log("entro aqui---------------")
                             <div className="task-item__due-date">Prioridad</div>
                         </Col>
                     </Row>
-
+                    {loading ? (
+                        <Spin size="large"> {/* Aquí usamos el componente Spin */}
+                            <div style={{ minHeight: 400 }} /> {/* Un contenedor para el spinner */}
+                        </Spin>// Mensaje mientras se cargan los datos
+                    ) : (
                         <DragDropContext onDragEnd={onDragEnd}>
                         <Droppable droppableId="proyectos" type="PROJECT">
                             {(provided) => (
@@ -2880,6 +2956,8 @@ console.log("entro aqui---------------")
                                     transition: 'background-color 0.3s ease',
                                     backgroundColor: hoveredRowBackground === project.id ? '#f7f2f2' : '',
                                     color: '#2a2e34',
+                                    marginBottom:2,
+                                    marginTop:2
 
                                 }}
                                 onMouseEnter={() => handleMouseEnter(project.id)}
@@ -2952,7 +3030,7 @@ console.log("entro aqui---------------")
                                             <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto', marginRight:0 }}>
 
 
-
+                                                {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
                                                 <Popover
                                                     content={getContent(project.id, project.nombre)}
                                                     trigger="click"
@@ -2972,9 +3050,17 @@ console.log("entro aqui---------------")
                                                     </Button>
                                                 </Popover>
 
+                                                ):(
+                                                    <div >
 
+                                                    </div>
+                                                )
 
-                                                <Button
+                                                }
+
+                                                {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                    <Button
                                                     style={{
                                                         color: '#656f7d',
                                                         backgroundColor: 'transparent', // Color de fondo predeterminado
@@ -2997,6 +3083,14 @@ console.log("entro aqui---------------")
                                                 >
 
                                                 </Button>
+
+                                                ):(
+                                                    <div >
+
+                                                    </div>
+                                                )
+
+                                                }
 
 
 
@@ -3077,7 +3171,12 @@ console.log("entro aqui---------------")
                                                 fontWeight: '400',
                                                 cursor: 'pointer',
                                             }}
-                                            onClick={() => handleSpanClick(project.fechaInicio, project.id)}
+                                           // onClick={() => handleSpanClick(project.fechaInicio, project.id)}
+                                            onClick={() => {
+                                                if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+                                                    handleSpanClick(project.fechaInicio, project.id);
+                                                }
+                                            }}
                                         >
                     {fechaInicioActual[project.id] || project.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -3140,10 +3239,17 @@ console.log("entro aqui---------------")
                                     )}
                                 </Col>
 
+
                                 <Col span={3} style={{ display: 'flex', alignItems: 'center' }}
                                      onMouseEnter={() => handleMouseEnter(project.id)}
                                      onMouseLeave={handleMouseLeave}
-                                     onDoubleClick={() => handleDoubleClick(project.id)}>
+                                     onDoubleClick={() => {
+                                         if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+                                             handleDoubleClick(project.id)
+                                         }
+
+
+                                     }}>
 
                                     {editingId === project.id ? (
                                         <Select
@@ -3182,7 +3288,14 @@ console.log("entro aqui---------------")
                                             </Option>
                                         </Select>
                                     ) : (
-                                        <span style={{ cursor: 'pointer' }} onDoubleClick={() => handleDoubleClick(project.id)}>
+
+                                        <span style={{ cursor: 'pointer' }} onDoubleClick={() => {
+
+                                            if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+                                                handleDoubleClick(project.id)
+                                            }
+
+                                } }>
             {project.prioridad ? (
                 <Space>
                     <FlagOutlined style={{ fontSize: '16px', color: project.prioridad.backgroundPrioridad }} />
@@ -3219,8 +3332,12 @@ console.log("entro aqui---------------")
                                             ...provided.draggableProps.style, // Mantén el estilo proporcionado
                                             borderBottom: '1px solid rgba(217, 217, 217, 0.1)', // Agrega borde a la parte inferior
                                             cursor: snapshot.isDragging ? 'grabbing' : 'pointer', // Cambia el cursor cuando esté siendo arrastrado
-                                            backgroundColor: snapshot.isDragging ? 'lightgray' : 'white', // Cambia el color de fondo cuando se está arrastrando
+                                            //backgroundColor: snapshot.isDragging ? 'lightgray' : 'white', // Cambia el color de fondo cuando se está arrastrando
                                             boxShadow: snapshot.isDragging ? '0 0 10px rgba(0, 0, 0, 0.1)' : 'none', // Agrega sombra si se está arrastrando
+                                            backgroundColor: hoveredRowmodulo === modulo.id ? '#f7f2f2' : '',
+                                            marginBottom:2,
+                                            marginTop:2,
+
                                         }}
 
                                         onMouseEnter={() => handleMouseEntermodulo(modulo.id)}
@@ -3228,7 +3345,7 @@ console.log("entro aqui---------------")
 
                                     >
                                         <Col span={12} >
-                                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between',marginLeft:30}}>
+                                            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between',marginLeft:44}}>
 
                                                 <div style={{display: 'flex', alignItems: 'center'}}>
                                                     <Checkbox
@@ -3301,7 +3418,10 @@ console.log("entro aqui---------------")
                                                         marginLeft: 'auto',
                                                         marginRight: 0
                                                     }}>
-                                                    <Popover
+
+                                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                            <Popover
                                                         content={getContentModulo(project.id, modulo.nombre, modulo.id)}
                                                         trigger="click"
                                                         onVisibleChange={(visible) => handleVisibleChangeM(visible, modulo.id)}
@@ -3318,6 +3438,13 @@ console.log("entro aqui---------------")
                                                             <EllipsisOutlined/>
                                                         </Button>
                                                     </Popover>
+                                                    ):(
+                                                        <div >
+
+                                                        </div>
+                                                    )
+
+                                                    }
                                                     <Tooltip title="kamban">
                                                         <Button
                                                             icon={<InsertRowBelowOutlined/>}
@@ -3327,6 +3454,7 @@ console.log("entro aqui---------------")
                                                             style={{marginLeft: 'auto'}}
                                                         />
                                                     </Tooltip>
+                                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
                                                         <Button
                                                             style={{
@@ -3351,6 +3479,14 @@ console.log("entro aqui---------------")
                                                         >
 
                                                         </Button>
+
+                                                    ):(
+                                                        <div >
+
+                                                        </div>
+                                                    )
+
+                                                    }
 
 
 
@@ -3445,7 +3581,13 @@ console.log("entro aqui---------------")
                                                             ? 'line-through' // Si la fecha es mayor, se aplica tachado
                                                             : 'none', // Si no, se mantiene normal
                                                     }}
-                                                    onClick={() => handleSpanClickModulo(modulo.fechaInicio, modulo.id)}
+                                                    onClick={() =>{
+
+                                                        if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                            handleSpanClickModulo(modulo.fechaInicio, modulo.id)
+                                                        }
+                                                }}
                                                 >
                     {fechaInicioActualModulo[modulo.id] || modulo.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -3492,7 +3634,13 @@ console.log("entro aqui---------------")
                                                             ? 'line-through' // Si la fecha es mayor, se aplica tachado
                                                             : 'none', // Si no, se mantiene normal
                                                     }}
-                                                    onClick={() => handleSpanClickModuloFin(modulo.fechaFin, modulo.id)}
+                                                    onClick={() =>{
+
+                                                        if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                            handleSpanClickModuloFin(modulo.fechaFin, modulo.id)
+                                                        }
+                                                    }}
                                                 >
                     {fechaInicioActualModuloFin[modulo.id] || modulo.fechaFin} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -3509,8 +3657,12 @@ console.log("entro aqui---------------")
 
                                              onMouseLeave={handleMouseLeave}
                                              onDoubleClick={(e) => {
-                                                 e.stopPropagation(); // Detener la propagación del evento
-                                                 handleDoubleClickModulo(modulo.id);
+
+
+                                                 if (usuarioActivo && usuarioActivo.rolesNames && usuarioActivo.rolesNames.includes("GESTOR")) {
+                                                     e.stopPropagation(); // Detener la propagación del evento
+                                                     handleDoubleClickModulo(modulo.id);
+                                                 }
                                              }}>
                                             {editingModuloId === modulo.id ? (
                                                 <Select
@@ -3551,7 +3703,13 @@ console.log("entro aqui---------------")
                                                 </Select>
 
                                             ) : (
-                                                <span style={{ cursor: 'pointer' }} onDoubleClick={() => handleDoubleClickModulo(modulo.id)}>
+                                                <span style={{ cursor: 'pointer' }} onDoubleClick={() =>{
+
+                                                    if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+                                                        handleDoubleClickModulo(modulo.id)
+                                                    }
+
+                                                }}>
             {modulo.prioridad ? (
                 <Space>
                     <FlagOutlined style={{ fontSize: '16px', color: modulo.prioridad.backgroundPrioridad }} />
@@ -3594,8 +3752,12 @@ console.log("entro aqui---------------")
                                     ...provided.draggableProps.style, // Mantén el estilo proporcionado
                                     borderBottom: '1px solid rgba(217, 217, 217, 0.1)', // Agrega borde a la parte inferior
                                     cursor: snapshot.isDragging ? 'grabbing' : 'pointer', // Cambia el cursor cuando esté siendo arrastrado
-                                    backgroundColor: snapshot.isDragging ? 'lightgray' : 'white', // Cambia el color de fondo cuando se está arrastrando
+                                   // backgroundColor: snapshot.isDragging ? 'lightgray' : 'white', // Cambia el color de fondo cuando se está arrastrando
                                     boxShadow: snapshot.isDragging ? '0 0 10px rgba(0, 0, 0, 0.1)' : 'none', // Agrega sombra si se está arrastrando
+                                    backgroundColor: hoveredRowtarea === tarea.id ? '#f7f2f2' : '',
+                                    marginBottom:2,
+                                    marginTop:2,
+
                                 }}
 
                                 onMouseEnter={() => handleMouseEntertarea(tarea.id)}
@@ -3606,7 +3768,7 @@ console.log("entro aqui---------------")
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        marginLeft: 45
+                                        marginLeft: 70
                                     }}>
                                         <div style={{display: 'flex', alignItems: 'center'}}>
                                             <Checkbox
@@ -3678,7 +3840,9 @@ console.log("entro aqui---------------")
                                                         marginLeft: 'auto',
                                                         marginRight: 0
                                                     }}>
-                                                    <Popover
+                                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                            <Popover
                                                         content={getContentTarea(tarea.id, tarea.nombre, modulo.id)}
                                                         trigger="click"
                                                         onVisibleChange={(visible) => handleVisibleChangeT(visible, tarea.id)}
@@ -3695,6 +3859,13 @@ console.log("entro aqui---------------")
                                                             <EllipsisOutlined/>
                                                         </Button>
                                                     </Popover>
+                                                    ):(
+                                                        <div >
+
+                                                        </div>
+                                                    )
+
+                                                    }
 
                                                     <Tooltip title="kamban">
                                                         <Button
@@ -3710,7 +3881,9 @@ console.log("entro aqui---------------")
                                                         />
                                                     </Tooltip>
 
-                                                    <Button
+                                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                        <Button
                                                         style={{
                                                             color: '#656f7d',
                                                             backgroundColor: 'transparent', // Color de fondo predeterminado
@@ -3732,6 +3905,15 @@ console.log("entro aqui---------------")
                                                         }}
                                                     >
                                                     </Button>
+
+
+                                                    ):(
+                                                        <div >
+
+                                                        </div>
+                                                    )
+
+                                                    }
 
                                                 </div>
                                             )}
@@ -3824,7 +4006,14 @@ console.log("entro aqui---------------")
                                                     ? 'line-through' // Si la fecha es mayor, se aplica tachado
                                                     : 'none', // Si no, se mantiene normal
                                             }}
-                                            onClick={() => handleSpanClickTareaFechaInicio(tarea.fechaInicio, tarea.id)}
+                                            onClick={() =>{
+
+                                                if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                    handleSpanClickTareaFechaInicio(tarea.fechaInicio, tarea.id)
+                                                }
+
+                                        }}
                                         >
                     {fechaInicioActualTareaFechaInicio[tarea.id] || tarea.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -3870,7 +4059,13 @@ console.log("entro aqui---------------")
                                                     ? 'line-through' // Si la fecha es mayor, se aplica tachado
                                                     : 'none', // Si no, se mantiene normal
                                             }}
-                                            onClick={() => handleSpanClickTareaFechaFin(tarea.fechaFin, tarea.id)}
+                                            onClick={() => {
+
+                                                if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                    handleSpanClickTareaFechaFin(tarea.fechaFin, tarea.id)
+                                                }
+                                        }}
                                         >
                     {fechaInicioActualTareaFechaFin[tarea.id] || tarea.fechaFin} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -3887,8 +4082,12 @@ console.log("entro aqui---------------")
 
                                      onMouseLeave={handleMouseLeave}
                                      onDoubleClick={(e) => {
-                                         e.stopPropagation(); // Detener la propagación del evento
-                                         handleDoubleClickTarea(tarea.id);
+
+
+                                         if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+                                             e.stopPropagation(); // Detener la propagación del evento
+                                             handleDoubleClickTarea(tarea.id);
+                                         }
                                      }}>
                                     {editingTareaId === tarea.id ? (
                                         <Select
@@ -3928,7 +4127,13 @@ console.log("entro aqui---------------")
                                             </Option>
                                         </Select>
                                     ) : (
-                                        <span style={{ cursor: 'pointer'}} onDoubleClick={() => handleDoubleClickTarea(tarea.id)}>
+                                        <span style={{ cursor: 'pointer'}} onDoubleClick={() => {
+
+                                            if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+                                                e.stopPropagation(); // Detener la propagación del evento
+                                                handleDoubleClickTarea(tarea.id)
+                                            }
+                                        }}>
             {tarea.prioridad ? (
                 <Space>
                     <FlagOutlined style={{ fontSize: '16px', color: tarea.prioridad.backgroundPrioridad }} />
@@ -3969,8 +4174,10 @@ console.log("entro aqui---------------")
                                                 ...provided.draggableProps.style, // Mantén el estilo proporcionado
                                                 borderBottom: '1px solid rgba(217, 217, 217, 0.1)', // Agrega borde a la parte inferior
                                                 cursor: snapshot.isDragging ? 'grabbing' : 'pointer', // Cambia el cursor cuando esté siendo arrastrado
-                                                backgroundColor: snapshot.isDragging ? 'lightgray' : 'white', // Cambia el color de fondo cuando se está arrastrando
+                                                //backgroundColor: snapshot.isDragging ? 'lightgray' : 'white', // Cambia el color de fondo cuando se está arrastrando
                                                 boxShadow: snapshot.isDragging ? '0 0 10px rgba(0, 0, 0, 0.1)' : 'none', // Agrega sombra si se está arrastrando
+                                                backgroundColor: hoveredRowsubtarea === subtarea.id ? '#f7f2f2' : '',
+
                                             }}
                                             onMouseEnter={() => handleMouseEntersubtarea(subtarea.id)}
                                             onMouseLeave={handleMouseLeavesubtarea}
@@ -3981,7 +4188,8 @@ console.log("entro aqui---------------")
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'space-between',
-                                                    marginLeft: 70
+                                                    marginLeft: 114
+
                                                 }}>
 
 
@@ -4047,7 +4255,9 @@ console.log("entro aqui---------------")
                                                             marginLeft: 'auto',
 
                                                         }}>
-                                                        <Popover
+                                                        {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                            <Popover
                                                             content={getContentsubTarea(subtarea.id, subtarea.nombre, tarea.id)}
                                                             trigger="click"
                                                             onVisibleChange={(visible) => handleVisibleChangeST(visible, subtarea.id)}
@@ -4064,6 +4274,14 @@ console.log("entro aqui---------------")
                                                                 <EllipsisOutlined/>
                                                             </Button>
                                                         </Popover>
+
+                                                        ):(
+                                                            <div >
+
+                                                            </div>
+                                                        )
+
+                                                        }
                                                     </div>
                                                 </div>
 
@@ -4166,7 +4384,14 @@ console.log("entro aqui---------------")
                                                                 ? 'line-through' // Si la fecha es mayor, se aplica tachado
                                                                 : 'none', // Si no, se mantiene normal
                                                         }}
-                                                        onClick={() => handleSpanClicksubtareaFechaInicio(subtarea.fechaInicio, subtarea.id)}
+                                                        onClick={() => {
+
+                                                            if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                                handleSpanClicksubtareaFechaInicio(subtarea.fechaInicio, subtarea.id)
+                                                            }
+
+                                                    }}
                                                     >
                     {fechaInicioActualsubtareaFechaInicio[subtarea.id] || subtarea.fechaInicio} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -4221,7 +4446,14 @@ console.log("entro aqui---------------")
 
 
                                                         }}
-                                                        onClick={() => handleSpanClicksubtareaFechaFin(subtarea.fechaFin, subtarea.id)}
+                                                        onClick={() => {
+
+                                                            if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                                handleSpanClicksubtareaFechaFin(subtarea.fechaFin, subtarea.id)
+                                                            }
+
+                                                    }}
                                                     >
                     {fechaInicioActualsubtareaFechaFin[subtarea.id] || subtarea.fechaFin} {/* Muestra la fecha seleccionada o la predeterminada */}
                 </span>
@@ -4243,8 +4475,12 @@ console.log("entro aqui---------------")
 
                                                  onMouseLeave={handleMouseLeave}
                                                  onDoubleClick={(e) => {
-                                                     e.stopPropagation(); // Detener la propagación del evento
-                                                     handleDoubleClickSubtarea(subtarea.id);
+
+                                                     if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                         e.stopPropagation(); // Detener la propagación del evento
+                                                         handleDoubleClickSubtarea(subtarea.id);
+                                                     }
                                                  }}>
                                                 {editingSubtareaId === subtarea.id ? (
                                                     <Select
@@ -4306,7 +4542,14 @@ console.log("entro aqui---------------")
                                                         cursor: 'pointer',
 
                                                     }}
-                                                          onDoubleClick={() => handleDoubleClickSubtarea(subtarea.id)}>
+                                                          onDoubleClick={()  =>{
+
+                                                              if (usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))) {
+
+                                                                  //e.stopPropagation(); // Detener la propagación del evento
+                                                                  handleDoubleClickSubtarea(subtarea.id)
+                                                              }
+                                                    }}>
             {subtarea.prioridad ? (
                 <Space>
                     <FlagOutlined style={{fontSize: '16px', color: subtarea.prioridad.backgroundPrioridad}}/>
@@ -4369,6 +4612,7 @@ console.log("entro aqui---------------")
                         </Droppable>
                     </DragDropContext>
 
+                    )}
                 </>
 
             </div>
@@ -4458,10 +4702,12 @@ console.log("entro aqui---------------")
                                             fontSize: '17px',
                                             marginLeft: 8
                                         }}>/</span>
-                                        <span style={{marginLeft: 8, color: '#656f7d'}}>PROYECTO</span>
+                                        <span style={{ color: '#656f7d'}}>PROYECTO</span>
                                     </div>
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 30}}>
-                                        <Tooltip title={"Archivar proyecto"}>
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: 20}}>
+                                        {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                <Tooltip title={"Archivar proyecto"}>
 
                                             <Button
                                                 style={{
@@ -4480,40 +4726,40 @@ console.log("entro aqui---------------")
                                             </Button>
 
                                         </Tooltip>
+
+                                        ):(
+                                            <div >
+
+                                            </div>
+                                        )
+
+                                        }
                                         <Divider type="vertical"/>
 
 
-                                        <div style={{display: 'flex', gap: '3px'}}>
+                                        <div style={{display: 'flex', gap: '0px'}}>
 
-                                            <Tooltip title={"Eliminar proyecto"}>
+                                            {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+
+                                                    <Tooltip title={"Eliminar proyecto"}>
                                             <Button
                                                 style={{border: 'none', background: 'transparent', padding: '3px'}}
                                                 icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
                                                 onClick={()=>eliminarProyectos(selectedProject.id, selectedProject.nombre)}
                                             />
                                             </Tooltip>
+                                            ):(
+                                                <div >
 
-                                            <Tooltip title={"Copiar proyecto"}>
-                                            <Button
-                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                            />
-                                            </Tooltip>
+                                                </div>
+                                            )
 
-                                            <Tooltip title={"Calificar proyecto"}>
-                                            <Button
-                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                            />
-                                            </Tooltip>
+                                            }
 
-                                            <Tooltip title={"Mas opciones"}>
-                                            <Button
-                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                            />
-                                            </Tooltip>
+
                                         </div>
+                                        <Divider type="vertical"/>
                                     </div>
 
                                 </div>
@@ -4559,7 +4805,7 @@ console.log("entro aqui---------------")
                             marginRight: 5,
                             marginLeft: 5
                         }}>
-    COMPLETADA
+    COMPLETADO
 </span>
                         ,cuando todos los  módulos tengan el estado        <span style={{
                                background: 'linear-gradient(45deg, blue, red)',
@@ -4570,7 +4816,7 @@ console.log("entro aqui---------------")
                                marginRight: 5,
                                marginLeft: 5
                            }}>
-    COMPLETADA
+    COMPLETADO
 </span> </span>
 
                     </span>
@@ -4768,6 +5014,7 @@ console.log("entro aqui---------------")
 
                                            </div>
 
+
                                            {selectedProject.fechaAmpliada && (
                                            <div style={{
                                                display: 'flex',
@@ -4776,8 +5023,10 @@ console.log("entro aqui---------------")
                                                marginTop: 0,
                                                color: '#656f7d'
                                            }}>
+
                                                <HourglassOutlined/>
-                                               <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
+
+                                                   <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
                                                    <span> Dias apliacion: </span><span style={{
                                                    fontSize: '14px',
                                                    paddingLeft: 5,
@@ -4796,6 +5045,8 @@ console.log("entro aqui---------------")
 
                                                </p>
 
+
+
                                            </div>
                                                )}
 
@@ -4809,7 +5060,9 @@ console.log("entro aqui---------------")
                                            color: '#656f7d'
                                        }}>
 
+                                           {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
                                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
                                       <p style={{fontSize: '14px', margin: 0, fontWeight: '600'}}>
@@ -4817,32 +5070,43 @@ console.log("entro aqui---------------")
                                       </p>
                                     </span>
 
-                                               <div style={{width: 300}}>
 
-                                                   <Select
-                                                       mode="multiple"
-                                                       style={{width: '100%'}}
-                                                       placeholder="Seleccionar una opción"
-                                                       value={selectedUserIds}
-                                                       onChange={handleUserChange}
-                                                       onBlur={handleUpdateUsers}
-                                                   >
-                                                   {usuarios.map(({value, label, emoji, desc}) => (
-                                                           <Option key={value} value={value}>
-                                                               <Space>
-                                                                   <span role="img" aria-label={label}>{emoji}</span>
-                                                                   {desc}
-                                                               </Space>
-                                                           </Option>
-                                                       ))}
-                                                   </Select>
+                                                   <div style={{ width: 300 }}>
+                                                       <Select
+                                                           mode="multiple"
+                                                           style={{ width: '100%' }}
+                                                           placeholder="Seleccionar una opción"
+                                                           value={selectedUserIds}
+                                                           onChange={handleUserChange}
+                                                           onBlur={handleUpdateUsers}
+                                                       >
+                                                           {usuarios.map(({ value, label, emoji, desc }) => (
+                                                               <Option key={value} value={value}>
+                                                                   <Space>
+                                                                       <span role="img" aria-label={label}>{emoji}</span>
+                                                                       {desc}
+                                                                   </Space>
+                                                               </Option>
+                                                           ))}
+                                                       </Select>
+                                                   </div>
 
 
-                                               </div>
+
+
 
                                            </div>
+                                           ):(
+                                               <div >
 
-                                           <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                               </div>
+                                           )
+
+                                           }
+
+                                           <div
+                                               style={{display: 'flex', alignItems: 'center', gap: '8px',width: 300}}
+                                           >
                                                <FlagOutlined
                                                    style={{
                                                        fontSize: '16px',
@@ -4888,6 +5152,7 @@ console.log("entro aqui---------------")
 
                     </div>
 
+                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
                     <div style={{marginTop:18}}>
                                        <h3 style={{borderBottom:'1px solid #f0f3f7'}}>Ampliacion de fecha</h3>
@@ -4931,11 +5196,18 @@ console.log("entro aqui---------------")
 
                                    </div>
 
+                    ):(
+                        <div >
 
+                        </div>
+                    )
+
+                    }
                                </div>
 
 
                            </div>
+
 
                        </Col>
         <Col span={9} style={{overflowY:"auto", height:450, paddingRight:10, backgroundColor:'#fbfbfc'}}>
@@ -4944,22 +5216,31 @@ console.log("entro aqui---------------")
             <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItems.map(item => ({
                 color: item.color,
                 children: (
-                    <span style={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar size="small" style={{ marginRight: '4px' }}>
-                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+                    <span style={{display: 'flex', alignItems: 'center'}}>
+            <Avatar size="small" style={{marginRight: '4px'}}>
+                <UserOutlined style={{color: 'green', fontSize: '16px'}}/>
             </Avatar>
-            <span style={{ color: '#4f5762', fontWeight: 500, fontSize:13,textDecoration: 'underline'}}>
-                {item.user}
-            </span>
-            <span style={{ marginRight: 6, marginLeft: 6 }}>{item.action}</span>
-            <span style={{ color: '#4f5762', fontWeight: 500, fontSize:13 }}>
+           <span
+               style={{
+                   color: '#4f5762',
+                   fontWeight: 500,
+                   fontSize: 13,
+                   textDecoration: 'underline',
+                   textTransform: 'lowercase'
+               }}
+           >
+  {item.user}
+</span>
+
+            <span style={{marginRight: 6, marginLeft: 6}}>{item.action}</span>
+            <span style={{color: '#4f5762', fontWeight: 500, fontSize: 13}}>
                 {item.formattedDate}
             </span>
         </span>
                 ),
-            }))} />
-                           </Col>
-                   </Row>
+            }))}/>
+        </Col>
+    </Row>
 
 </>
                     )
@@ -5156,6 +5437,7 @@ console.log("entro aqui---------------")
 
 
                                 <div style={{display: 'flex', gap: '3px'}}>
+                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
                                     <Tooltip title={"Eliminar modulo"}>
                                         <Button
@@ -5164,27 +5446,15 @@ console.log("entro aqui---------------")
                                             icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
                                         />
                                     </Tooltip>
+                                    ):(
+                                        <div >
 
-                                    <Tooltip title={"Copiar modulo"}>
-                                        <Button
-                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                            icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                        />
-                                    </Tooltip>
+                                        </div>
+                                    )
 
-                                    <Tooltip title={"Calificar modulo"}>
-                                        <Button
-                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                            icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                        />
-                                    </Tooltip>
+                                    }
 
-                                    <Tooltip title={"Mas opciones"}>
-                                        <Button
-                                            style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                            icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                        />
-                                    </Tooltip>
+                                   
                                 </div>
                             </div>
                         </div>
@@ -5217,9 +5487,49 @@ console.log("entro aqui---------------")
                                                alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
                                            }}
                                        >
-                                           <MessageOutlined
-                                               style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-                                           {selectedModule.descripcion}
+
+
+
+                                           <span
+                                               style={{
+
+                                                   padding: '10px',
+                                                   backgroundColor: '#f0f2f5',
+                                                   borderRadius: '5px',
+                                                   display: 'flex', // Usar flex para alinear el ícono y el texto
+                                                   alignItems: 'flex-start', // Alinear el ícono al inicio (parte superior),
+                                                   color: '#656f7d'
+
+
+                                               }}
+                                           >
+                    <MessageOutlined
+                        style={{marginRight: '8px', alignSelf: 'flex-start', color: '#656f7d'}}/>
+                       <span> El estado del módulo se actualizará automáticamente a
+                        <span style={{
+                            background: 'linear-gradient(45deg, blue, red)',
+                            backgroundClip: 'text',
+                            color: 'transparent',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                            marginRight: 5,
+                            marginLeft: 5
+                        }}>
+    COMPLETADO
+</span>
+                        ,cuando todas las  tareas tengan el estado        <span style={{
+                               background: 'linear-gradient(45deg, blue, red)',
+                               backgroundClip: 'text',
+                               color: 'transparent',
+                               fontWeight: 'bold',
+                               fontSize: '12px',
+                               marginRight: 5,
+                               marginLeft: 5
+                           }}>
+    COMPLETADO
+</span> </span>
+
+                    </span>
                                        </p>
 
                                        <div style={{
@@ -5325,16 +5635,26 @@ console.log("entro aqui---------------")
 
                                                    </div>
 
+                                                   <div style={{marginTop: 20}}>
+
+                                                       <h3 style={{borderBottom: '1px solid #f0f3f7'}}>Descripcion</h3>
+                                                       <div><p
+                                                           style={{color: " #656f7d"}}>{selectedModule.descripcion}</p>
+
+                                                       </div>
+                                                   </div>
 
                                                    <div style={{marginTop: 20}}>
 
 
-                                                       <Tabs defaultActiveKey="1" items={itemsTapModulos} onChange={onChange}/>
+                                                       <Tabs defaultActiveKey="1" items={itemsTapModulos}
+                                                             onChange={onChange}/>
 
 
                                                    </div>
                                                </div>
                                            </div>
+
 
                                            <div style={{
                                                display: 'flex',
@@ -5343,7 +5663,7 @@ console.log("entro aqui---------------")
                                                color: '#656f7d'
                                            }}>
 
-
+                                               {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
                                             <div style={{display: 'flex', alignItems: 'center', gap: '8px',}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
@@ -5375,6 +5695,13 @@ console.log("entro aqui---------------")
                                                 </div>
                                             </div>
 
+                                               ):(
+                                                   <div style={{width: 300}} >
+
+                                                   </div>
+                                               )
+
+                                               }
                                             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
 
                                                 <FlagOutlined
@@ -5418,7 +5745,16 @@ console.log("entro aqui---------------")
             <Avatar size="small" style={{ marginRight: '4px' }}>
                 <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
             </Avatar>
-            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+            <span
+                style={{
+                    color: '#4f5762',
+                    fontWeight: 500,
+                    fontSize: 13,
+                    textDecoration: 'underline',
+                    textTransform: 'lowercase'
+                }}
+
+            >
                 {item.user}
             </span>
             <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
@@ -5496,35 +5832,24 @@ console.log("entro aqui---------------")
 
 
                                     <div style={{display: 'flex', gap: '3px'}}>
+                                        {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
-                                        <Tooltip title={"Eliminar tarea"}>
+
+                                            <Tooltip title={"Eliminar tarea"}>
                                             <Button
                                                 style={{border: 'none', background: 'transparent', padding: '3px'}}
                                                 icon={<DeleteOutlined style={{fontSize: '17px', color: '#ff4d4f'}}/>}
                                                 onClick={() => handleDeleteTarea(selectedTarea.id,selectedTarea.nombre,selectedModule.id)}
                                             />
                                         </Tooltip>
+                                        ):(
+                                            <div >
 
-                                        <Tooltip title={"Copiar tarea"}>
-                                            <Button
-                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                            />
-                                        </Tooltip>
+                                            </div>
+                                        )
 
-                                        <Tooltip title={"Calificar tarea"}>
-                                            <Button
-                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                            />
-                                        </Tooltip>
+                                        }
 
-                                        <Tooltip title={"Mas opciones"}>
-                                            <Button
-                                                style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                            />
-                                        </Tooltip>
                                     </div>
                                 </div>
                             </div>
@@ -5654,6 +5979,8 @@ console.log("entro aqui---------------")
                             color: '#656f7d'
                         }}>
 
+                            {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
                             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
@@ -5683,6 +6010,13 @@ console.log("entro aqui---------------")
                                 </div>
                             </div>
 
+                            ):(
+                                <div style={{width: 300}} >
+
+                                </div>
+                            )
+
+                            }
                             <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                 <FlagOutlined
                                     style={{
@@ -5722,6 +6056,7 @@ console.log("entro aqui---------------")
         </Col>
         <Col span={9} style={{overflowY:"auto", height:400, paddingRight:10, backgroundColor:'#fbfbfc'}}>
             <h2 style={{marginLeft:6}}>Actividades</h2>
+
             <Timeline style={{ paddingLeft: 20 }} items={sortedTimelineItemsTarea.map(item => ({
                 color: item.color,
                 children: (
@@ -5729,7 +6064,15 @@ console.log("entro aqui---------------")
             <Avatar size="small" style={{ marginRight: '4px' }}>
                 <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
             </Avatar>
-            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+            <span
+                style={{
+                    color: '#4f5762',
+                    fontWeight: 500,
+                    fontSize: 13,
+                    textDecoration: 'underline',
+                    textTransform: 'lowercase'
+                }}
+                >
                 {item.user}
             </span>
             <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
@@ -5897,6 +6240,7 @@ console.log("entro aqui---------------")
 
 
                                         <div style={{display: 'flex', gap: '3px'}}>
+                                            {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
                                             <Tooltip title={"Eliminar subtarea"}>
                                                 <Button
@@ -5907,26 +6251,14 @@ console.log("entro aqui---------------")
                                                 />
                                             </Tooltip>
 
-                                            <Tooltip title={"Copiar subtarea"}>
-                                                <Button
-                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                    icon={<CopyOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                                />
-                                            </Tooltip>
+                                            ):(
+                                                <div >
 
-                                            <Tooltip title={"Calificar subtarea"}>
-                                                <Button
-                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                    icon={<StarOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                                />
-                                            </Tooltip>
+                                                </div>
+                                            )
 
-                                            <Tooltip title={"Mas opciones"}>
-                                                <Button
-                                                    style={{border: 'none', background: 'transparent', padding: '3px'}}
-                                                    icon={<MoreOutlined style={{fontSize: '17px', color: '#656f7d'}}/>}
-                                                />
-                                            </Tooltip>
+                                            }
+
                                         </div>
                                     </div>
                                 </div>
@@ -6060,6 +6392,7 @@ console.log("entro aqui---------------")
                                                 color: '#656f7d'
                                             }}>
 
+                                                {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
                                                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                          <span style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                       <UserOutlined/>
@@ -6091,6 +6424,14 @@ console.log("entro aqui---------------")
                                                     </div>
 
                                                 </div>
+
+                                                ):(
+                                                    <div style={{width: 300}}>
+
+                                                    </div>
+                                                )
+
+                                                }
 
                                                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                                     <FlagOutlined
@@ -6133,7 +6474,16 @@ console.log("entro aqui---------------")
             <Avatar size="small" style={{ marginRight: '4px' }}>
                 <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
             </Avatar>
-            <span style={{ color: '#4f5762', fontWeight: 600,fontSize:13,textDecoration: 'underline' }}>
+            <span
+
+                style={{
+                    color: '#4f5762',
+                    fontWeight: 500,
+                    fontSize: 13,
+                    textDecoration: 'underline',
+                    textTransform: 'lowercase'
+                }}
+                >
                 {item.user}
             </span>
             <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
@@ -6142,7 +6492,9 @@ console.log("entro aqui---------------")
             </span>
         </span>
                                     ),
-                                }))} />
+                                }))}
+
+                                />
                         </Col>
 
                     </Row>

@@ -1,28 +1,55 @@
 package com.codigo.msregistro.application.controller;
 
+import org.springframework.security.core.Authentication;
 import com.codigo.msregistro.application.exceptions.EmailAlreadyExistsException;
+import com.codigo.msregistro.application.services.AuthenticationService;
 import com.codigo.msregistro.application.services.UsuarioService;
 import com.codigo.msregistro.domain.aggregates.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
 public class UsuarioController {
-
+    private final AuthenticationService authenticationService;
     private final UsuarioService usuarioService;
+
     // Listar todos los usuarios
     @GetMapping
     public ResponseEntity<List<Usuario>> listarUsuarios() {
         List<Usuario> usuarios = usuarioService.listarUsuarios();
         return new ResponseEntity<>(usuarios, HttpStatus.OK);
+    }
+
+    // Método para obtener el usuario autenticado y sus roles
+    @GetMapping("/getCurrentUser")
+    public ResponseEntity<?> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            String username = authentication.getName(); // El nombre del usuario autenticado
+
+            // Cargar el usuario desde el servicio con sus detalles
+            Usuario usuario = authenticationService.getUserDetailsByUsername(username);
+
+            // Obtener los roles del usuario autenticado
+            Set<String> roles = usuario.getRolesNames();
+
+            // Devolver el usuario junto con sus roles
+            return ResponseEntity.ok(Map.of(
+                    "usuario", usuario,
+                    "roles", roles
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
     }
 
     // Crear un nuevo usuario

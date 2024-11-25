@@ -86,6 +86,9 @@ const KanbanBoard = () => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
+    const [usuarioActivo, setUsuarioActivo] = useState(null); // default is 'middle'
+
+
 
     useEffect(() => {
         if (token) {
@@ -94,6 +97,9 @@ const KanbanBoard = () => {
         fetchTasks(token);
 
         fetchPrioridad(token);
+            fetchUsuarioAutenticado(token);
+
+
 
         } else {
             setIsAuthenticated(false);
@@ -111,6 +117,30 @@ const KanbanBoard = () => {
         setSelectedOptionSubtarea(null); // Limpia la opción de subtarea si es necesario
         setOpen(true); // Abre el drawer
     };
+    //ACTIVIDADES DE FECHA POR TAREA
+        const sortedTimelineItemsTarea = [
+        {
+            color: 'green',
+            user: selectedTask?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedTask?.createAt,
+            formattedDate: selectedTask?.createAt ? dayjs(selectedTask.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+
+          //  formattedDate: selectedTarea?.createAt ? dayjs(new Date(selectedTarea.createAt)).format('YYYY-MM-DD HH:mm:ss') : null
+
+           // formattedDate: selectedTarea?.createAt ? dayjs(selectedTask.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedTask?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedTask?.modifyAt,
+            formattedDate: selectedTask?.modifyAt ? dayjs(selectedTask.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
 
     const fetchPrioridad = async (token) => {
@@ -370,7 +400,7 @@ const KanbanBoard = () => {
                         'success'
                     );
                     // Aquí puedes actualizar el estado para eliminar la tarea de la lista en el frontend
-                    await fetchTasks();
+                    await fetchTasks(token);
                 }
             } catch (error) {
                 console.error("Error eliminando la tarea:", error);
@@ -419,9 +449,15 @@ const KanbanBoard = () => {
         removedUserIds.forEach(async (userId) => {
             try {
 
-                await axios.delete(`http://localhost:8080/api/modulos/${moduleData.id}/tareas/${selectedTask.id}/usuarios/${userId}`);
+                await axios.delete(`http://localhost:8080/api/modulos/${moduleData.id}/tareas/${selectedTask.id}/usuarios/${userId}`
+                    , {
+                        headers: {
+                            'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                        }
+                    }
+                );
 
-                await fetchTasks();
+                await fetchTasks(token);
 
             } catch (error) {
                 //   message.error(`Error al eliminar el usuario ${userId} del proyecto`);
@@ -439,9 +475,16 @@ const KanbanBoard = () => {
         try {
 
             console.log("Usuarios seleccionados:", selectedTareaUserIds);
-            await axios.put(`http://localhost:8080/api/modulos/${moduleData.id}/tareas/${selectedTask.id}/usuarios`, selectedTareaUserIds);
+            await axios.put(`http://localhost:8080/api/modulos/${moduleData.id}/tareas/${selectedTask.id}/usuarios`,
+                selectedTareaUserIds
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
 
-            await fetchTasks();
+            await fetchTasks(token);
 
             const updatedUsuarios = usuarios
                 .filter(persona => selectedUserIds.includes(persona.value))
@@ -509,7 +552,6 @@ const KanbanBoard = () => {
 
                         id: tarea.id.toString(),
                         nombre: tarea.nombre || 'Sin título',
-
                         descripcion: tarea.descripcion || 'Sin fecha',
                         fechaInicio: tarea.fechaInicio || '-',
                         fechaFin: tarea.fechaFin || '-',
@@ -517,8 +559,11 @@ const KanbanBoard = () => {
                         usuarios: tarea.usuarios || 'sin usuarios',
                         prioridad: tarea.prioridad || '-',
                         subtareas: tarea.subtareas || '0',
-                        createAt: tarea.createAt,
-                        userCreate: tarea.userCreate
+                        createAt: tarea.createAt|| 'Fecha no disponible',
+                        userCreate: tarea.userCreate,
+                        modifyAt:tarea.modifyAt,
+                        userModify:tarea.userModify
+
 
                     }
 
@@ -618,7 +663,7 @@ const KanbanBoard = () => {
                         // Restablecer el formulario y cerrar el modal
                         form.resetFields();
                         setIsModalOpen(false);
-                        await fetchTasks();
+                        await fetchTasks(token);
 
                     } catch (error) {
                         Swal.fire({
@@ -713,6 +758,38 @@ const KanbanBoard = () => {
     const handleMouseLeaveSubtarea = () => {
         setIsHoveredSubtarea(null); // Limpiar el estado cuando se sale de la fila
     };
+
+
+    //USAURIOS AUTENTICADO
+
+    const fetchUsuarioAutenticado = async (token) => {
+        try {
+
+
+
+            const response = await axios.get(
+                `http://localhost:8080/api/usuarios/getCurrentUser`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
+
+            console.log("Datos recibidos autenticado:", JSON.stringify(response.data.usuario, null, 2));
+
+
+            if (response.data.usuario) {
+                setUsuarioActivo(response.data.usuario);
+            } else {
+                console.error("El campo 'usuario' no está presente en la respuesta.");
+            }
+        } catch (error) {
+            console.error("Error al obtener proyectos:", error);
+        }
+    };
+
+
 
     const handleChangeSubtareaPrioridad = async (value, tareaId, subtareaId) => {
         setSelectedOptionSubtarea(value === 'none' ? null : prioridad.find(option => option.value === value));
@@ -823,6 +900,7 @@ const KanbanBoard = () => {
 
 
 
+
     const onDragEnd = async (result) => {
         const {destination, source, draggableId} = result;
 
@@ -868,18 +946,32 @@ const KanbanBoard = () => {
                 taskIds: endTaskIds,
             };
 
-            setData((prevData) => ({
-                ...prevData,
+            // Actualiza el estado local con las columnas modificadas
+            const updatedData = {
+                ...data,
                 columns: {
-                    ...prevData.columns,
+                    ...data.columns,
                     [newStartColumn.id]: newStartColumn,
                     [newEndColumn.id]: newEndColumn,
                 },
-            }));
+            };
+
+            setData(updatedData);
+
+            //setData((prevData) => ({
+              //  ...prevData,
+                //columns: {
+                  //  ...prevData.columns,
+                    //[newStartColumn.id]: newStartColumn,
+                    //[newEndColumn.id]: newEndColumn,
+                //},
+            //}));
             // Aquí se hace la llamada a la API para actualizar el estado de la tarea
-            const nuevoEstado = destination.droppableId === 'column-1' ? 'PENDIENTE' :
+            let nuevoEstado = destination.droppableId === 'column-1' ? 'PENDIENTE' :
                 destination.droppableId === 'column-2' ? 'EN_PROGRESO' :
                     destination.droppableId === 'column-3' ? 'COMPLETADA' : null;
+
+
 
             if (nuevoEstado) {
                 try {
@@ -892,11 +984,91 @@ const KanbanBoard = () => {
                         },
                     }
                     );
+
+
+                    // Verifica el estado del módulo basado en las columnas actualizadas
+                    const tareasEnProgreso = updatedData.columns['column-2'].taskIds.length > 0;
+                    const tareasCompletadas =
+                        updatedData.columns['column-3'].taskIds.length === Object.keys(updatedData.tasks).length;
+
+                    if (tareasCompletadas) {
+                        // Si todas las tareas están completadas
+                        await axios.put(
+                            `http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/estado?nuevoEstado=COMPLETADO`,
+                            {},
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
+                                },
+                            }
+                        );
+                        // Verificar si todos los módulos están completados
+                        //const modulos = projectData.find((project) => project.id === Number(proyectoId)).modulos;
+                        if (projectData) {
+                            // Si projectData es un objeto, accede directamente a 'modulos'
+                            const modulos = projectData.modulos;
+                            if (modulos) {
+                                // Verificar si todos los módulos están completados
+                                const todosModulosCompletados = modulos.every((modulo) => modulo.estado === 'COMPLETADO');
+
+                                // Verificar si hay algún módulo en progreso
+                                //const hayModuloEnProgreso = modulos.some((modulo) => modulo.estado === 'EN_PROGRESO');
+
+                                if (todosModulosCompletados) {
+                                    // Actualizar el estado del proyecto a COMPLETADO
+                                    await axios.put(
+                                        `http://localhost:8080/api/proyectos/${proyectoId}/actualizar-estado?nuevoEstado=COMPLETADO`,
+                                        {},
+                                        {
+                                            headers: {
+                                                Authorization: `Bearer ${token}`,
+                                            },
+                                        }
+                                    );
+
+                                } else {
+                                    // Si algún módulo está en progreso, actualiza el estado del proyecto a EN_PROGRESO
+                                    await axios.put(
+                                        `http://localhost:8080/api/proyectos/${proyectoId}/actualizar-estado?nuevoEstado=EN_PROGRESO`,
+                                        {},
+                                        {
+                                            headers: {
+                                                Authorization: `Bearer ${token}`,
+                                            },
+                                        }
+                                    );
+                                }
+                            } else {
+                                console.error("No modules found for the given projectId");
+                            }
+                        } else {
+                            console.error("projectData is undefined or null");
+                        }
+
+
+
+
+
+                    } else if (tareasEnProgreso) {
+                        // Si hay al menos una tarea en progreso
+                        await axios.put(
+                            `http://localhost:8080/api/proyectosmodulo/${proyectoId}/modulos/${moduloId}/estado?nuevoEstado=EN_PROGRESO`,
+                            {},
+                            {
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
+                                },
+                            }
+                        );
+                    }
+
+                    await fetchTasks(token);
                     ///api/tareas/{tareaId}/subTareas/{subtareaId}/estado
                 } catch (error) {
                     console.error('Error actualizando el estado de la tarea:', error);
                 }
             }
+
         }
 
 
@@ -925,74 +1097,124 @@ const KanbanBoard = () => {
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
-
+                justifyContent: 'space-between', // Alinea los elementos a los extremos
                 padding: 10,
                 borderBottom: '1px solid #ddd'
+
             }}> {/* Borde inferior suave */}
 
 
-                <Button type="dashed" icon={<ArrowLeftOutlined />
-
-
-                }
-                        onClick={() => navigate(-1)} // Navega hacia atrás en el historial
+                <div
+                    style={{
+                        display: 'flex', // Usamos flexbox
+                        flexDirection: 'row', // Alinea los elementos en una fila
+                        alignItems: 'center', // Centra los elementos verticalmente en la fila
+                        gap: '10px', // Espaciado uniforme entre los elementos
+                    }}
                 >
-                    Atras
-                </Button>
 
-                <Tooltip title={projectData ? projectData.nombre : 'Cargando nombre del modulo...'} placement="top">
-            <span style={{
-                fontWeight: 'bold',
-                color: '#555',
-                fontSize: 14,
-                marginLeft: 10,
-                marginRight: 3,
-                cursor: 'pointer'
-            }}>
-
-                 <FolderOutlined style={{
-
-                     color: 'black',
-
-                     // Espacio entre el icono y el texto
-                 }}/>
-                <span> {truncateTextP(projectData.nombre, 16)} </span>
-            </span>
-                </Tooltip>
-                <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
+          <span
+              style={{
+                  color: '#fff', // Color blanco para el texto
+                  backgroundColor: 'rgb(0, 21, 41)', // Fondo oscuro para contraste
+                  padding: '2px 8px', // Añade un poco de espacio alrededor del texto
+                  borderRadius: '4px', // Opcional: Bordes redondeados
+                  fontWeight: 'bold', // Opcional: Negrita para destacar el texto
+              }}
+          >
+    T
+</span>
 
 
-                <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del proyecto...'} placement="top">
-        <span style={{color: '#555', fontSize: 14, cursor: 'pointer'}}>
-            <MenuOutlined style={{
+                    <Tooltip title={projectData ? projectData.nombre : 'Cargando nombre del modulo...'} placement="top">
 
-                color: 'black',
-                // Espacio entre el icono y el texto
-            }}/>
-            <span> {truncateTextM(moduleData.nombre, 16)} </span>
-        </span>
-                </Tooltip>
+                        <div style={{
+                            fontWeight: 'bold',
+                            color: '#555',
+                            fontSize: 14,
+                            marginLeft: 10,
+                            marginRight: 3,
+                            cursor: 'pointer',
+
+                            display: 'flex', // Usamos flexbox
+                            flexDirection: 'row', // Alinea los elementos en una fila
+                            alignItems: 'center', // Centra los elementos verticalmente en la fila
+                            gap: '10px', // Espaciado uniforme entre los elementos
+                        }}>
+
+                            <FolderOutlined style={{
+
+                                color: 'black',
+
+                                // Espacio entre el icono y el texto
+                            }}/>
+                            <div> {truncateTextP(projectData.nombre, 16)} </div>
+                        </div>
+                    </Tooltip>
+                    <div style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</div>
 
 
+                    <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del proyecto...'} placement="top">
+                        <div style={{
+                            color: '#555', fontSize: 14, cursor: 'pointer',
+                            display: 'flex', // Usamos flexbox
+                            flexDirection: 'row', // Alinea los elementos en una fila
+                            alignItems: 'center', // Centra los elementos verticalmente en la fila
+                            gap: '10px', // Espaciado uniforme entre los elementos
+                        }}>
+                            <MenuOutlined style={{
 
-                <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
-                < span style={{color: '#555', fontSize: 13, cursor: 'pointer'}}>
-                    <MergeOutlined/>
-                    Tareas
-                </span>
-                <span><EllipsisOutlined style={{
-                    marginTop:4,
-                    marginLeft: 5,
-                    fontSize: 17,
-                    fontWeight: 800
-                }}/></span>
+                                color: 'black',
+                                // Espacio entre el icono y el texto
+                            }}/>
+                            <div> {truncateTextM(moduleData.nombre, 16)} </div>
+                        </div>
+                    </Tooltip>
+
+
+                    <div style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</div>
+                    <div
+                        style={{
+                            color: '#555', fontSize: 13,
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <MergeOutlined/>
+                        Tareas
+                    </div>
+                    <div style={{display: 'flex', justifyContent: 'center', marginTop:5}}>
+                        <EllipsisOutlined
+                            style={{
+                                marginLeft: 5,
+                                fontSize: 17,
+                                fontWeight: 800,
+                            }}
+                        />
+                    </div>
+
+
+                </div>
+
+                <div
+
+                >
+                    <Button color="primary" variant="filled" icon={<ArrowLeftOutlined/>
+
+
+                    }
+                            onClick={() => navigate(-1)} // Navega hacia atrás en el historial
+                    >
+                        Atras
+                    </Button>
+
+                </div>
 
 
             </div>
 
 
             <DragDropContext onDragEnd={onDragEnd}>
-                <Row gutter={16} style={{marginLeft:2,marginRight:2}}>
+                <Row gutter={16} style={{marginLeft: 2, marginRight: 2}}>
                     {data.columnOrder.map((columnId) => {
                         const column = data.columns[columnId];
                         const tasks = column.taskIds.map(taskId => data.tasks[taskId]);
@@ -1366,8 +1588,7 @@ const KanbanBoard = () => {
 
                                                                         Subtareas
                                                                     </span>
-                                                                    <span style={{color: "red"}}>{task.id}</span>
-                                                                    <span style={{color: "red"}}>{moduleData.id}</span>
+
 
                                                                 </Col>
                                                             </Row>
@@ -1384,7 +1605,9 @@ const KanbanBoard = () => {
                                                                     }}
                                                                     wrap
                                                                 >
-                                                                    <Popover content={getContent(task.id,moduleData.id,task.nombre)}  trigger="click">
+                                                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                                        <Popover content={getContent(task.id,moduleData.id,task.nombre)}  trigger="click">
                                                                         <Button
                                                                             style={{
                                                                                 padding: '4px 8px', // Ajusta el padding para hacer el botón más pequeño
@@ -1394,6 +1617,13 @@ const KanbanBoard = () => {
                                                                             <EllipsisOutlined />
                                                                         </Button>
                                                                     </Popover>
+                                                                    ):(
+                                                                        <div >
+
+                                                                        </div>
+                                                                    )
+
+                                                                    }
                                                                 </Space>
 
 
@@ -1407,10 +1637,10 @@ const KanbanBoard = () => {
                                             {provided.placeholder}
 
                                             {/* Div para "Agregar tarea" */}
-                                            <div
 
+                                            {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
-                                                onClick={() => showModal('AñadirTarea', projectData.id, moduleData.id, column.estado)}
+                                                <div onClick={() => showModal('AñadirTarea', projectData.id, moduleData.id, column.estado)}
 
                                                 // Abre el modal de creación de tarea
                                                 style={{
@@ -1426,6 +1656,15 @@ const KanbanBoard = () => {
                                             >
                                                 + Agregar tarea
                                             </div>
+                                            ):(
+                                                <div >
+
+                                                </div>
+                                            )
+
+                                            }
+
+
                                         </div>
                                     )}
                                 </Droppable>
@@ -1503,7 +1742,7 @@ const KanbanBoard = () => {
             <Drawer
 
 
-                width={1100}
+                width={1000}
                 onClose={handleCloseDrawer}
                 //onClose={onClose}
                 open={open}
@@ -1561,7 +1800,11 @@ const KanbanBoard = () => {
                             </Col>
 
                             <Col span={6} style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
-                                {isEditing ? (
+
+                                {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+
+                                        isEditing ? (
                                     <>
 
                                         <Button
@@ -1602,8 +1845,10 @@ const KanbanBoard = () => {
                                         >
                                             Guardar
                                         </Button>
+
                                     </>
                                 ) : (
+
                                     <Button
                                         onClick={handleEditClick}
                                         type="text"
@@ -1619,18 +1864,16 @@ const KanbanBoard = () => {
                                     >
                                         Editar
                                     </Button>
-                                )}
+                                )
+                                ):(
+                                    <div >
 
-                                <Button
-                                    type="text"
-                                    icon={<EllipsisOutlined />}
-                                    style={{ fontSize: 16, color: '#000' }}
-                                />
-                                <Button
-                                    type="text"
-                                    icon={<StarOutlined />}
-                                    style={{ fontSize: 16, color: '#000' }}
-                                />
+                                    </div>
+                                )
+
+                                }
+
+
                                 <Button
                                     type="text"
                                     // onClick={onClose}
@@ -1683,35 +1926,32 @@ const KanbanBoard = () => {
                                 </div>
 
 
-
-                                <Timeline style={{paddingLeft: 20}}
-                                          items={[
-
-                                              {
-                                                  color:'green',
-                                                  children: (
-                                                      <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedTask.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedTask.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+<h2>Actividades</h2>
+                                <Timeline style={{ paddingLeft: 20,backgroundColor:'#fbfbfc', paddingTop:10 }} items={sortedTimelineItemsTarea.map(item => ({
+                                    color: item.color,
+                                    children: (
+                                        <span style={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar size="small" style={{ marginRight: '4px' }}>
+                <UserOutlined style={{ color: 'green', fontSize: '16px' }} />
+            </Avatar>
+            <span
+                style={{
+                    color: '#4f5762',
+                    fontWeight: 500,
+                    fontSize: 13,
+                    textDecoration: 'underline',
+                    textTransform: 'lowercase'
+                }}
+            >
+                {item.user}
             </span>
-                                                  ),
-                                              },
-
-                                              {
-                                                  color: 'red',
-                                                  children: 'Eliminado solved 2015-09-01',
-                                              },
-                                          ]}
-                                />
+            <span style={{ marginRight: 6, marginLeft: 6,fontSize:13 }}>{item.action}</span>
+            <span style={{ color: '#4f5762', fontWeight: 600 }}>
+                {item.formattedDate}
+            </span>
+        </span>
+                                    ),
+                                }))} />
                             </Col>
                             <Col span={8}>
                                 <h3 style={{marginBottom: 20, color:'#4f5762'}}> Fechas</h3>
@@ -1853,11 +2093,18 @@ const KanbanBoard = () => {
                                     <div style={{width: 300}}>
                                         <Select
                                             mode="multiple"
-                                            style={{width: '100%'}}
+                                            style={{width: '90%'}}
                                             placeholder="Seleccionar una opción"
                                             value={selectedTareaUserIds}
                                             onChange={handleUserTareaChange}
                                             onBlur={handleUpdateTareaUsers}
+                                            disabled={
+                                                !(
+                                                    usuarioActivo &&
+                                                    usuarioActivo.rolesNames &&
+                                                    (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))
+                                                )
+                                            }
                                         >
                                             {usuarios.map(({value, label, emoji, desc}) => (
                                                 <Option key={value} value={value}>

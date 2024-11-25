@@ -85,12 +85,16 @@ const KanbanBoardSubtarea = () => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
+
+    const [usuarioActivo, setUsuarioActivo] = useState(null); // default is 'middle'
+
     useEffect(() => {
         if (token) {
             setIsAuthenticated(true);
         fetchUsuario(token);
         fetchTasks(token);
         fetchPrioridad(token);
+            fetchUsuarioAutenticado(token);
         console.log("subatrea", tareaData);
         } else {
             setIsAuthenticated(false);
@@ -107,6 +111,58 @@ const KanbanBoardSubtarea = () => {
         setSelectedOptionSubtarea(null); // Limpia la opción de subtarea si es necesario
         setOpen(true); // Abre el drawer
     };
+
+    //USAURIOS AUTENTICADO
+
+    const fetchUsuarioAutenticado = async (token) => {
+        try {
+
+
+
+            const response = await axios.get(
+                `http://localhost:8080/api/usuarios/getCurrentUser`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
+
+            console.log("Datos recibidos autenticado:", JSON.stringify(response.data.usuario, null, 2));
+
+
+            if (response.data.usuario) {
+                setUsuarioActivo(response.data.usuario);
+            } else {
+                console.error("El campo 'usuario' no está presente en la respuesta.");
+            }
+        } catch (error) {
+            console.error("Error al obtener proyectos:", error);
+        }
+    };
+
+
+
+    //ACTIVIDADES DE FECHA POR SUBATAREA
+    const sortedTimelineItemsSubtarea = [
+        {
+            color: 'green',
+            user: selectedTask?.userCreate || 'Usuario no disponible',
+            action: 'creó',
+            date: selectedTask?.createAt,
+            formattedDate: selectedTask?.createAt ? dayjs(selectedTask.createAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+        {
+            color: '#00CCFF',
+            user: selectedTask?.userModify || 'Usuario no disponible',
+            action: 'modificó',
+            date: selectedTask?.modifyAt,
+            formattedDate: selectedTask?.modifyAt ? dayjs(selectedTask.modifyAt).format('YYYY-MM-DD HH:mm:ss') : null
+        },
+
+    ]
+        .filter(item => item.date) // Filtrar los elementos sin fecha (date null)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
 
 
     const fetchPrioridad = async () => {
@@ -542,7 +598,9 @@ const KanbanBoardSubtarea = () => {
                         prioridad:subtarea.prioridad||'-',
                         subtareas:subtarea.subtareas||'0',
                         createAt:subtarea.createAt,
-                        userCreate:subtarea.userCreate
+                        userCreate:subtarea.userCreate,
+                        modifyAt:subtarea.modifyAt,
+                        userModify:subtarea.userModify
 
                     }
 
@@ -896,6 +954,7 @@ const KanbanBoardSubtarea = () => {
                     }
                     );
                     ///api/tareas/{tareaId}/subTareas/{subtareaId}/estado
+                    await fetchTasks(token);
                 } catch (error) {
                     console.error('Error actualizando el estado de la tarea:', error);
                 }
@@ -926,29 +985,42 @@ const KanbanBoardSubtarea = () => {
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
-
+                justifyContent: 'space-between', // Alinea los elementos a los extremos
                 padding: 10,
                 borderBottom: '1px solid #ddd'
             }}> {/* Borde inferior suave */}
 
-
-                <Button type="dashed" icon={<ArrowLeftOutlined />
-
-
-                }
-                        onClick={() => navigate(-1)} // Navega hacia atrás en el historial
+                <div
+                    style={{
+                        display: 'flex', // Usamos flexbox
+                        flexDirection: 'row', // Alinea los elementos en una fila
+                        alignItems: 'center', // Centra los elementos verticalmente en la fila
+                        gap: '10px', // Espaciado uniforme entre los elementos
+                    }}
                 >
-                    Atras
-                </Button>
-
-                <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del modulo...'} placement="top">
-            <span style={{
+                       <span
+                           style={{
+                               color: '#fff', // Color blanco para el texto
+                               backgroundColor: 'rgb(0, 21, 41)', // Fondo oscuro para contraste
+                               padding: '2px 8px', // Añade un poco de espacio alrededor del texto
+                               borderRadius: '4px', // Opcional: Bordes redondeados
+                               fontWeight: 'bold', // Opcional: Negrita para destacar el texto
+                           }}
+                       >
+    S
+</span>
+                    <Tooltip title={moduleData ? moduleData.nombre : 'Cargando nombre del modulo...'} placement="top">
+            <div style={{
                 fontWeight: 'bold',
                 color: '#555',
                 fontSize: 14,
                 marginLeft: 10,
                 marginRight: 3,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'flex', // Usamos flexbox
+                flexDirection: 'row', // Alinea los elementos en una fila
+                alignItems: 'center', // Centra los elementos verticalmente en la fila
+                gap: '10px', // Espaciado uniforme entre los elementos
             }}>
 
                  <FolderOutlined style={{
@@ -957,61 +1029,78 @@ const KanbanBoardSubtarea = () => {
 
                      // Espacio entre el icono y el texto
                  }}/>
-                <span> {truncateTextP(moduleData.nombre, 16)} </span>
-            </span>
-                </Tooltip>
-                <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
+                <div> {truncateTextP(moduleData.nombre, 16)} </div>
+            </div>
+                    </Tooltip>
+                    <div style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</div>
 
 
-                <Tooltip title={tareaData ? tareaData.nombre : 'Cargando nombre del proyecto...'} placement="top">
-        <span style={{color: '#555', fontSize: 14, cursor: 'pointer'}}>
+                    <Tooltip title={tareaData ? tareaData.nombre : 'Cargando nombre del proyecto...'} placement="top">
+        <div style={{
+            color: '#555', fontSize: 14, cursor: 'pointer',
+            display: 'flex', // Usamos flexbox
+            flexDirection: 'row', // Alinea los elementos en una fila
+            alignItems: 'center', // Centra los elementos verticalmente en la fila
+            gap: '10px', // Espaciado uniforme entre los elementos
+        }}>
             <MenuOutlined style={{
 
                 color: 'black',
                 // Espacio entre el icono y el texto
             }}/>
-            <span> {truncateTextM(tareaData.nombre, 16)} </span>
-        </span>
-                </Tooltip>
+            <div> {truncateTextM(tareaData.nombre, 16)} </div>
+        </div>
+                    </Tooltip>
 
 
-
-                <span style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</span>
-                < span style={{color: '#555', fontSize: 13, cursor: 'pointer'}}>
+                    <div style={{margin: '0 8px', color: '#555', fontSize: 15, marginLeft: 7}}>/</div>
+                    <div style={{color: '#555', fontSize: 13, cursor: 'pointer'}}>
                     <MergeOutlined/>
                    Sub Tareas
-                </span>
-                <span><EllipsisOutlined style={{
-                    marginTop:4,
-                    marginLeft: 5,
-                    fontSize: 17,
-                    fontWeight: 800
-                }}/></span>
+                </div>
+                    <div style={{display: 'flex', justifyContent: 'center', marginTop:5}}><EllipsisOutlined style={{
+
+                        marginLeft: 5,
+                        fontSize: 17,
+                        fontWeight: 800
+                    }}/></div>
+                </div>
 
 
+                <div>
+                    <Button color="primary" variant="filled" icon={<ArrowLeftOutlined/>
+
+
+                    }
+                            onClick={() => navigate(-1)} // Navega hacia atrás en el historial
+                    >
+                        Atras
+                    </Button>
+
+                </div>
             </div>
 
 
             <DragDropContext onDragEnd={onDragEnd}>
-                <Row gutter={16} style={{marginLeft:2,marginRight:2}}>
-                    {data.columnOrder.map((columnId) => {
-                        const column = data.columns[columnId];
-                        const tasks = column.taskIds.map(taskId => data.tasks[taskId]);
+                <Row gutter={16} style={{marginLeft: 2, marginRight: 2}}>
+                        {data.columnOrder.map((columnId) => {
+                            const column = data.columns[columnId];
+                            const tasks = column.taskIds.map(taskId => data.tasks[taskId]);
 
-                        return (
-                            <Col key={column.id} span={8}>
+                            return (
+                                <Col key={column.id} span={8}>
 
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    marginTop: 12,
-                                    paddingBottom:2,
-                                    backgroundColor: "#f5f5f5",
-                                    borderTopRightRadius: '10px',
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        marginTop: 12,
+                                        paddingBottom: 2,
+                                        backgroundColor: "#f5f5f5",
+                                        borderTopRightRadius: '10px',
 
 
-                                }}>
+                                    }}>
 
     <span
         style={{
@@ -1036,7 +1125,7 @@ const KanbanBoardSubtarea = () => {
                 border: `3px solid ${getBackgroundColor(column.title)}`, // Borde del círculo
                 marginTop: 0,
                 marginRight: 4,
-                color:getBackgroundColor(column.title) ,
+                color: getBackgroundColor(column.title),
 
             }}
         >
@@ -1044,86 +1133,92 @@ const KanbanBoardSubtarea = () => {
                     </div>
 
 
-        <span style={{fontWeight: 'bold', backgroundColor: getBackgroundColor(column.title), paddingBottom:4,paddingRight:5,paddingLeft:4,paddingTop:4, borderRadius:4}}> {/* Span adicional para el texto en negrita */}
+        <span style={{
+            fontWeight: 'bold',
+            backgroundColor: getBackgroundColor(column.title),
+            paddingBottom: 4,
+            paddingRight: 5,
+            paddingLeft: 4,
+            paddingTop: 4,
+            borderRadius: 4
+        }}> {/* Span adicional para el texto en negrita */}
             {column.title}
         </span>
 
-  <span style={{marginLeft: 10,color:getBackgroundColor(column.title)}}>{column.taskIds.length}</span>
+  <span style={{marginLeft: 10, color: getBackgroundColor(column.title)}}>{column.taskIds.length}</span>
     </span>
 
 
-                                </div>
+                                    </div>
 
-                                <Droppable droppableId={column.id}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            style={getDroppableStyle(snapshot.isDraggingOver)}
-                                        >
-                                            {tasks.map((task, index) => (
-                                                <Draggable key={task.id} draggableId={task.id} index={index}>
-                                                    {(draggableProvided) => (
-                                                        <Card
-                                                            onMouseEnter={() => handleMouseEnterPoper(task.id)} // Manejo del hover
-                                                            onMouseLeave={handleMouseLeavePoper}
-                                                            style={{
-                                                                position: 'relative', // Para posicionar el div dentro del card
-                                                                width: 300,
-                                                                margin: '10px',
-                                                            }}
-                                                            ref={draggableProvided.innerRef}
-                                                            {...draggableProvided.draggableProps}
-                                                            {...draggableProvided.dragHandleProps}
-                                                            className="task-card"
-
-                                                        >
-                                                            <Card.Meta
-
-                                                                title={
-                                                                    <a  style={{
-                                                                        color: '#4c47ab',
-                                                                        marginLeft: 8,
-                                                                        whiteSpace: 'normal', // Permite que el texto se envuelva
-                                                                        overflow: 'visible',  // Asegura que el texto no se recorte
-                                                                        display: 'inline-block', // Configura el contenedor como inline para evitar recortes
-                                                                        width: '100%'          // Permite que ocupe el espacio completo
-                                                                    }}
-                                                                        onClick={() => showDrawer(task)}
-                                                                    >
-
-
-
-
-                                                                        {task.nombre}
-                                                                    </a>
-                                                                }
-
-
-                                                            />
-
-
-                                                            <Row
+                                    <Droppable droppableId={column.id}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.droppableProps}
+                                                style={getDroppableStyle(snapshot.isDraggingOver)}
+                                            >
+                                                {tasks.map((task, index) => (
+                                                    <Draggable key={task.id} draggableId={task.id} index={index}>
+                                                        {(draggableProvided) => (
+                                                            <Card
+                                                                onMouseEnter={() => handleMouseEnterPoper(task.id)} // Manejo del hover
+                                                                onMouseLeave={handleMouseLeavePoper}
                                                                 style={{
-
-                                                                    backgroundColor: hoveredRowId===task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
-                                                                    transition: 'background-color 0.3s ease', // Transición suave
-                                                                    paddingTop:2,
-                                                                    paddingBottom:2,
-                                                                    paddingLeft:7,
-                                                                    borderRadius:10,
-                                                                    marginTop:10
+                                                                    position: 'relative', // Para posicionar el div dentro del card
+                                                                    width: 300,
+                                                                    margin: '10px',
                                                                 }}
-                                                                onMouseEnter={() => handleMouseEnter(task.id)} // Activa el hover
-                                                                onMouseLeave={handleMouseLeave} // Desactiva el hover
-
+                                                                ref={draggableProvided.innerRef}
+                                                                {...draggableProvided.draggableProps}
+                                                                {...draggableProvided.dragHandleProps}
+                                                                className="task-card"
 
                                                             >
+                                                                <Card.Meta
+
+                                                                    title={
+                                                                        <a style={{
+                                                                            color: '#4c47ab',
+                                                                            marginLeft: 8,
+                                                                            whiteSpace: 'normal', // Permite que el texto se envuelva
+                                                                            overflow: 'visible',  // Asegura que el texto no se recorte
+                                                                            display: 'inline-block', // Configura el contenedor como inline para evitar recortes
+                                                                            width: '100%'          // Permite que ocupe el espacio completo
+                                                                        }}
+                                                                           onClick={() => showDrawer(task)}
+                                                                        >
 
 
-                                                                <Col span={2}>
-                                                                    <Tooltip title="Usuarios">
-                    <span style={{ fontWeight: 800 }}>
+                                                                            {task.nombre}
+                                                                        </a>
+                                                                    }
+
+
+                                                                />
+
+
+                                                                <Row
+                                                                    style={{
+
+                                                                        backgroundColor: hoveredRowId === task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
+                                                                        transition: 'background-color 0.3s ease', // Transición suave
+                                                                        paddingTop: 2,
+                                                                        paddingBottom: 2,
+                                                                        paddingLeft: 7,
+                                                                        borderRadius: 10,
+                                                                        marginTop: 10
+                                                                    }}
+                                                                    onMouseEnter={() => handleMouseEnter(task.id)} // Activa el hover
+                                                                    onMouseLeave={handleMouseLeave} // Desactiva el hover
+
+
+                                                                >
+
+
+                                                                    <Col span={2}>
+                                                                        <Tooltip title="Usuarios">
+                    <span style={{fontWeight: 800}}>
                         <UserAddOutlined
                             style={{
                                 fontSize: '13px',
@@ -1132,10 +1227,10 @@ const KanbanBoardSubtarea = () => {
                             }}
                         />
                     </span>
-                                                                    </Tooltip>
-                                                                </Col>
+                                                                        </Tooltip>
+                                                                    </Col>
 
-                                                                <Col span={22}>
+                                                                    <Col span={22}>
                 <span>
                     {Array.isArray(task.usuarios) && task.usuarios.length > 0 ? (
                         task.usuarios.map((usuario, index) => {
@@ -1165,39 +1260,36 @@ const KanbanBoardSubtarea = () => {
                         })
                     ) : (
                         <Tooltip title="Agregar persona">
-                            <Avatar size={27} icon={<UserAddOutlined />} />
+                            <Avatar size={27} icon={<UserAddOutlined/>}/>
                         </Tooltip>
                     )}
                 </span>
-                                                                </Col>
-                                                            </Row>
+                                                                    </Col>
+                                                                </Row>
 
 
+                                                                <Row
+
+                                                                    style={{
 
 
+                                                                        // Desactiva el hover
 
-                                                            <Row
-
-                                                                style={{
-
-
-                                                                    // Desactiva el hover
-
-                                                                    backgroundColor: isHoveredCalendario===task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
-                                                                    transition: 'background-color 0.3s ease', // Transición suave
-                                                                    paddingTop:2,
-                                                                    paddingBottom:0,
-                                                                    paddingLeft:7,
-                                                                    borderRadius:10
-                                                                }}
-                                                                onMouseEnter={() => handleMouseEnterCalendario(task.id)} // Activa el hover
-                                                                onMouseLeave={handleMouseLeaveCalendario} // Desactiva el hover
+                                                                        backgroundColor: isHoveredCalendario === task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
+                                                                        transition: 'background-color 0.3s ease', // Transición suave
+                                                                        paddingTop: 2,
+                                                                        paddingBottom: 0,
+                                                                        paddingLeft: 7,
+                                                                        borderRadius: 10
+                                                                    }}
+                                                                    onMouseEnter={() => handleMouseEnterCalendario(task.id)} // Activa el hover
+                                                                    onMouseLeave={handleMouseLeaveCalendario} // Desactiva el hover
 
 
-                                                            >
+                                                                >
 
-                                                                <Col span={2}>
-                                                                    <Tooltip title="Fecha límite">
+                                                                    <Col span={2}>
+                                                                        <Tooltip title="Fecha límite">
                                                                      <span style={{fontWeight: 800}}>
                                                                   <CalendarOutlined style={{
                                                                       fontSize: '13px',
@@ -1206,9 +1298,9 @@ const KanbanBoardSubtarea = () => {
                                                                   }}/>
 
                                                                 </span>
-                                                                    </Tooltip>
-                                                                </Col>
-                                                                <Col span={22} >
+                                                                        </Tooltip>
+                                                                    </Col>
+                                                                    <Col span={22}>
 
 
                                                                     <span style={{
@@ -1221,31 +1313,30 @@ const KanbanBoardSubtarea = () => {
                                                                     </span>
 
 
+                                                                    </Col>
+                                                                </Row>
+                                                                <Row
 
-                                                                </Col>
-                                                            </Row>
-                                                            <Row
-
-                                                                style={{
-
-
-                                                                    // Desactiva el hover
-
-                                                                    backgroundColor: isHoveredCalendarioFin===task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
-                                                                    transition: 'background-color 0.3s ease', // Transición suave
-                                                                    paddingTop:2,
-                                                                    paddingBottom:0,
-                                                                    paddingLeft:7,
-                                                                    borderRadius:10
-                                                                }}
-                                                                onMouseEnter={() => handleMouseEnterCalendarioFin(task.id)} // Activa el hover
-                                                                onMouseLeave={handleMouseLeaveCalendarioFin} // Desactiva el hover
+                                                                    style={{
 
 
-                                                            >
+                                                                        // Desactiva el hover
 
-                                                                <Col span={2}>
-                                                                    <Tooltip title="Fecha límite">
+                                                                        backgroundColor: isHoveredCalendarioFin === task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
+                                                                        transition: 'background-color 0.3s ease', // Transición suave
+                                                                        paddingTop: 2,
+                                                                        paddingBottom: 0,
+                                                                        paddingLeft: 7,
+                                                                        borderRadius: 10
+                                                                    }}
+                                                                    onMouseEnter={() => handleMouseEnterCalendarioFin(task.id)} // Activa el hover
+                                                                    onMouseLeave={handleMouseLeaveCalendarioFin} // Desactiva el hover
+
+
+                                                                >
+
+                                                                    <Col span={2}>
+                                                                        <Tooltip title="Fecha límite">
                                                                      <span style={{fontWeight: 800}}>
                                                                   <CalendarOutlined style={{
                                                                       fontSize: '13px',
@@ -1254,9 +1345,9 @@ const KanbanBoardSubtarea = () => {
                                                                   }}/>
 
                                                                 </span>
-                                                                    </Tooltip>
-                                                                </Col>
-                                                                <Col span={22} >
+                                                                        </Tooltip>
+                                                                    </Col>
+                                                                    <Col span={22}>
 
 
                                                                     <span style={{
@@ -1269,27 +1360,26 @@ const KanbanBoardSubtarea = () => {
                                                                     </span>
 
 
+                                                                    </Col>
+                                                                </Row>
 
-                                                                </Col>
-                                                            </Row>
+                                                                <Row
 
-                                                            <Row
+                                                                    style={{
 
-                                                                style={{
+                                                                        backgroundColor: isHoveredPrioridad === task.id ? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
+                                                                        transition: 'background-color 0.3s ease', // Transición suave
+                                                                        paddingTop: 2,
+                                                                        paddingBottom: 0,
+                                                                        paddingLeft: 7,
+                                                                        borderRadius: 10
+                                                                    }}
+                                                                    onMouseEnter={() => handleMouseEnterPrioridad(task.id)} // Activa el hover
+                                                                    onMouseLeave={handleMouseLeavePrioridad} // Desactiva el hover
+                                                                >
 
-                                                                    backgroundColor: isHoveredPrioridad ===task.id? '#f0f0f0' : 'transparent', // Cambia el color de fondo al hacer hover
-                                                                    transition: 'background-color 0.3s ease', // Transición suave
-                                                                    paddingTop:2,
-                                                                    paddingBottom:0,
-                                                                    paddingLeft:7,
-                                                                    borderRadius:10
-                                                                }}
-                                                                onMouseEnter={() => handleMouseEnterPrioridad(task.id)} // Activa el hover
-                                                                onMouseLeave={handleMouseLeavePrioridad} // Desactiva el hover
-                                                            >
-
-                                                                <Col span={2}>
-                                                                    <Tooltip title="Prioridad">
+                                                                    <Col span={2}>
+                                                                        <Tooltip title="Prioridad">
                                                                      <span style={{fontWeight: 800}}>
                                                                   <FlagOutlined style={{
                                                                       fontSize: '13px',
@@ -1298,216 +1388,230 @@ const KanbanBoardSubtarea = () => {
                                                                   }}/>
 
                                                                 </span>
-                                                                    </Tooltip>
-                                                                </Col>
-                                                                <Col span={22}>
+                                                                        </Tooltip>
+                                                                    </Col>
+                                                                    <Col span={22}>
 
 
-                                                                    {task.prioridad && task.prioridad.nombre ? (
-                                                                        <Space>
-                                                                            <FlagOutlined style={{ fontSize: '12px', color: task.prioridad.backgroundPrioridad }} />
-                                                                            <span style={{color: task.prioridad.backgroundPrioridad, fontSize:12}}>{task.prioridad.nombre}</span>
-                                                                        </Space>
-                                                                    ) : (
-                                                                        <Space>
-                                                                            -
-                                                                        </Space>
-                                                                    )}
+                                                                        {task.prioridad && task.prioridad.nombre ? (
+                                                                            <Space>
+                                                                                <FlagOutlined style={{
+                                                                                    fontSize: '12px',
+                                                                                    color: task.prioridad.backgroundPrioridad
+                                                                                }}/>
+                                                                                <span style={{
+                                                                                    color: task.prioridad.backgroundPrioridad,
+                                                                                    fontSize: 12
+                                                                                }}>{task.prioridad.nombre}</span>
+                                                                            </Space>
+                                                                        ) : (
+                                                                            <Space>
+                                                                                -
+                                                                            </Space>
+                                                                        )}
 
 
+                                                                    </Col>
+                                                                </Row>
 
 
-                                                                </Col>
-                                                            </Row>
+                                                                {hoveredRowIdPoper === task.id && (
+                                                                    <Space
+                                                                        style={{
+                                                                            position: 'absolute',
+                                                                            top: '0px',  // Posiciona en la parte superior
+                                                                            right: '0px', // Posiciona en la parte derecha
+                                                                            display: 'flex',
+                                                                            gap: '2px', // Ajusta el espacio entre elementos
+                                                                            marginTop: 2, marginRight: 2
+                                                                        }}
+                                                                        wrap
+                                                                    >
+                                                                        {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                                            <Popover
+                                                                            content={getContent(task.id, tareaData.id, task.nombre)}
+                                                                            trigger="click">
+                                                                            <Button
+                                                                                style={{
+                                                                                    padding: '4px 8px', // Ajusta el padding para hacer el botón más pequeño
+                                                                                    fontSize: '12px', // Reduce el tamaño de la fuente
+                                                                                }}
+                                                                            >
+                                                                                <EllipsisOutlined/>
+                                                                            </Button>
+                                                                        </Popover>
+                                                                        ):(
+                                                                            <div >
+
+                                                                            </div>
+                                                                        )
+
+                                                                        }
+                                                                    </Space>
 
 
-
-                                                            {hoveredRowIdPoper === task.id && (
-                                                                <Space
-                                                                    style={{
-                                                                        position: 'absolute',
-                                                                        top: '0px',  // Posiciona en la parte superior
-                                                                        right: '0px', // Posiciona en la parte derecha
-                                                                        display: 'flex',
-                                                                        gap: '2px', // Ajusta el espacio entre elementos
-                                                                        marginTop:2,marginRight:2
-                                                                    }}
-                                                                    wrap
-                                                                >
-                                                                    <Popover content={getContent(task.id,tareaData.id,task.nombre)}  trigger="click">
-                                                                        <Button
-                                                                            style={{
-                                                                                padding: '4px 8px', // Ajusta el padding para hacer el botón más pequeño
-                                                                                fontSize: '12px', // Reduce el tamaño de la fuente
-                                                                            }}
-                                                                        >
-                                                                            <EllipsisOutlined />
-                                                                        </Button>
-                                                                    </Popover>
-                                                                </Space>
+                                                                )}
 
 
-                                                            )}
+                                                            </Card>
+                                                        )}
+                                                    </Draggable>
+                                                ))}
+                                                {provided.placeholder}
+
+                                                {/* Div para "Agregar tarea" */}
+                                                {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                                    <div
 
 
-                                                        </Card>
-                                                    )}
-                                                </Draggable>
-                                            ))}
-                                            {provided.placeholder}
+                                                    onClick={() => showModal('AñadirSubTarea', moduleData.id, tareaData.id, column.estado)}
 
-                                            {/* Div para "Agregar tarea" */}
-                                            <div
+                                                    // Abre el modal de creación de tarea
+                                                    style={{
+                                                        marginTop: 10,
+                                                        padding: '8px',
+                                                        textAlign: 'center',
+                                                        cursor: 'pointer',
+                                                        backgroundColor: '#e0e0e0',
+                                                        borderRadius: '5px',
+                                                        fontWeight: 'bold',
+                                                        color: '#333',
+                                                    }}
+                                                >
+                                                    + Agregar Subtarea
+                                                </div>
+                                                ):(
+                                                    <div >
 
+                                                    </div>
+                                                )
 
-                                                onClick={() => showModal('AñadirSubTarea', moduleData.id, tareaData.id, column.estado)}
-
-                                                // Abre el modal de creación de tarea
-                                                style={{
-                                                    marginTop: 10,
-                                                    padding: '8px',
-                                                    textAlign: 'center',
-                                                    cursor: 'pointer',
-                                                    backgroundColor: '#e0e0e0',
-                                                    borderRadius: '5px',
-                                                    fontWeight: 'bold',
-                                                    color: '#333',
-                                                }}
-                                            >
-                                                + Agregar tarea
+                                                }
                                             </div>
-                                        </div>
-                                    )}
-                                </Droppable>
-                            </Col>
-                        );
-                    })}
-                </Row>
+                                        )}
+                                    </Droppable>
+                                </Col>
+                            );
+                        })}
+                    </Row>
 
-            </DragDropContext>
-
+                </DragDropContext>
 
 
+                <Modal
+                    title={
+                        modalType === 'AñadirSubTarea' ? 'Crear SubTarea' :
+                            'Editar Tarea'
 
-            <Modal
-                title={
-                    modalType === 'AñadirSubTarea' ? 'Crear SubTarea':
-                       'Editar Tarea'
-
-                }
-                visible={isModalOpen}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                confirmLoading={isProcessing} // Deshabilita mientras se procesa
-                width={modalType==='verSubtarea'? 800 : undefined}
-                //  bodyStyle={{  borderBottom: '1px solid #d9d9d9',borderTop: '1px solid #d9d9d9', borderRadius: '8px' }} // Estilo del cuerpo del modal
-
-
-            >
-
-
-                {modalType === 'AñadirSubTarea' && (
-                    <Form form={form} layout="vertical">
-                        <Form.Item
-                            name="nombre"
-                            label="Nombre"
-                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
-                        >
-                            <Input/>
-                        </Form.Item>
-
-                        <Form.Item
-                            name="fechaInicio"
-                            label="Fecha de Inicio"
-                            rules={[{required: true, message: 'Por favor, selecciona una fecha'}]}
-                        >
-                            <DatePicker/>
-                        </Form.Item>
-                        <Form.Item
-                            name="fechaFin"
-                            label="Fecha de Fin"
-                            rules={[{required: true, message: 'Por favor, selecciona una fecha'}]}
-                        >
-                            <DatePicker/>
-                        </Form.Item>
-
-                        <Form.Item
-                            name="estado"
-                            // Ocultar el campo
-                            // Ocultar el campo del formulario
-                            style={{display:"none"}}
-                            initialValue={selectedColumnId || ''} // Establecer valor inicial
-                        >
-                            <Input  readOnly />
-                        </Form.Item>
-
-
-
-
-
-
-
-
-                        <Form.Item
-                            name="descripcion"
-                            label="Descripción"
-                            rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
-                        >
-                            <Input.TextArea/>
-                        </Form.Item>
-                    </Form>
-                )}
-
-
-
-
-
-            </Modal>
-
-
-            <Drawer
-
-
-                width={1100}
-                onClose={handleCloseDrawer}
-                //onClose={onClose}
-                open={open}
-                styles={{
-                    body: {
-                        paddingBottom: 50,
-
-                    },
-                    mask: {
-                        backgroundColor: 'rgba(255, 255, 255, 0)', // Sin opacidad
                     }
-                }}
-                closeIcon={
-                    null
-                }
+                    visible={isModalOpen}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                    confirmLoading={isProcessing} // Deshabilita mientras se procesa
+                    width={modalType === 'verSubtarea' ? 800 : undefined}
+                    //  bodyStyle={{  borderBottom: '1px solid #d9d9d9',borderTop: '1px solid #d9d9d9', borderRadius: '8px' }} // Estilo del cuerpo del modal
 
 
-            >
-                {selectedTask && (
+                >
 
-                    <Form form={form} layout="vertical" hideRequiredMark>
 
-                        <Row gutter={16} style={{borderBottom:'1px solid #e6eaf0', marginBottom:9, paddingBottom:9}}>
-                            <Col span={18} >
-                                {isEditing ? (
-                                    <Form.Item
-                                        name="nombre"
-                                        label="Nombre"
-                                        rules={[{ required: true, message: 'Por favor, ingresa el nombre' }]}
-                                    >
-                                        <Input />
-                                    </Form.Item>
-                                ) : (
-                                    <span style={{fontSize: 28, color: '#343940'}}>
+                    {modalType === 'AñadirSubTarea' && (
+                        <Form form={form} layout="vertical">
+                            <Form.Item
+                                name="nombre"
+                                label="Nombre"
+                                rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
+                            >
+                                <Input/>
+                            </Form.Item>
+
+                            <Form.Item
+                                name="fechaInicio"
+                                label="Fecha de Inicio"
+                                rules={[{required: true, message: 'Por favor, selecciona una fecha'}]}
+                            >
+                                <DatePicker/>
+                            </Form.Item>
+                            <Form.Item
+                                name="fechaFin"
+                                label="Fecha de Fin"
+                                rules={[{required: true, message: 'Por favor, selecciona una fecha'}]}
+                            >
+                                <DatePicker/>
+                            </Form.Item>
+
+                            <Form.Item
+                                name="estado"
+                                // Ocultar el campo
+                                // Ocultar el campo del formulario
+                                style={{display: "none"}}
+                                initialValue={selectedColumnId || ''} // Establecer valor inicial
+                            >
+                                <Input readOnly/>
+                            </Form.Item>
+
+
+                            <Form.Item
+                                name="descripcion"
+                                label="Descripción"
+                                rules={[{required: true, message: 'Por favor, ingresa la descripción'}]}
+                            >
+                                <Input.TextArea/>
+                            </Form.Item>
+                        </Form>
+                    )}
+
+
+                </Modal>
+
+
+                <Drawer
+
+
+                    width={1000}
+                    onClose={handleCloseDrawer}
+                    //onClose={onClose}
+                    open={open}
+                    styles={{
+                        body: {
+                            paddingBottom: 50,
+
+                        },
+                        mask: {
+                            backgroundColor: 'rgba(255, 255, 255, 0)', // Sin opacidad
+                        }
+                    }}
+                    closeIcon={
+                        null
+                    }
+
+
+                >
+                    {selectedTask && (
+
+                        <Form form={form} layout="vertical" hideRequiredMark>
+
+                            <Row gutter={16}
+                                 style={{borderBottom: '1px solid #e6eaf0', marginBottom: 9, paddingBottom: 9}}>
+                                <Col span={18}>
+                                    {isEditing ? (
+                                        <Form.Item
+                                            name="nombre"
+                                            label="Nombre"
+                                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
+                                        >
+                                            <Input/>
+                                        </Form.Item>
+                                    ) : (
+                                        <span style={{fontSize: 28, color: '#343940'}}>
 
                                         {selectedTask.nombre || 'Sin título'}
                                     </span>
-                                )}
-                                    <span style={{display: 'flex', alignItems: 'center',
+                                    )}
+                                    <span style={{
+                                        display: 'flex', alignItems: 'center',
 
                                     }}>
        {/* Icono de check */}
@@ -1515,281 +1619,277 @@ const KanbanBoardSubtarea = () => {
                                             backgroundColor: '#8957e5', // Cambia el color de fondo según lo desees
                                             padding: '4px 8px', // Espaciado interno
                                             borderRadius: '4px', // Esquinas redondeadas opcionales
-                                            color:'#ffffff',
-                                            fontWeight:500
+                                            color: '#ffffff',
+                                            fontWeight: 500
                                         }}>
-                                             <CheckOutlined style={{marginRight: '4px', color: '#ffffff',
+                                             <CheckOutlined style={{
+                                                 marginRight: '4px', color: '#ffffff',
 
                                              }}/>
                                             Subtarea</span>
     </span>
-                            </Col>
+                                </Col>
 
-                            <Col span={6} style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
-                                {isEditing ? (
-                                    <>
+                                <Col span={6} style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
 
+                                    isEditing ? (
+                                        <>
+
+                                            <Button
+                                                onClick={handleCancelClick}
+                                                type="text"
+
+                                                style={{
+                                                    fontSize: 12,
+                                                    color: '#656f7d',
+                                                    border: '1px solid #9daabd', // Gris para el borde
+                                                    borderRadius: 4,
+                                                    padding: '2px 6px',
+                                                    backgroundColor: '#f0f0f0', // Fondo gris claro
+                                                    fontWeight: 700,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                            >
+                                                Cancelar
+                                            </Button>
+                                            <Button
+                                                onClick={() => handleGuardarClick(tareaData.id, selectedTask.id)}
+                                                type="text"
+
+                                                style={{
+                                                    fontSize: 12,
+                                                    color: '#ffffff',
+                                                    border: '1px solid #52c41a', // Verde de Ant Design
+                                                    borderRadius: 4,
+                                                    padding: '2px 6px',
+                                                    backgroundColor: '#52c41a', // Verde de fondo
+                                                    fontWeight: 700,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                            >
+                                                Guardar
+                                            </Button>
+                                        </>
+                                    ) : (
                                         <Button
-                                            onClick={handleCancelClick}
+                                            onClick={handleEditClick}
                                             type="text"
-
                                             style={{
                                                 fontSize: 12,
                                                 color: '#656f7d',
-                                                border: '1px solid #9daabd', // Gris para el borde
+                                                border: '1px solid #9daabd',
                                                 borderRadius: 4,
                                                 padding: '2px 6px',
-                                                backgroundColor: '#f0f0f0', // Fondo gris claro
-                                                fontWeight: 700,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '4px'
+                                                background: 'transparent',
+                                                fontWeight: 700
                                             }}
                                         >
-                                            Cancelar
+                                            Editar
                                         </Button>
-                                        <Button
-                                            onClick={() => handleGuardarClick(tareaData.id, selectedTask.id)}
-                                            type="text"
+                                    )
+                                        ):(
+                                        <div >
 
-                                            style={{
-                                                fontSize: 12,
-                                                color: '#ffffff',
-                                                border: '1px solid #52c41a', // Verde de Ant Design
-                                                borderRadius: 4,
-                                                padding: '2px 6px',
-                                                backgroundColor: '#52c41a', // Verde de fondo
-                                                fontWeight: 700,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '4px'
-                                            }}
-                                        >
-                                            Guardar
-                                        </Button>
-                                    </>
-                                ) : (
+                                        </div>
+                                        )
+
+                                    }
+
+
+
                                     <Button
-                                        onClick={handleEditClick}
                                         type="text"
-                                        style={{
-                                            fontSize: 12,
-                                            color: '#656f7d',
-                                            border: '1px solid #9daabd',
-                                            borderRadius: 4,
-                                            padding: '2px 6px',
-                                            background: 'transparent',
-                                            fontWeight: 700
-                                        }}
-                                    >
-                                        Editar
-                                    </Button>
-                                )}
-
-                                <Button
-                                    type="text"
-                                    icon={<EllipsisOutlined />}
-                                    style={{ fontSize: 16, color: '#000' }}
-                                />
-                                <Button
-                                    type="text"
-                                    icon={<StarOutlined />}
-                                    style={{ fontSize: 16, color: '#000' }}
-                                />
-                                <Button
-                                    type="text"
-                                    // onClick={onClose}
-                                    style={{ fontSize: 16, color: '#000' }}
-                                    onClick={handleCloseDrawer}
-                                    icon={<CloseOutlined />}
-                                />
-                            </Col>
-                        </Row>
+                                        // onClick={onClose}
+                                        style={{fontSize: 16, color: '#000'}}
+                                        onClick={handleCloseDrawer}
+                                        icon={<CloseOutlined/>}
+                                    />
+                                </Col>
+                            </Row>
 
 
+                            <Row gutter={16}>
+
+                                <Col span={16}>
+
+                                    <div>
+
+                                        {isEditing ? (
+                                            // Mostrar el campo de entrada cuando está en modo edición
+                                            <Form.Item
+                                                name="descripcion"
+                                                label={"Descripcion"}
+                                                rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
+                                            >
+                                                <Input.TextArea rows={4}/>
+                                            </Form.Item>
+                                        ) : (
+                                            // Mostrar el título cuando no está en modo edición
+                                            <p
+                                                style={{
+
+                                                    padding: '10px',
+                                                    backgroundColor: '#f0f2f5',
+                                                    borderRadius: '5px',
+                                                    display: 'flex', // Usar flex para alinear el ícono y el texto
+                                                    alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
+                                                }}
+                                            >
+                                                <MessageOutlined
+                                                    style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
+
+                                                <span>  {selectedTask.descripcion || 'Sin descripcion'}  </span>
+                                            </p>
+                                        )}
 
 
+                                    </div>
 
-                        <Row gutter={16}>
-
-                            <Col span={16}>
-
-                                <div>
-
-                                    {isEditing ? (
-                                        // Mostrar el campo de entrada cuando está en modo edición
-                                        <Form.Item
-                                            name="descripcion"
-                                            label={"Descripcion"}
-                                            rules={[{required: true, message: 'Por favor, ingresa el nombre'}]}
-                                        >
-                                            <Input.TextArea rows={4}/>
-                                        </Form.Item>
-                                    ) : (
-                                        // Mostrar el título cuando no está en modo edición
-                                        <p
-                                            style={{
-
-                                                padding: '10px',
-                                                backgroundColor: '#f0f2f5',
-                                                borderRadius: '5px',
-                                                display: 'flex', // Usar flex para alinear el ícono y el texto
-                                                alignItems: 'flex-start' // Alinear el ícono al inicio (parte superior)
-                                            }}
-                                        >
-                                            <MessageOutlined
-                                                style={{marginRight: '8px', alignSelf: 'flex-start'}}/>
-
-                                            <span>  {selectedTask.descripcion || 'Sin descripcion'}  </span>
-                                        </p>
-                                    )}
-
-
-                                </div>
-
-
-
-                                <Timeline style={{paddingLeft: 20}}
-                                          items={[
-
-                                              {
-                                                  color:'green',
+                                    <h2>Actividades</h2>
+                                    <Timeline style={{paddingLeft: 20}}
+                                              items={sortedTimelineItemsSubtarea.map(item => ({
+                                                  color: item.color,
                                                   children: (
                                                       <span style={{display: 'flex', alignItems: 'center'}}>
-                <Avatar size="small" style={{marginRight: '4px'}}>
-                    <UserOutlined
-                        style={{color: 'green', fontSize: '16px'}}/> {/* Icono de usuario dentro del Avatar */}
-                </Avatar>
-                <span style={{color: '#4f5762', fontWeight: 600}}>
-                    {`${selectedTask.userCreate}`} {/* Texto de usuario en negro */}
-                </span>
-                   <span style={{marginRight: 6, marginLeft: 6}}>creo</span>
-               <span style={{color: '#4f5762', fontWeight: 600}}>
-    {` ${dayjs(selectedTask.createAt).format('YYYY-MM-DD HH:mm:ss')}`} {/* Texto adicional */}
-</span>
+            <Avatar size="small" style={{marginRight: '4px'}}>
+                <UserOutlined style={{color: 'green', fontSize: '16px'}}/>
+            </Avatar>
+            <span
+
+                style={{
+                    color: '#4f5762',
+                    fontWeight: 500,
+                    fontSize: 13,
+                    textDecoration: 'underline',
+                    textTransform: 'lowercase'
+                }}
+            >
+                {item.user}
             </span>
+            <span style={{marginRight: 6, marginLeft: 6, fontSize: 13}}>{item.action}</span>
+            <span style={{color: '#4f5762', fontWeight: 600}}>
+                {item.formattedDate}
+            </span>
+        </span>
                                                   ),
-                                              },
+                                              }))}
 
-                                              {
-                                                  color: 'red',
-                                                  children: 'Eliminado solved 2015-09-01',
-                                              },
-                                          ]}
-                                />
-                            </Col>
-                            <Col span={8}>
-                            <h3 style={{marginBottom: 20, color:'#4f5762'}}> Fechas</h3>
+                                    />
+                                </Col>
+                                <Col span={8}>
+                                    <h3 style={{marginBottom: 20, color: '#4f5762'}}> Fechas</h3>
 
-                                <Timeline >
+                                    <Timeline>
 
 
+                                        <Timeline.Item
+                                            dot={<CalendarOutlined
+                                                style={{fontSize: '15px', color: '#888'}}/>} // Color gris plomo
+                                            color="gray" // Color para el ítem
+                                        >
+
+                                            <div style={{display: 'flex', alignItems: 'center'}}>
 
 
+                                                {isEditing ? (
+                                                    // Mostrar el campo de entrada cuando está en modo edición
 
-                                    <Timeline.Item
-                                        dot={<CalendarOutlined
-                                            style={{fontSize: '15px', color: '#888'}}/>} // Color gris plomo
-                                        color="gray" // Color para el ítem
-                                    >
+                                                    <Form.Item
+                                                        name="fechaInicio"
+                                                        label={"Fecha inicio "}
 
-                                        <div style={{display: 'flex', alignItems: 'center'}}>
+                                                    >
+                                                        <DatePicker/>
+                                                    </Form.Item>
+                                                ) : (
+                                                    // Mostrar el título cuando no está en modo edición
+                                                    <Tooltip title={'Fecha incio'}>
+                                                        <p style={{fontSize: '14px', margin: 0}}>
 
+                                                            {selectedTask.fechaInicio ?
+                                                                (typeof selectedTask.fechaInicio === 'object' ?
+                                                                    selectedTask.fechaInicio.format('YYYY-MM-DD') :
+                                                                    selectedTask.fechaInicio)
+                                                                :
+                                                                'Sin fecha'} {/* Maneja el caso cuando fechaInicio es undefined o null */}
+                                                        </p>
+                                                    </Tooltip>
 
-                                            {isEditing ? (
-                                                // Mostrar el campo de entrada cuando está en modo edición
+                                                )}
 
-                                                <Form.Item
-                                                    name="fechaInicio"
-                                                    label={"Fecha inicio "}
-
-                                                >
-                                                    <DatePicker/>
-                                                </Form.Item>
-                                            ) : (
-                                                // Mostrar el título cuando no está en modo edición
-                                                <Tooltip title={'Fecha incio'}>
-                                                <p style={{fontSize: '14px', margin: 0}}>
-
-                                                    {selectedTask.fechaInicio ?
-                                                        (typeof selectedTask.fechaInicio === 'object' ?
-                                                            selectedTask.fechaInicio.format('YYYY-MM-DD') :
-                                                            selectedTask.fechaInicio)
-                                                        :
-                                                        'Sin fecha'} {/* Maneja el caso cuando fechaInicio es undefined o null */}
-                                                </p>
-                                                </Tooltip>
-
-                                            )}
-
-                                        </div>
+                                            </div>
 
 
-                                    </Timeline.Item>
+                                        </Timeline.Item>
 
-                                    <Timeline.Item
-                                        dot={<CalendarOutlined
-                                            style={{fontSize: '15px', color: '#52c41a'}}/>} // Color verde
-                                        color="green" // Color para el ítem
-                                        style={{marginBottom:0,paddingBottom:0}}
-                                    >
-                                        <div style={{display: 'flex', alignItems: 'center'}}>
-
-
-                                            {isEditing ? (
-                                                // Mostrar el campo de entrada cuando está en modo edición
-
-                                                <Form.Item
-                                                    name="fechaFin"
-                                                    label={"Fecha fin"}
+                                        <Timeline.Item
+                                            dot={<CalendarOutlined
+                                                style={{fontSize: '15px', color: '#52c41a'}}/>} // Color verde
+                                            color="green" // Color para el ítem
+                                            style={{marginBottom: 0, paddingBottom: 0}}
+                                        >
+                                            <div style={{display: 'flex', alignItems: 'center'}}>
 
 
-                                                >
-                                                    <DatePicker/>
-                                                </Form.Item>
-                                            ) : (
-                                                // Mostrar el título cuando no está en modo edición
-                                                <Tooltip title={'Fecha fin'}>
-                                                <p style={{fontSize: '14px', margin: 0}}>
+                                                {isEditing ? (
+                                                    // Mostrar el campo de entrada cuando está en modo edición
 
-                                                    {selectedTask.fechaFin ?
-                                                        (typeof selectedTask.fechaFin === 'object' ?
-                                                            selectedTask.fechaFin.format('YYYY-MM-DD') :
-                                                            selectedTask.fechaFin)
-                                                        :
-                                                        'Sin fecha'} {/* Maneja el caso cuando fechaInicio es undefined o null */}
-                                                </p>
-                                                </Tooltip>
-
-                                            )}
-
-                                        </div>
-                                    </Timeline.Item>
-
-                                </Timeline>
+                                                    <Form.Item
+                                                        name="fechaFin"
+                                                        label={"Fecha fin"}
 
 
-                                <div
-                                    style={{
-                                        width: '100%',
+                                                    >
+                                                        <DatePicker/>
+                                                    </Form.Item>
+                                                ) : (
+                                                    // Mostrar el título cuando no está en modo edición
+                                                    <Tooltip title={'Fecha fin'}>
+                                                        <p style={{fontSize: '14px', margin: 0}}>
+
+                                                            {selectedTask.fechaFin ?
+                                                                (typeof selectedTask.fechaFin === 'object' ?
+                                                                    selectedTask.fechaFin.format('YYYY-MM-DD') :
+                                                                    selectedTask.fechaFin)
+                                                                :
+                                                                'Sin fecha'} {/* Maneja el caso cuando fechaInicio es undefined o null */}
+                                                        </p>
+                                                    </Tooltip>
+
+                                                )}
+
+                                            </div>
+                                        </Timeline.Item>
+
+                                    </Timeline>
 
 
-                                    }} // Ancho del Card
-
-                                >
-
-
-                                    <h3 style={{marginBottom: 10, color: '#4f5762'}}> Estado</h3>
-                                    <span
+                                    <div
                                         style={{
+                                            width: '100%',
 
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            flexDirection: 'initial'
 
-                                        }}
+                                        }} // Ancho del Card
 
                                     >
+
+
+                                        <h3 style={{marginBottom: 10, color: '#4f5762'}}> Estado</h3>
+                                        <span
+                                            style={{
+
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                flexDirection: 'initial'
+
+                                            }}
+
+                                        >
 
                                        <span style={{
 
@@ -1803,46 +1903,54 @@ const KanbanBoardSubtarea = () => {
                                        }}> {selectedTask.estado}</span>
 </span>
 
-                                    {/* Aquí puedes agregar más contenido si lo deseas */}
-                                </div>
-
-                                <div style={{marginTop: 10}}>
-
-                                    <h3 style={{marginBottom: 20, color: '#4f5762'}}> Asignados</h3>
-                                </div>
-
-                                <Card
-                                    style={{width: '100%',}} // Ancho del Card
-
-                                >
-                                    <div style={{width: 300}}>
-                                        <Select
-                                            mode="multiple"
-                                            style={{width: '100%'}}
-                                            placeholder="Seleccionar una opción"
-                                            value={selectedTareaUserIds}
-                                            onChange={handleUserTareaChange}
-                                            onBlur={handleUpdateTareaUsers}
-                                        >
-                                            {usuarios.map(({value, label, emoji, desc}) => (
-                                                <Option key={value} value={value}>
-                                                    <Space>
-                                                        <span role="img" aria-label={label}>{emoji}</span>
-                                                        {desc}
-                                                    </Space>
-                                                </Option>
-                                            ))}
-                                        </Select>
+                                        {/* Aquí puedes agregar más contenido si lo deseas */}
                                     </div>
-                                    {/* Aquí puedes agregar más contenido si lo deseas */}
-                                </Card>
 
-                                <div style={{marginTop: 10}}>
+                                    <div style={{marginTop: 10}}>
 
-                                    <h3 style={{marginBottom: 10, color: '#4f5762'}}> Prioridad</h3>
-                                </div>
+                                        <h3 style={{marginBottom: 20, color: '#4f5762'}}> Asignados</h3>
+                                    </div>
 
-                                <div style={{display: 'flex', alignItems: 'center'}}
+                                    <Card
+                                        style={{width: '100%'}} // Ancho del Card
+
+                                    >
+                                        <div style={{width: '100%'}}>
+                                            <Select
+                                                mode="multiple"
+                                                style={{width: '100%', marginLeft:0}}
+                                                placeholder="Seleccionar una opción"
+                                                value={selectedTareaUserIds}
+                                                onChange={handleUserTareaChange}
+                                                onBlur={handleUpdateTareaUsers}
+
+                                                disabled={
+                                                    !(
+                                                        usuarioActivo &&
+                                                        usuarioActivo.rolesNames &&
+                                                        (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR"))
+                                                    )
+                                                }
+                                            >
+                                                {usuarios.map(({value, label, emoji, desc}) => (
+                                                    <Option key={value} value={value} >
+                                                        <Space>
+                                                            <span role="img" aria-label={label}>{emoji}</span>
+                                                            {desc}
+                                                        </Space>
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </div>
+                                        {/* Aquí puedes agregar más contenido si lo deseas */}
+                                    </Card>
+
+                                    <div style={{marginTop: 10}}>
+
+                                        <h3 style={{marginBottom: 10, color: '#4f5762'}}> Prioridad</h3>
+                                    </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center'}}
                                     >
 
                                         <Space>
@@ -1857,22 +1965,22 @@ const KanbanBoardSubtarea = () => {
                                         </Space>
 
 
-                                </div>
+                                    </div>
 
-                            </Col>
+                                </Col>
 
-                        </Row>
-
-
-                    </Form>
-                )}
-            </Drawer>
+                            </Row>
 
 
-        </>
+                        </Form>
+                    )}
+                </Drawer>
 
 
-    );
+            </>
+
+
+            );
 
 
 };

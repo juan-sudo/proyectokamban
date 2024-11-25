@@ -135,7 +135,7 @@ function RegistrarUsuarioadmin(onLoginR) {
 
                 });
 
-                //fetchProyectos(); // Descomenta si necesitas esta función
+                //fetchProyectos(); //   Descomenta si necesitas esta función
             } catch (error) {
                 console.error("Error creando usuario:", error);
 

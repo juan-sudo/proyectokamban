@@ -28,6 +28,12 @@ public class ProyectoService {
 
     private final PrioridadRepository prioridadRepository;
 
+    private final AuthService authService;  // Inyección del servicio AuthService
+    // Actualizar una tarea
+    public Proyecto actualizarTarea(Proyecto tarea) {
+        return proyectoRepository.save(tarea);
+    }
+
     @Transactional
     public Proyecto moverProyectoAPosicion(Long idProyecto, int nuevaPosicion) {
         // Incrementar la posición de todos los proyectos con id_proyecto_orden >= nuevaPosicion
@@ -40,47 +46,6 @@ public class ProyectoService {
         return proyectoRepository.findById(idProyecto).orElse(null);
     }
 
-//CAMBIO DE POSICION
-// Método para actualizar la posición de un proyecto en la lista
-//public Proyecto actualizarPosicion(Long idPocisionJalar, Long idPosicionPoner) {
-//
-//    // Obtener el proyecto que deseas mover (según idProyectoOrden)
-//    Proyecto proyectoMover = proyectoRepository.findByIdProyectoOrden(idPocisionJalar);
-//
-//
-//    if (proyectoMover != null) {
-//        Long currentOrder = proyectoMover.getIdProyectoOrden();
-//
-//        // Si la nueva posición es la misma que la actual, no hay nada que hacer
-//        if (currentOrder.equals(idPosicionPoner)) {
-//            return proyectoMover;
-//        }
-//
-//        // Obtener todos los proyectos y ordenarlos por idProyectoOrden
-//        List<Proyecto> proyectos = proyectoRepository.findAll();
-//        proyectos.sort(Comparator.comparingLong(Proyecto::getIdProyectoOrden));
-//
-//        // Remover el proyecto a mover de la lista
-//        proyectos.remove(proyectoMover);
-//
-//        // Insertar el proyecto en la nueva posición
-//        int nuevaPosicion = Math.toIntExact(idPosicionPoner - 1); // Convertir Long a int y ajustar posición (índice de la lista)
-//        proyectos.add(nuevaPosicion, proyectoMover);
-//
-//        // Asignar nuevos valores de idProyectoOrden según la posición en la lista
-//        for (int i = 0; i < proyectos.size(); i++) {
-//            proyectos.get(i).setIdProyectoOrden((long) (i + 1)); // Asignar orden a partir de 1
-//            proyectoRepository.save(proyectos.get(i)); // Guardar cada proyecto con su nuevo orden
-//        }
-//
-//        // Devolver el proyecto movido con su nueva posición
-//        return proyectoMover;
-//    }
-//
-//    return null; // Si no se encuentra el proyecto, retornar null
-//}
-
-
     //ACTUALIZR NOMBRE PROYECTO
     public Proyecto actualizarFechaInicioProyecto(Long id, Proyecto proyecto) {
         Optional<Proyecto> proyectoOptional = proyectoRepository.findById(id);
@@ -90,7 +55,7 @@ public class ProyectoService {
 
             // Actualizar los campos del proyecto
             proyectoActual.setFechaInicio(proyecto.getFechaInicio());
-            proyectoActual.setUserModify("quiii santa perez");
+            proyectoActual.setUserModify(authService.obtenerNombreYApellido());
             proyectoActual.setModifyAt(new Date());
 
 
@@ -119,7 +84,7 @@ public class ProyectoService {
             // Establecer fecha ampliada en el proyecto
             proyectoActual.setFechaAmpliada(calendar.getTime());
 
-            proyectoActual.setUserModify("quiii santa perez");
+            proyectoActual.setUserModify(authService.obtenerNombreYApellido());
             proyectoActual.setModifyAt(new Date());
 
             // Guardar el proyecto actualizado
@@ -139,7 +104,7 @@ public class ProyectoService {
 
             // Actualizar los campos del proyecto
             proyectoActual.setNombre(proyecto.getNombre());
-            proyectoActual.setUserModify("quiii santa perez");
+            proyectoActual.setUserModify(authService.obtenerNombreYApellido());
             proyectoActual.setModifyAt(new Date());
 
 
@@ -170,9 +135,10 @@ public class ProyectoService {
 
     // Crear un nuevo proyecto
     public Proyecto createProyecto(Proyecto proyecto) {
+
         proyecto.setEstado(EstadoProyecto.PENDIENTE);
         proyecto.setBackgroundProyecto(generarColorAleatorio());
-        proyecto.setUserCreate("salomon santa perez");
+        proyecto.setUserCreate(authService.obtenerNombreYApellido());  // Aquí se usa el nombre del usuario autenticado
         proyecto.setCreateAt(new Date());
 
         // Obtener el valor actual más alto de idProyectoOrden
@@ -199,7 +165,7 @@ public class ProyectoService {
 
         if (proyecto.isPresent()) {
             Proyecto p = proyecto.get();
-            p.setUserDelete("pepe diaz salvatierra");
+            p.setUserDelete(authService.obtenerNombreYApellido());
             p.setDeleteAt(new Date());
             p.moverAPapelera();
             proyectoRepository.save(p);
@@ -268,7 +234,7 @@ public class ProyectoService {
             proyecto.setEstado(nuevoEstado);  // Actualizar el estado del proyecto
             if(nuevoEstado.equals(EstadoProyecto.ARCHIVADO)){
                 proyecto.setArchivarAt(new Date());
-                proyecto.setArchivarDelete("SAlomon lopez de la tierra");
+                proyecto.setArchivarDelete(authService.obtenerNombreYApellido());
             }
             proyectoRepository.save(proyecto);  // Guardar los cambios
             return true;
@@ -318,7 +284,7 @@ public class ProyectoService {
         // Agregar los nuevos usuarios al proyecto
         proyecto.getUsuarios().addAll(nuevosUsuarios);
         proyecto.setModifyAt(new Date());
-        proyecto.setUserModify("pamela perez dias");
+        proyecto.setUserModify(authService.obtenerNombreYApellido());
 
         // Guardar el proyecto actualizado
         return proyectoRepository.save(proyecto);

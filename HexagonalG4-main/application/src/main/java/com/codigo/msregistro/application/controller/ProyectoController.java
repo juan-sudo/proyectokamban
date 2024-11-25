@@ -1,6 +1,8 @@
 package com.codigo.msregistro.application.controller;
 
+import com.codigo.msregistro.domain.aggregates.EstadoModulo;
 import com.codigo.msregistro.domain.aggregates.EstadoProyecto;
+import com.codigo.msregistro.domain.aggregates.Modulo;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,24 @@ import com.codigo.msregistro.domain.aggregates.Proyecto;
 public class ProyectoController {
 
     private final ProyectoService proyectoService;
+
+
+
+    //actualizar estado de modulo
+    @PutMapping("/{proyectoId}/actualizar-estado")
+    public ResponseEntity<?> actualizarEstadoProyecto(@PathVariable Long proyectoId, @RequestParam EstadoProyecto nuevoEstado) {
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<Proyecto> tareaOpt = proyectoService.getProyectoById(proyectoId);
+        if (tareaOpt.isPresent()) {
+            Proyecto modulo = tareaOpt.get();
+            modulo.setEstado(nuevoEstado); // Actualizar el estado de la tarea
+            Proyecto modululoActualizado = proyectoService.actualizarTarea(modulo);
+            return ResponseEntity.ok(modululoActualizado);
+        } else {
+            return ResponseEntity.notFound().build(); // Si no encuentra la tarea, devolver 404
+        }
+    }
 
     //ACTUALIZAR POSICISION
     @PutMapping("/actualizar-posicion")

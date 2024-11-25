@@ -25,7 +25,12 @@ public class ModuloService {
     private final UsuarioRepository usuarioRepository;
     private final PrioridadRepository prioridadRepository;
     private final ProyectoRepository proyectoRepository;
+    private final AuthService authService;  // Inyección del servicio AuthService
 
+    // Actualizar una tarea
+    public Modulo actualizarTarea(Modulo tarea) {
+        return moduloRepository.save(tarea);
+    }
 
     // ACTUALIZAR FECHA FIN MODULO
     public Modulo actualizarFechaInicioModuloFin(Long idProyecto, Long idModulo, Modulo modulo) {
@@ -47,7 +52,7 @@ public class ModuloService {
 
                     // Actualizar los campos del módulo
                     modeloActual.setFechaFin(modulo.getFechaFin());
-                    modeloActual.setUserModify("quiii santa perez");
+                    modeloActual.setUserModify(authService.obtenerNombreYApellido());
                     modeloActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -83,7 +88,7 @@ public class ModuloService {
 
                     // Actualizar los campos del módulo
                     modeloActual.setFechaInicio(modulo.getFechaInicio());
-                    modeloActual.setUserModify("quiii santa perez");
+                    modeloActual.setUserModify(authService.obtenerNombreYApellido());
                     modeloActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -139,7 +144,7 @@ public class ModuloService {
 
                     // Actualizar los campos del módulo
                     modeloActual.setNombre(modulo.getNombre());
-                    modeloActual.setUserModify("quiii santa perez");
+                    modeloActual.setUserModify(authService.obtenerNombreYApellido());
                     modeloActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -158,7 +163,7 @@ public class ModuloService {
     public Modulo crearModulo(Proyecto proyecto, Modulo modulo) {
         modulo.setProyecto(proyecto);
         modulo.setEstado(EstadoModulo.PENDIENTE);
-        modulo.setUserCreate("salomon santa perez");
+        modulo.setUserCreate(authService.obtenerNombreYApellido());
         modulo.setCreateAt(new Date());
         return moduloRepository.save(modulo);
     }
@@ -188,7 +193,7 @@ public class ModuloService {
 
         // Agregar los nuevos usuarios al proyecto
         modulo.getUsuarios().addAll(nuevosUsuarios);
-        modulo.setUserModify("martha tita jura");
+        modulo.setUserModify(authService.obtenerNombreYApellido());
         modulo.setModifyAt(new Date());
 
         // Guardar el proyecto actualizado

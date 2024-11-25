@@ -107,6 +107,8 @@ function ProyectoListPapelera() {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [isAuthenticated, setIsAuthenticated] = useState(!!token);
 
+    const [usuarioActivo, setUsuarioActivo] = useState(null); // default is 'middle'
+
 
 
 
@@ -117,6 +119,7 @@ function ProyectoListPapelera() {
             fetchProyectos(token);
             fetchUsuario(token);
             fetchPrioridad(token);
+            fetchUsuarioAutenticado(token);
         } else {
             setIsAuthenticated(false);
         }
@@ -201,6 +204,36 @@ function ProyectoListPapelera() {
 
         }
     }, [selectedsubTarea]);
+
+    //USARIO AUTENTICADO
+
+    const fetchUsuarioAutenticado = async (token) => {
+        try {
+
+
+
+            const response = await axios.get(
+                `http://localhost:8080/api/usuarios/getCurrentUser`
+                , {
+                    headers: {
+                        'Authorization': `Bearer ${token}`  // Aquí se agrega el token en el encabezado
+                    }
+                }
+            );
+
+            console.log("Datos recibidos autenticado:", JSON.stringify(response.data.usuario, null, 2));
+
+
+            if (response.data.usuario) {
+                setUsuarioActivo(response.data.usuario);
+            } else {
+                console.error("El campo 'usuario' no está presente en la respuesta.");
+            }
+        } catch (error) {
+            console.error("Error al obtener proyectos:", error);
+        }
+    };
+
 
     //ACTUALIZR ESTADO DEL PROYECTO
 
@@ -1402,8 +1435,7 @@ function ProyectoListPapelera() {
 
                  }}>
                 <Col span={24} style={{ padding: '16px', fontSize:23 }}>
-                    <FolderOutlined style={{paddingRight:5,paddingLeft:5}} />
-                    <FolderOpenOutlined style={{paddingRight:5,paddingLeft:10}} />
+
                     <apan>Proyectos Eliminado</apan>
                 </Col>
             </Row>
@@ -1695,7 +1727,9 @@ function ProyectoListPapelera() {
                                 </Col>
 
                                 <Col key={row.id} span={3}>
-                                    <Space direction="horizontal" style={{ border: 'none', marginBottom:0    }}>
+                                    {usuarioActivo && usuarioActivo.rolesNames && (usuarioActivo.rolesNames.includes("GESTOR") || usuarioActivo.rolesNames.includes("ADMINISTRADOR")) ? (
+
+                                        <Space direction="horizontal" style={{ border: 'none', marginBottom:0    }}>
                                         <Button
 
 
@@ -1707,6 +1741,13 @@ function ProyectoListPapelera() {
 
                                         </Button>
                                     </Space>
+                                    ):(
+                                        <div >
+
+                                        </div>
+                                    )
+
+                                    }
                                 </Col>
 
 

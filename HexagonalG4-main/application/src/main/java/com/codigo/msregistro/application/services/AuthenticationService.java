@@ -16,6 +16,7 @@ public interface AuthenticationService {
     AuthenticationResponse signin(SignInRequest signInRequest);
     boolean validateToken(String token);
 
+    Usuario getUserDetailsByUsername(String username);
 
 }
 

@@ -1,5 +1,6 @@
 package com.codigo.msregistro.application.controller;
 
+import com.codigo.msregistro.domain.aggregates.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import com.codigo.msregistro.domain.aggregates.Modulo;
-import com.codigo.msregistro.domain.aggregates.Proyecto;
+
 import com.codigo.msregistro.application.services.ModuloService;
 import com.codigo.msregistro.application.services.ProyectoService;
 
@@ -24,6 +24,27 @@ public class ModuloController {
     public ModuloController(ModuloService moduloService, ProyectoService proyectoService) {
         this.moduloService = moduloService;
         this.proyectoService = proyectoService;
+    }
+
+    //actualizar estado de modulo
+    @PutMapping("/{moduloId}/estado")
+    public ResponseEntity<?> actualizarEstadoTarea(@PathVariable Long proyectoId, @PathVariable Long moduloId, @RequestParam EstadoModulo nuevoEstado) {
+        Map<String, Object> response = new HashMap<>();
+
+        Optional<Proyecto> moduloOpt = proyectoService.getProyectoById(proyectoId);
+        if (!moduloOpt.isPresent()) {
+            return ResponseEntity.notFound().build(); // Si no encuentra el módulo, devolver 404
+        }
+
+        Optional<Modulo> tareaOpt = moduloService.obtenerModuloPorId(moduloId);
+        if (tareaOpt.isPresent()) {
+            Modulo modulo = tareaOpt.get();
+            modulo.setEstado(nuevoEstado); // Actualizar el estado de la tarea
+            Modulo modululoActualizado = moduloService.actualizarTarea(modulo);
+            return ResponseEntity.ok(modululoActualizado);
+        } else {
+            return ResponseEntity.notFound().build(); // Si no encuentra la tarea, devolver 404
+        }
     }
 
     @PatchMapping("/actualizarFechaFin/{moduloId}")

@@ -12,6 +12,8 @@ import Otra from './components/otra';
 import UsuariosList from "./components/usuariosLista.jsx";
 import LoginPage from './components/LoginPage';
 import RegistraUsuairo from "./components/registrarUsuario.jsx";
+import HomeProyectos from "./components/home.jsx";
+
 import logo from './assets/logoinei.svg';
 import {
     HomeOutlined,
@@ -63,6 +65,7 @@ function App() {
                 } else {
                     // Si "GESTOR" no está, asignamos todos los roles
                     setRoles(payload.roles);
+
 
                 }
                 // Configurar temporizador para cerrar sesión cuando el token haya expirado
@@ -156,11 +159,9 @@ function App() {
         { key: '4',
             icon: <UserOutlined />,
             label: <Link to="/usuarioslista">Usuarios lista</Link>,
-            visible: role.includes("GESTOR")
+            visible: role.includes("GESTOR") || role.includes("ADMINISTRADOR") // Visible si es GESTOR o ADMINISTRADOR
         },
-        { key: '6', icon: <ClockCircleOutlined />, label: 'Hojas de horas' },
-        { key: '7', icon: <TeamOutlined />, label: 'Paneles' },
-        { key: '8', icon: <FileOutlined />, label: 'Clips' },
+
         { key: '9', icon: <UserOutlined />, label: <Link to="/proyectoPapelera">Papelera</Link> },
     ];
 
@@ -198,10 +199,10 @@ function App() {
                     </Col>
                     <Col span={17} >
 
-                        <div style={{marginLeft: 10, color: 'rgb(68, 64, 80)'}}>
+                        <div style={{marginLeft: 5, color: 'rgb(68, 64, 80)'}}>
                             {nombresC.toLowerCase()}
                         </div>
-                        <div style={{marginLeft: 10, color: 'rgb(172, 170, 177)'}}>
+                        <div style={{marginLeft: 5, color: 'rgb(172, 170, 177)'}}>
                             <span> {role.length > 0 ? role.join(', ') : 'Cargando roles...'}</span>
                         </div>
 
@@ -225,14 +226,7 @@ function App() {
             </div>
 
 
-            <div onClick={() => archivarProyecto(proyectoId, nombreProyecto)} style={{cursor: 'pointer', marginBottom: 10}}>
-                <Row align="middle" style={{padding: 4, borderRadius: 5, color: 'rgb(68, 64, 80)'}}>
-                    <SettingOutlined style={{marginRight: 8}}/> {/* Ícono de copiar */}
 
-                    <span>Configuracion</span>
-
-                </Row>
-            </div>
 
             <div
                 onClick={logout}
@@ -298,34 +292,7 @@ function App() {
 
                 {/* Columna para los botones */}
                 <Col span={12} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <Button
-                        icon={<MessageOutlined  style={{fontSize:20,color:'rgb(68, 64, 80)'}}/>} // Icono de mensaje
-                        style={{
-                            backgroundColor: 'transparent', // Fondo transparente
-                            border: 'none', // Sin borde
 
-                            fontSize: '20px', // Tamaño del icono
-                            padding: 0, // Sin padding extra
-                            cursor: 'pointer', // Cambia el cursor al pasar por encima
-                        }}
-                        onClick={() => {
-                            console.log('Mensaje clickeado');
-                        }}
-                    />
-                    <Button
-                        icon={<BellOutlined style={{fontSize:20,color:'rgb(68, 64, 80)'}} />} // Icono de notificación
-                        style={{
-                            backgroundColor: 'transparent', // Fondo transparente
-                            border: 'none', // Sin borde
-
-                            fontSize: '20px', // Tamaño del icono
-                            padding: 0, // Sin padding extra
-                            cursor: 'pointer', // Cambia el cursor al pasar por encima
-                        }}
-                        onClick={() => {
-                            console.log('Notificación clickeada');
-                        }}
-                    />
 
 
 
@@ -397,7 +364,7 @@ function App() {
                             <Content style={{ margin: '24px 16px', background: '#fff', minHeight: '280px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
 
                                 <Routes>
-                                    <Route path="/" element={<h2 style={{ fontSize: '20px', textAlign: 'center' }}>Bienvenido a la Gestión de Proyectos</h2>} />
+                                    <Route path="/" element={<HomeProyectos />}   />
                                     <Route path="/otro" element={<Otro />} />
                                     <Route path="/otra" element={<Otra />} />
                                     <Route path="/proyectoList" element={<ProyectoList setIsAuthenticated={setIsAuthenticated} />} />

@@ -22,7 +22,7 @@ import java.util.Optional;
         private final UsuarioRepository usuarioRepository;
         private final PrioridadRepository prioridadRepository;
         private final ModuloRepository moduloRepository;
-
+    private final AuthService authService;  // Inyección del servicio AuthService
 
     //ACTULIZAR FECHA FIN
     public Tarea actualizarTareaFechaFin(Long idModulo, Long idTarea, Tarea tarea) {
@@ -44,7 +44,7 @@ import java.util.Optional;
 
                     // Actualizar los campos del módulo
                     tareaActual.setFechaFin(tarea.getFechaFin());
-                    tareaActual.setUserModify("quiii santa perez");
+                    tareaActual.setUserModify(authService.obtenerNombreYApellido());
                     tareaActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -79,7 +79,7 @@ import java.util.Optional;
 
                     // Actualizar los campos del módulo
                     tareaActual.setFechaInicio(tarea.getFechaInicio());
-                    tareaActual.setUserModify("quiii santa perez");
+                    tareaActual.setUserModify(authService.obtenerNombreYApellido());
                     tareaActual.setModifyAt(new Date());
 
                     // Guardar el módulo actualizado
@@ -116,7 +116,7 @@ import java.util.Optional;
 
                         // Actualizar los campos del módulo
                         tareaActual.setNombre(tarea.getNombre());
-                        tareaActual.setUserModify("quiii santa perez");
+                        tareaActual.setUserModify(authService.obtenerNombreYApellido());
                         tareaActual.setModifyAt(new Date());
 
                         // Guardar el módulo actualizado
@@ -155,7 +155,7 @@ import java.util.Optional;
 
     // Crear una nueva tarea
     public Tarea crearTarea(Tarea tarea) {
-        tarea.setUserCreate("salomon santa perez");
+        tarea.setUserCreate(authService.obtenerNombreYApellido());
         tarea.setCreateAt(new Date());
         return tareaRepository.save(tarea);
     }
@@ -198,7 +198,7 @@ import java.util.Optional;
 
         // Agregar los nuevos usuarios al proyecto
         modulo.getUsuarios().addAll(nuevosUsuarios);
-        modulo.setUserModify("sara matias santos");
+        modulo.setUserModify(authService.obtenerNombreYApellido());
         modulo.setModifyAt(new Date());
 
 

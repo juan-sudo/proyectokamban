@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return String.format("#%06X", color);
     }
 
+
+    // Método para obtener los detalles del usuario por nombre de usuario
+    public Usuario getUserDetailsByUsername(String username) {
+        return usuarioRepository.findByEmail(username) // Asumiendo que el username es el correo
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+    }
     @Transactional
     @Override
     public Usuario signUpUser(SignUpRequest signUpRequest) {
@@ -89,9 +96,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         usuario.setBackgroundUser(generarColorAleatorio());
         Set<Rol> assginedRoles = new HashSet<>();
         Rol userRol = rolRepository.findByNombreRol(Role.GESTOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
-        Rol userRol2 = rolRepository.findByNombreRol(Role.DESARROLLADOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
+        //Rol userRol2 = rolRepository.findByNombreRol(Role.DESARROLLADOR.name()).orElseThrow(() -> new RuntimeException("EL ROL NO EXISTE, REVISA TU BD"));
         assginedRoles.add(userRol);
-        assginedRoles.add(userRol2);
+       // assginedRoles.add(userRol2);
         usuario.setRoles(assginedRoles);
         //HASH AL PASSWORD PENDIENTE
         usuario.setPassword(new BCryptPasswordEncoder().encode(signUpRequest.getPassword()));

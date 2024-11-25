@@ -35,6 +35,13 @@ public class UsuarioService {
         int color = (int) (Math.random() * 0xFFFFFF);
         return String.format("#%06X", color);
     }
+    public Usuario buscarPorEmail(String email) {
+        // Utilizamos el método findByEmail y verificamos si el usuario existe
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+
+        // Si el usuario está presente, lo retornamos, de lo contrario retornamos null o lanzar una excepción
+        return usuarioOpt.orElse(null); // O puedes lanzar una excepción si prefieres manejarlo de esa manera
+    }
 
 
 
