@@ -259,7 +259,7 @@ function ProyectoListArchivados() {
                     }
                 );
 
-                if (response.data.mensaje) {
+             if (response.data.mensaje) {
                     console.log('Mensaje del servidor:', response.data.mensaje);
 
                     // Muestra el mensaje de confirmación en una alerta de éxito

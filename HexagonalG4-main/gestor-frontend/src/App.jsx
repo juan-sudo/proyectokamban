@@ -200,7 +200,7 @@ function App() {
                     <Col span={17} >
 
                         <div style={{marginLeft: 5, color: 'rgb(68, 64, 80)'}}>
-                            {nombresC.toLowerCase()}
+                            {nombresC}
                         </div>
                         <div style={{marginLeft: 5, color: 'rgb(172, 170, 177)'}}>
                             <span> {role.length > 0 ? role.join(', ') : 'Cargando roles...'}</span>
@@ -214,7 +214,7 @@ function App() {
             </div>
 
             {/* Separador vertical */}
-            <Divider type="horizontal" style={{backgroundColor: '#d9d9d9', padding: 0, marginTop: 6, marginBottom: 6}}/>
+            <Divider type="horizontal" style={{backgroundColor: '#f5f7fa', padding: 0, marginTop: 6, marginBottom: 6}}/>
 
 
             <div onClick={() => archivarProyecto(proyectoId, nombreProyecto)} style={{cursor: 'pointer',marginBottom: 10}}>
@@ -331,7 +331,7 @@ function App() {
                                     }}
                                 ></span>
                             </div>
-                            <span style={{fontWeight: 700, fontSize: 15}}>{nombresC.toLowerCase()}</span>
+                            <span style={{fontWeight: 700, fontSize: 15}}>{nombresC}</span>
                         </Button>
                     </Popover>
 

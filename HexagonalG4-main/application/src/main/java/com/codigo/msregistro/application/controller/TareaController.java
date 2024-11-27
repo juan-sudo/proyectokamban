@@ -32,6 +32,18 @@ public class TareaController {
 
     private final Logger log = LoggerFactory.getLogger(TareaController.class);
 
+    // ACTUALIZAR POSICION
+    @PutMapping("/actualizar-posicion")
+    public ResponseEntity<?> actualizarPosicion(
+            @PathVariable Long moduloId,  // Captura 'proyectoId' desde la URL
+            @RequestParam Long tareaId,    // Captura 'moduloId' desde la URL
+            @RequestParam int idPosicionPoner) {  // 'idPosicionPoner' sigue siendo un parámetro de consulta
+        Tarea proyectoActualizado = tareaService.moverTareaAPosicion(moduloId, tareaId, idPosicionPoner);
+        if (proyectoActualizado != null) {
+            return ResponseEntity.ok(proyectoActualizado);
+        }
+        return ResponseEntity.notFound().build();
+    }
     @PatchMapping("/actualizarFechaFin/{tareaId}")
     public ResponseEntity<?> actualizarModuloFechaFin(@PathVariable Long moduloId, @PathVariable Long tareaId, @RequestBody Tarea tarea) {
         Map<String, String> response = new HashMap<>();
@@ -140,7 +152,7 @@ public class TareaController {
         Optional<Tarea> tareaOpt = tareaService.obtenerTareaPorId(idTarea);
         if (tareaOpt.isPresent()) {
             // Elimina la tarea si existe
-            tareaService.deleteTarea(idTarea);
+            tareaService.deleteTarea(moduloId, idTarea);
             return ResponseEntity.ok("Tarea eliminada exitosamente");
         } else {
             return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra la tarea
@@ -167,8 +179,9 @@ public class TareaController {
 
         Optional<Modulo> moduloOpt = moduloService.obtenerModuloPorId(moduloId);
         if (moduloOpt.isPresent()) {
+            Modulo modulo=moduloOpt.get();
             nuevaTarea.setModulo(moduloOpt.get()); // Asignar el módulo a la tarea
-            Tarea tareaGuardada = tareaService.crearTarea(nuevaTarea);
+            Tarea tareaGuardada = tareaService.crearTarea(modulo,nuevaTarea);
             return ResponseEntity.ok(tareaGuardada);
         } else {
             return ResponseEntity.notFound().build(); // Si no encuentra el módulo, devolver 404

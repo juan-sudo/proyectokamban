@@ -36,17 +36,29 @@ public class JwtServiceImpl implements JwtService {
 
         Usuario usuario = (Usuario) userDetails;
 
+        String nombreCompleto = capitalizar(usuario.getNombres()) + " " +
+                capitalizar(usuario.getApellidoPaterno()) + " " +
+                capitalizar(usuario.getApellidoMaterno());
+
         // Obtener los nombres de los roles
         Set<String> roles = usuario.getRolesNames();
         return Jwts.builder().
                 setSubject(userDetails.getUsername())
                 .claim("roles", roles) // Añadir roles al payload
-                .claim("nombreCompleto", usuario.getNombres() + " " + usuario.getApellidoPaterno())
+                .claim("nombreCompleto", nombreCompleto)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1200000))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    private String capitalizar(String texto) {
+        if (texto == null || texto.isEmpty()) {
+            return texto;
+        }
+        return texto.substring(0, 1).toUpperCase() + texto.substring(1).toLowerCase();
+    }
+
 
 
 

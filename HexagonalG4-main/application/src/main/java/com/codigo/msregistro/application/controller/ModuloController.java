@@ -2,6 +2,7 @@ package com.codigo.msregistro.application.controller;
 
 import com.codigo.msregistro.domain.aggregates.*;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,16 +16,29 @@ import com.codigo.msregistro.application.services.ModuloService;
 import com.codigo.msregistro.application.services.ProyectoService;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/proyectosmodulo/{proyectoId}/modulos")
 public class ModuloController {
 
     private final ModuloService moduloService;
     private final ProyectoService proyectoService;
 
-    public ModuloController(ModuloService moduloService, ProyectoService proyectoService) {
-        this.moduloService = moduloService;
-        this.proyectoService = proyectoService;
+
+
+
+    // ACTUALIZAR POSICION
+    @PutMapping("/actualizar-posicion")
+    public ResponseEntity<Modulo> actualizarPosicion(
+            @PathVariable Long proyectoId,  // Captura 'proyectoId' desde la URL
+            @RequestParam Long moduloId,    // Captura 'moduloId' desde la URL
+            @RequestParam int idPosicionPoner) {  // 'idPosicionPoner' sigue siendo un parámetro de consulta
+        Modulo proyectoActualizado = moduloService.moverProyectoAPosicion(proyectoId, moduloId, idPosicionPoner);
+        if (proyectoActualizado != null) {
+            return ResponseEntity.ok(proyectoActualizado);
+        }
+        return ResponseEntity.notFound().build();
     }
+
 
     //actualizar estado de modulo
     @PutMapping("/{moduloId}/estado")

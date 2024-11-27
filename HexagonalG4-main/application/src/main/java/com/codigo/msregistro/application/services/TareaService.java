@@ -10,6 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,45 @@ import java.util.Optional;
         private final PrioridadRepository prioridadRepository;
         private final ModuloRepository moduloRepository;
     private final AuthService authService;  // Inyección del servicio AuthService
+
+
+
+    @Transactional
+    public Tarea moverTareaAPosicion( Long idModulo,Long idTarea, int nuevaPosicion) {
+        // Verificar si el proyecto existe y no está eliminado ni archivado
+        Modulo modulo = moduloRepository.findById(idModulo)
+                .orElseThrow(() -> new EntityNotFoundException("Módulo no encontrado."));
+        // Verificar si el módulo existe
+        Tarea tarea = tareaRepository.findById(idTarea)
+                .orElseThrow(() -> new EntityNotFoundException("Tarea no encontrado."));
+
+        // Verificar que el módulo pertenece al proyecto
+        if (!tarea.getModulo().getId().equals(modulo.getId())) {
+            throw new IllegalArgumentException("El tarea no pertenece al modulo especificado.");
+        }
+
+        Long posicionActual = tarea.getIdTareaOrden();
+
+        if (nuevaPosicion > posicionActual) {
+            // Decrementar posiciones en el rango entre la posición actual + 1 y la nueva posición
+            tareaRepository.decrementarPosiciones(idModulo, posicionActual, nuevaPosicion);
+        }
+        else if (nuevaPosicion < posicionActual) {
+            // Si la nueva posición es menor que la actual (mover hacia arriba)
+
+            // Incrementar posiciones en el rango entre la nueva posición y la posición actual - 1
+            tareaRepository.incrementarPosiciones(idModulo, nuevaPosicion, posicionActual );
+        }
+
+        // Actualizar la posición del módulo
+        tareaRepository.actualizarPosicionTarea(idTarea, nuevaPosicion);
+
+        // Retornar el tarea actualizado
+        return tareaRepository.findById(idTarea)
+                .orElseThrow(() -> new EntityNotFoundException("Error inesperado: módulo no encontrado después de actualizar."));
+    }
+
+
 
     //ACTULIZAR FECHA FIN
     public Tarea actualizarTareaFechaFin(Long idModulo, Long idTarea, Tarea tarea) {
@@ -132,13 +172,32 @@ import java.util.Optional;
             }
         }
 
-    public String deleteTarea(Long id) {
-        Tarea tarea = tareaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tarea con ID " + id + " no encontrada"));
+    public String deleteTarea(Long moduloId,Long idTarea) {
+        // Verifica si el proyecto existe
+        Optional<Modulo> moduloOpt = moduloRepository.findById(moduloId);
+        if (!moduloOpt.isPresent()) {
+            return "El tarea con ID " + moduloId + " no existe.";
+        }
 
-        tareaRepository.delete(tarea);
-        return "Tarea eliminada exitosamente";
+        Long idModuloId=moduloOpt.get().getId();
+
+        // Verifica si el módulo existe
+        Optional<Tarea> tareaOpt = tareaRepository.findById(idTarea);
+        Tarea tarea = tareaOpt.get();
+        Long idTareaOrdenActual = tarea.getIdTareaOrden();
+
+        if (moduloOpt.isPresent()) {
+            // Elimina el módulo si existe
+            // Reorganizar las posiciones de los proyectos restantes para cubrir el hueco
+            tareaRepository.decrementarPosiciones(idModuloId,idTareaOrdenActual + 1, Integer.MAX_VALUE);
+
+            tareaRepository.deleteById(idTarea);
+            return "Módulo con ID " + idTarea + " eliminado correctamente.";
+        } else {
+            return "El módulo con ID " + idTarea + " no existe.";
+        }
     }
+
 
     public Tarea actualizarTarea(Long id, Tarea tarea) {
         Tarea tareaExistente = tareaRepository.findById(id)
@@ -153,12 +212,29 @@ import java.util.Optional;
     }
 
 
-    // Crear una nueva tarea
-    public Tarea crearTarea(Tarea tarea) {
-        tarea.setUserCreate(authService.obtenerNombreYApellido());
-        tarea.setCreateAt(new Date());
-        return tareaRepository.save(tarea);
-    }
+        // Crear una nueva tarea
+        public Tarea crearTarea(Modulo modulo,Tarea tarea) {
+            tarea.setUserCreate(authService.obtenerNombreYApellido());
+            tarea.setCreateAt(new Date());
+            // Obtener todos los módulos ordenados por idModuloOrden para el proyecto
+            List<Tarea> tareas = tareaRepository.findByModuloIdOrderByIdTareaOrdenDesc(modulo.getId());
+
+            // Calcular el siguiente idModuloOrden
+            long siguienteId = 1L; // Valor por defecto en caso de que no haya módulos
+
+            if (!tareas.isEmpty()) {
+
+                Tarea ultimoTarea = tareas.get(0);  // Ya que están ordenados en orden descendente
+                siguienteId = ultimoTarea.getIdTareaOrden() + 1;  // El siguiente valor será el inmediato después del mayor
+
+            }
+
+            // Asignar el siguiente idModuloOrden al nuevo módulo
+            tarea.setIdTareaOrden(siguienteId);
+
+            return tareaRepository.save(tarea);
+
+        }
 
     // Obtener todas las tareas de un módulo
     public List<Tarea> obtenerTareasPorModulo(Modulo modulo) {

@@ -58,6 +58,10 @@ public class Tarea {
     @JsonBackReference  // Evitar la recursión al serializar
     private Modulo modulo;  // Este campo representa la relación con el Módulo
 
+    @NotNull
+    @Column(name = "id_tarea_orden")
+    private Long idTareaOrden;
+
     // Relación unidireccional muchos a muchos con Usuario
     @ManyToMany
     @JoinTable(

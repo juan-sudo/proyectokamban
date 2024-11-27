@@ -62,6 +62,9 @@
         @JsonIgnore // Omitir tarea en la serialización
         private Tarea tarea;  // Cada subtarea pertenece a una tarea
 
+        @NotNull
+        @Column(name = "id_subtarea_orden")
+        private Long idSubtareaOrden;
 
         // Relación unidireccional muchos a muchos con Usuario
         @ManyToMany

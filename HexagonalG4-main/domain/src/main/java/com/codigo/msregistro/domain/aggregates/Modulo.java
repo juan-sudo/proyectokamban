@@ -49,6 +49,10 @@ public class Modulo {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date fechaFin;
 
+    @NotNull
+    @Column(name = "id_modulo_orden")
+    private Long idModuloOrden;
+
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prioridad_id") // Columna que almacena la relación

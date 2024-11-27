@@ -1,6 +1,6 @@
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import React,{ useEffect, useState } from 'react';
+import React,{ useEffect, useState,useRef } from 'react';
 import "../index.css";
 import { useNavigate } from 'react-router-dom'; // Asegúrate de importar useN
 import _ from 'lodash';
@@ -116,6 +116,9 @@ function ProyectoList() {
 
     const [usuarioActivo, setUsuarioActivo] = useState(null); // default is 'middle'
 
+    const isMounted = useRef(true);  // Usamos useRef para manejar el flag
+
+
     useEffect(() => {
         // Actualizar el estado de autenticación si el token cambia
         if (token) {
@@ -132,12 +135,27 @@ function ProyectoList() {
         }
     }, [token]);
 
+//DESMONATANDO
+    useEffect(() => {
+        fetchProyectos(token);
+
+        return () => {
+            // Limpiar el flag cuando el componente se desmonte
+            isMounted.current = false;
+        };
+    }, [token]); // Dependencias del useEffect, se vuelve a ejecutar cuando cambia el token
+
+
     // Este useEffect se ejecutará cuando 'usuarioActivo' cambie
     useEffect(() => {
-        console.log("usuario autenticado", usuarioActivo);
+
     }, [usuarioActivo]);
     useEffect(() => {
-        setProyectosState(proyectos);
+       // setProyectosState(proyectos);
+        // Se ejecutará cuando 'proyectos' cambie
+        if (proyectos && proyectos.length > 0) {
+            setProyectosState(proyectos);
+        }
     }, [proyectos]);
 
 
@@ -1637,6 +1655,8 @@ console.log("ide modulo:"+moduloId);
     //OBTENE PROYECTOS
 
     const fetchProyectos = async (token) => {
+       // let isMounted = true; // flag para evitar actualizaciones de estado si el componente se desmonta
+
         try {
 
 
@@ -1663,12 +1683,18 @@ console.log("ide modulo:"+moduloId);
                         : null;
                     return { ...proyecto, color, selectedOption }; // Incluir selectedOption en el objeto del proyecto
                 });
-                setProyectos(proyectosConColor);
+              //  setProyectos(proyectosConColor);
+                if (isMounted.current) {  // Verificar si el componente está montado antes de actualizar el estado
+                    setProyectos(proyectosConColor);
+                }
             }
         } catch (error) {
             console.error("Error al obtener proyectos:", error);
         }  finally {
-            setLoading(false);  // Una vez terminada la solicitud, cambiar loading a false
+            //setLoading(false);  // Una vez terminada la solicitud, cambiar loading a false
+            if (isMounted.current) {
+                setLoading(false);  // Cambiar loading a false solo si el componente está montado
+            }
         }
     };
 
@@ -1688,7 +1714,6 @@ console.log("ide modulo:"+moduloId);
                 }
             );
 
-            console.log("Datos recibidos autenticado:", JSON.stringify(response.data.usuario, null, 2));
 
 
             if (response.data.usuario) {
@@ -1761,7 +1786,7 @@ console.log("ide modulo:"+moduloId);
                 withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
             });
 
-            console.log("prioridades que hay"+response.data)
+
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -1771,7 +1796,7 @@ console.log("ide modulo:"+moduloId);
                 }));
                 setPrioridad(usuarioValor);
             }
-            console.log("prioridades aquiii"+prioridad)
+
         } catch (error) {
             console.error("Error al obtener prioridades:", error);
             // Puedes mostrar un mensaje de error si es necesario
@@ -2311,9 +2336,8 @@ navigate(`/proyectos/${proyectoId}/modulos/${moduloId}`)
             form.resetFields();
         }
     };
-
     const handleOk = () => {
-console.log("entro aqui---------------")
+        console.log("entro aqui---------------")
         form.validateFields().then(async (values) => {
             if (values.fechaInicio) {
                 values.fechaInicio = values.fechaInicio.format('YYYY-MM-DD');
@@ -2327,6 +2351,8 @@ console.log("entro aqui---------------")
                 url = `${backendUrl}/api/proyectos`;
 
                 try {
+
+
                     // Hacer la solicitud POST al backend con axios
                     // const response = await axios.post(url, values);
                     //   console.log("estaaaaa"+response);
@@ -2514,36 +2540,49 @@ console.log("entro aqui---------------")
         setHoveredRowsubtarea(null); // Limpiar el estado cuando se sale de la fila
     };
 
-    const onDragEnd = async(result) => {
-        const { source, destination, type } = result;
-        if (!destination) return;
+        const onDragEnd = async(result) => {
+            const { source, destination, type } = result;
+            if (!destination) return;
+    
+            // Reordenamiento de Proyectos
+            if (type === 'PROJECT') {
+                const reorderedProjects = Array.from(proyectosState);
+                // Movemos el proyecto de la posición source a la posición destination
+                const [movedProject] = reorderedProjects.splice(source.index, 1); // El proyecto movido
+                reorderedProjects.splice(destination.index, 0, movedProject); // Lo insertamos en la nueva posición
 
-        // Reordenamiento de Proyectos
-        if (type === 'PROJECT') {
-            const reorderedProjects = Array.from(proyectosState);
-            const [movedProject] = reorderedProjects.splice(source.index, 1);
-            reorderedProjects.splice(destination.index, 0, movedProject);
-            setProyectosState(reorderedProjects);
+                // Asignamos el valor de 'indexVisual' en orden descendente de 'idProyectoOrden'
+                const proyectosConNuevoIndice = reorderedProjects
+                    .sort((a, b) => b.idProyectoOrden - a.idProyectoOrden) // Ordenamos por 'idProyectoOrden' de forma descendente
+                    .map((project, index) => ({
+                        ...project,
+                        indexVisual: proyectosState.length - 1 - index // Asignamos índices en orden descendente
+                    }));
 
-            // Llamada a la API para actualizar la posición en el backend
-            // Obtener los ID correctos de posición
-            // Calcular las posiciones reales en `idProyectoOrden`
-            const idPosicionJalar = source.index + 1; // Posición inicial (de donde se mueve)
-            const idPosicionPoner = destination.index + 1; // Posición final (donde se coloca)
+                setProyectosState(proyectosConNuevoIndice); // Actualizamos el estado con los nuevos índices visuales
+
+            const idProyecto = proyectosState[source.index].id; // ID del proyecto que se mueve
+                const idPosicionPoner = proyectosState.length  - destination.index;
+
 
 
             try {
-                await axios.put(`http://localhost:8080/api/proyectos/actualizar-posicion`, null, {
-                    params: {
-                        idPosicionJalar,
-                        idPosicionPoner
+                await axios.put(
+                    'http://localhost:8080/api/proyectos/actualizar-posicion',
+                    null, // PUT no necesita cuerpo en este caso
+                    {
+                        params: {
+                            idProyecto, // Enviar como idProyecto
+                            idPosicionPoner
+                        },
+                        headers: {
+                            'Authorization': `Bearer ${token}` // Enviar el token aquí
+                        }
                     }
+                );
 
-                });
-                await fetchProyectos();
-                console.log("Posición esta jalando:"+idPosicionJalar);
-                console.log("Posición donde va poner"+idPosicionPoner);
-                console.log("Posición actualizada correctamente en el backend.");
+                await fetchProyectos(token);
+
             } catch (error) {
                 console.error("Error al actualizar la posición:", error);
             }
@@ -2551,175 +2590,236 @@ console.log("entro aqui---------------")
         }
         // Reordenamiento de Módulos
         else if (type === 'MODULE') {
-            const projectIndex = proyectosState.findIndex(
-                (project) => project.id.toString() === source.droppableId
-            );
-            const projectModules = Array.from(proyectosState[projectIndex].modulos);
-            const [movedModule] = projectModules.splice(source.index, 1);
-            projectModules.splice(destination.index, 0, movedModule);
+                const projectIndex = proyectosState.findIndex(
+                    (project) => project.id.toString() === source.droppableId
+                );
 
-            const updatedProjects = Array.from(proyectosState);
-            updatedProjects[projectIndex] = {
-                ...updatedProjects[projectIndex],
-                modulos: projectModules,
-            };
+                // Obtén el ID del proyecto al que pertenece el módulo
+                const idProyectoModulo = proyectosState[projectIndex].id; // Este es el ID del proyecto
+
+
+                const projectModules = Array.from(proyectosState[projectIndex].modulos);
+                const [movedModule] = projectModules.splice(source.index, 1);
+                projectModules.splice(destination.index, 0, movedModule);
+
+
+                const updatedProjects = Array.from(proyectosState);
+                updatedProjects[projectIndex] = {
+                    ...updatedProjects[projectIndex],
+                    modulos: projectModules,
+                };
+
+
             setProyectosState(updatedProjects);
+
+                // Ahora tenemos el ID del proyecto
+                const moduloId = movedModule.id;
+                const idPosicionPoner = projectModules.length - destination.index;
+
+
+
+                try {
+                    await axios.put(
+                        `http://localhost:8080/api/proyectosmodulo/${idProyectoModulo}/modulos/actualizar-posicion`,
+
+                        null, // PUT no necesita cuerpo en este caso
+                        {
+                            params: {
+
+                                idPosicionPoner,
+                                moduloId, // Enviar ID del módulo
+                            },
+                            headers: {
+                                'Authorization': `Bearer ${token}` // Enviar el token aquí
+                            }
+                        }
+                    );
+
+                    await fetchProyectos(token);
+
+                } catch (error) {
+                    console.error("Error al actualizar la posición:", error);
+                }
+
+
+
+
         }
-        // Reordenamiento de Tareas
+            else if (type === 'TASK') {
+                // Encuentra el índice del módulo que contiene las tareas
+                const moduleIndex = proyectosState.findIndex(
+                    (project) => project.modulos.some(modulo => modulo.id.toString() === source.droppableId)
+                );
 
-        // Si el tipo es 'TASK' para reordenar tareas dentro del mismo módulo
-        else if (type === 'TASK') {
-            const sourceModuleId = source.droppableId;
-            const destModuleId = destination.droppableId;
+                // Encuentra el módulo específico basado en el droppableId
+                const modulo = proyectosState[moduleIndex].modulos.find(
+                    (modulo) => modulo.id.toString() === source.droppableId
+                );
 
-            // Verificar que el módulo de origen y destino sean el mismo
-            if (sourceModuleId === destModuleId) {
-                // Encuentra el módulo de origen en el estado global
-                const sourceModule = proyectosState
-                    .flatMap((proyecto) => proyecto.modulos)
-                    .find((modulo) => modulo.id.toString() === sourceModuleId);
+                // Copia las tareas del módulo para manipularlas sin mutar el estado original
+                const moduleTasks = Array.from(modulo.tareas);
+                const [movedTask] = moduleTasks.splice(source.index, 1); // Extrae la tarea que se está moviendo
+                moduleTasks.splice(destination.index, 0, movedTask); // Inserta la tarea en la nueva posición
 
-                if (sourceModule) {
-                    // Crear una copia de las tareas del módulo de origen
-                    const updatedTasks = Array.from(sourceModule.tareas);
-                    const [movedTask] = updatedTasks.splice(source.index, 1);
-                    updatedTasks.splice(destination.index, 0, movedTask); // Insertar en la nueva posición
+                // Crea una copia del estado de los proyectos y actualiza las tareas del módulo
+                const updatedModules = Array.from(proyectosState[moduleIndex].modulos);
+                updatedModules.forEach(mod => {
+                    if (mod.id === modulo.id) {
+                        mod.tareas = moduleTasks;
+                    }
+                });
 
-                    // Actualizar el módulo con las tareas reordenadas
-                    const updatedModule = {
-                        ...sourceModule,
-                        tareas: updatedTasks,
-                    };
+                const updatedProjects = Array.from(proyectosState);
+                updatedProjects[moduleIndex] = {
+                    ...updatedProjects[moduleIndex],
+                    modulos: updatedModules,
+                };
 
-                    // Actualizar el estado con el módulo actualizado
-                    const updatedProjects = proyectosState.map((proyecto) => ({
-                        ...proyecto,
-                        modulos: proyecto.modulos.map((modulo) =>
-                            modulo.id === sourceModule.id ? updatedModule : modulo
-                        ),
-                    }));
+                // Actualiza el estado en el frontend
+                setProyectosState(updatedProjects);
 
-                    setProyectosState(updatedProjects);
+                // ID del módulo y tarea que se están moviendo
+                const tareaId = movedTask.id;
+                const idPosicionPoner = moduleTasks.length - destination.index;
+
+                try {
+                    // Realiza la llamada al backend para sincronizar los cambios
+                    await axios.put(
+                        `http://localhost:8080/api/modulos/${modulo.id}/tareas/actualizar-posicion`,
+                        null, // No hay necesidad de cuerpo
+                        {
+                            params: {
+                                idPosicionPoner,
+                                tareaId, // ID de la tarea que se mueve
+                            },
+                            headers: {
+                                'Authorization': `Bearer ${token}`, // Token para autorización
+                            },
+                        }
+                    );
+
+                    // Vuelve a cargar los datos para asegurarte de que estén sincronizados
+                    await fetchProyectos(token);
+
+                } catch (error) {
+                    console.error("Error al actualizar la posición de la tarea:", error);
                 }
             }
-        }
-        // Reordenamiento de Subtareas dentro de una Tarea
-        else if (type === 'SUBTASK') {
-            const sourceTaskId = source.droppableId;
-            const destTaskId = destination.droppableId;
 
-            // Verificar que el droppable de origen y destino sean el mismo
-            if (sourceTaskId === destTaskId) {
-                const sourceTask = proyectosState
-                    .flatMap((proyecto) => proyecto.modulos)
-                    .flatMap((modulo) => modulo.tareas)
-                    .find((tarea) => tarea.id.toString() === sourceTaskId);
+            else if (type === 'SUBTASK') {
 
-                if (sourceTask) {
-                    const updatedSubtasks = Array.from(sourceTask.subtareas);
-                    const [movedSubtask] = updatedSubtasks.splice(source.index, 1);
-                    updatedSubtasks.splice(destination.index, 0, movedSubtask);
+                // Encuentra el índice de la tarea que contiene las subtareas
+                const tareaIndexEncontrada = proyectosState.findIndex((project) =>
+                        project.modulos && project.modulos.some(modulo =>
+                            modulo.tareas && modulo.tareas.some(tarea => tarea.id.toString() === source.droppableId)
+                        )
+                );
 
-                    const updatedTask = {
-                        ...sourceTask,
-                        subtareas: updatedSubtasks,
-                    };
+                let tareaEncontrada = null; // Declaramos tareaEncontrada fuera del bloque condicional
 
-                    const updatedProjects = proyectosState.map((proyecto) => ({
-                        ...proyecto,
-                        modulos: proyecto.modulos.map((modulo) => ({
-                            ...modulo,
-                            tareas: modulo.tareas.map((tarea) =>
-                                tarea.id === sourceTask.id ? updatedTask : tarea
-                            ),
-                        })),
-                    }));
+                if (tareaIndexEncontrada !== -1) {
+                    // Ahora que tenemos el índice del proyecto, encontramos el módulo y la tarea dentro de él
+                    const project = proyectosState[tareaIndexEncontrada];
 
-                    setProyectosState(updatedProjects);
+                    // Encuentra el módulo dentro de 'modulos' que contiene la tarea
+                    const moduloIndex = project.modulos.findIndex(modulo =>
+                        modulo.tareas.some(tarea => tarea.id.toString() === source.droppableId)
+                    );
+
+                    if (moduloIndex !== -1) {
+
+                        // Encuentra la tarea dentro del módulo
+                        tareaEncontrada = project.modulos[moduloIndex].tareas.find(tarea =>
+                            tarea.id.toString() === source.droppableId
+                        );
+
+                        if (tareaEncontrada) {
+
+
+                            // Verificamos que 'subtareas' esté definido y sea un array antes de manipularlo
+                            const tareaTasks = Array.isArray(tareaEncontrada.subtareas) ? [...tareaEncontrada.subtareas] : [];
+                            const [movedTask] = tareaTasks.splice(source.index, 1); // Extrae la subtarea que se está moviendo
+                            tareaTasks.splice(destination.index, 0, movedTask); // Inserta la subtarea en la nueva posición
+
+                            // Actualiza el estado del proyecto correctamente
+                            const updatedProjects = proyectosState.map((project, index) => {
+                                if (index === tareaIndexEncontrada) {
+                                    const updatedModulos = project.modulos.map((modulo, moduloIndex) => {
+                                        if (moduloIndex === moduloIndex) {
+                                            // Actualiza las tareas dentro del módulo
+                                            const updatedTareas = modulo.tareas.map(tarea => {
+                                                if (tarea.id === tareaEncontrada.id) {
+                                                    return {
+                                                        ...tarea,
+                                                        subtareas: tareaTasks, // Actualiza las subtareas de la tarea
+                                                    };
+                                                }
+                                                return tarea;
+                                            });
+
+                                            return {
+                                                ...modulo,
+                                                tareas: updatedTareas, // Actualiza las tareas dentro del módulo
+                                            };
+                                        }
+                                        return modulo;
+                                    });
+
+                                    return {
+                                        ...project,
+                                        modulos: updatedModulos, // Actualiza los módulos
+                                    };
+                                }
+                                return project;
+                            });
+
+                            // Actualiza el estado en el frontend
+                            setProyectosState(updatedProjects);
+
+                            // ID de la subtarea que se está moviendo y nueva posición
+                            const subtareaId = movedTask.id;
+                            const idPosicionPoner = tareaTasks.length - destination.index;
+
+                            try {
+                                // Realiza la llamada al backend para sincronizar los cambios
+                                await axios.put(
+                                    `http://localhost:8080/api/tareas/${tareaEncontrada.id}/subTareas/actualizar-posicion`,
+                                    null, // No hay necesidad de cuerpo
+                                    {
+                                        params: {
+                                            subtareaId, // ID de la subtarea que se mueve
+                                            idPosicionPoner, // Nueva posición de la subtarea
+                                        },
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`, // Token para autorización
+                                        },
+                                    }
+                                );
+
+                                // Vuelve a cargar los datos para asegurarte de que estén sincronizados
+                                await fetchProyectos(token);
+
+                            } catch (error) {
+                                console.error("Error al actualizar la posición de la subtarea:", error);
+                            }
+                        }
+
+                        console.log('Tarea encontrada:', tarea);
+                        // Ahora puedes hacer lo que necesites con la tarea encontrada, por ejemplo actualizarla
+                    } else {
+                        console.log('Módulo no encontrado');
+                    }
+                } else {
+                    console.log('Proyecto no encontrado');
                 }
+
+
             }
-        }
 
 
         };
 
 
-
-    //const [proyectosState, setProyectosState] = useState(proyectos);
-   /* const onDragEnd = (result) => {
-        const { source, destination, type } = result;
-        if (!destination) return;
-
-        if (type === 'PROJECT') {
-            const reorderedProjects = Array.from(proyectosState);
-            const [movedProject] = reorderedProjects.splice(source.index, 1);
-            reorderedProjects.splice(destination.index, 0, movedProject);
-            setProyectosState(reorderedProjects);
-        } else if (type === 'MODULE') {
-            const projectIndex = proyectosState.findIndex(
-                (project) => project.id.toString() === source.droppableId
-            );
-            const projectModules = Array.from(proyectosState[projectIndex].modulos);
-            const [movedModule] = projectModules.splice(source.index, 1);
-            projectModules.splice(destination.index, 0, movedModule);
-
-            const updatedProjects = Array.from(proyectosState);
-            updatedProjects[projectIndex] = {
-                ...updatedProjects[projectIndex],
-                modulos: projectModules,
-            };
-            setProyectosState(updatedProjects);
-        }
-
-        if (type === 'TASK') {
-            const [sourceProjectIndex, sourceModuleIndex] = source.droppableId.split('-').map(Number);
-            const [destProjectIndex, destModuleIndex] = destination.droppableId.split('-').map(Number);
-
-            // Asegura que el proyecto y el módulo de origen existen
-            if (
-                proyectosState[sourceProjectIndex] &&
-                proyectosState[sourceProjectIndex].modulos[sourceModuleIndex]
-            ) {
-                const movedTask = proyectosState[sourceProjectIndex].modulos[sourceModuleIndex].tareas[source.index];
-
-                // Copia profunda de las tareas de ambos módulos
-                const updatedSourceTasks = [...proyectosState[sourceProjectIndex].modulos[sourceModuleIndex].tareas];
-                updatedSourceTasks.splice(source.index, 1);
-
-                const updatedDestTasks = [...proyectosState[destProjectIndex].modulos[destModuleIndex].tareas];
-                updatedDestTasks.splice(destination.index, 0, movedTask);
-
-                // Actualiza los módulos y proyectos
-                const updatedSourceModules = [...proyectosState[sourceProjectIndex].modulos];
-                updatedSourceModules[sourceModuleIndex] = {
-                    ...updatedSourceModules[sourceModuleIndex],
-                    tareas: updatedSourceTasks,
-                };
-
-                const updatedDestModules = [...proyectosState[destProjectIndex].modulos];
-                updatedDestModules[destModuleIndex] = {
-                    ...updatedDestModules[destModuleIndex],
-                    tareas: updatedDestTasks,
-                };
-
-                const updatedProjects = [...proyectosState];
-                updatedProjects[sourceProjectIndex] = {
-                    ...updatedProjects[sourceProjectIndex],
-                    modulos: updatedSourceModules,
-                };
-                updatedProjects[destProjectIndex] = {
-                    ...updatedProjects[destProjectIndex],
-                    modulos: updatedDestModules,
-                };
-
-                // Actualiza el estado con los proyectos modificados
-                setProyectosState(updatedProjects);
-            }
-        }
-
-    };
-
-*/
 
 
 
@@ -2930,7 +3030,13 @@ console.log("entro aqui---------------")
                             {(provided) => (
                                 <div {...provided.droppableProps} ref={provided.innerRef}>
                                 {proyectosState.map((project,index) => (
-                                    <Draggable key={project.id} draggableId={project.id.toString()} index={index}>
+                                    <Draggable
+                                        key={project.id}
+                                        draggableId={project.id ? project.id.toString() : "default-id"}
+
+                                        index={index}
+                                       // index={project.idProyectoOrden}
+                                    >
                                         {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
@@ -3734,7 +3840,7 @@ console.log("entro aqui---------------")
                                             <Droppable droppableId={modulo.id.toString()} type="TASK">
                                             {(provided) => (
                                                 <div ref={provided.innerRef} {...provided.droppableProps}>
-                                                    {modulo.tareas?.map((tarea, tareaIndex) => (
+                                                    {modulo?.tareas?.map((tarea, tareaIndex) => (
                                 <React.Fragment key={tarea.id}>
                                     <Draggable key={tarea.id}
                                                draggableId={`task-${tarea.id}`}
@@ -4158,7 +4264,7 @@ console.log("entro aqui---------------")
                                         <Droppable droppableId={tarea.id.toString()} type="SUBTASK">
                                                 {(provided) => (
                                                     <div ref={provided.innerRef} {...provided.droppableProps}>
-                                                        {tarea.subtareas?.map((subtarea, subtareaIndex) => (
+                                                        {tarea?.subtareas?.map((subtarea, subtareaIndex) => (
                                                             <React.Fragment key={subtarea.id}>
                                                                 <Draggable key={subtarea.id}
                                                                            draggableId={`subtask-${subtarea.id}`}

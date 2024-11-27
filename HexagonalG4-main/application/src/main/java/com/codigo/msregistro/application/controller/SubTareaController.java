@@ -32,6 +32,19 @@ public class SubTareaController {
 
     private final Logger log = LoggerFactory.getLogger(SubTareaController.class);
 
+    // ACTUALIZAR POSICION
+    @PutMapping("/actualizar-posicion")
+    public ResponseEntity<?> actualizarPosicion(
+            @PathVariable Long tareaId,  // Captura 'proyectoId' desde la URL
+            @RequestParam Long subtareaId,    // Captura 'moduloId' desde la URL
+            @RequestParam int idPosicionPoner) {  // 'idPosicionPoner' sigue siendo un parámetro de consulta
+        Subtarea proyectoActualizado = subTareaService.moversubTareaAPosicion(tareaId, subtareaId, idPosicionPoner);
+        if (proyectoActualizado != null) {
+            return ResponseEntity.ok(proyectoActualizado);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
     //ACTUALIZAR NOMBRE FECHA FIN
     @PatchMapping("/actualizarFechaFin/{subtareaId}")
     public ResponseEntity<?> actualizarSubatreaFechaFin(@PathVariable Long tareaId, @PathVariable Long subtareaId, @RequestBody Subtarea subtarea) {
@@ -124,7 +137,7 @@ public class SubTareaController {
         Optional<Subtarea> tareaOpt = subTareaService.obtenerTareaPorId(subtareaId);
         if (tareaOpt.isPresent()) {
             // Elimina la tarea si existe
-            subTareaService.deleteSubTarea(subtareaId);
+            subTareaService.deleteSubTarea(tareaId,subtareaId);
             return ResponseEntity.ok("Subtarea eliminada exitosamente");
         } else {
             return ResponseEntity.notFound().build(); // Devuelve 404 si no se encuentra la tarea
@@ -173,7 +186,8 @@ public class SubTareaController {
         Optional<Tarea> tareaOpt = tareaService.obtenerTareaPorId(tareaId);
         if (tareaOpt.isPresent()) {
             nuevaTarea.setTarea(tareaOpt.get()); // Asignar el módulo a la tarea
-            Subtarea tareaGuardada = subTareaService.crearTarea(nuevaTarea);
+            Tarea tarea=tareaOpt.get();
+            Subtarea tareaGuardada = subTareaService.crearTarea(tarea,nuevaTarea);
             return ResponseEntity.ok(tareaGuardada);
         } else {
             return ResponseEntity.notFound().build(); // Si no encuentra el módulo, devolver 404

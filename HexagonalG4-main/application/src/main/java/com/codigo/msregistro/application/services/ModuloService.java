@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -26,6 +28,96 @@ public class ModuloService {
     private final PrioridadRepository prioridadRepository;
     private final ProyectoRepository proyectoRepository;
     private final AuthService authService;  // Inyección del servicio AuthService
+
+    @Transactional
+    public Modulo moverProyectoAPosicion(Long idProyecto, Long idModulo, int nuevaPosicion) {
+        // Verificar si el proyecto existe y no está eliminado ni archivado
+        Proyecto proyecto = proyectoRepository.findByIdAndEliminadoAndEstadoNot(
+                idProyecto, false, EstadoProyecto.ARCHIVADO
+        ).orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado o no cumple las condiciones."));
+
+        // Verificar si el módulo existe
+        Modulo modulo = moduloRepository.findById(idModulo)
+                .orElseThrow(() -> new EntityNotFoundException("Módulo no encontrado."));
+
+        // Verificar que el módulo pertenece al proyecto
+        if (!modulo.getProyecto().getId().equals(proyecto.getId())) {
+            throw new IllegalArgumentException("El módulo no pertenece al proyecto especificado.");
+        }
+
+        // Obtener la posición actual del módulo
+        Long posicionActual = modulo.getIdModuloOrden();
+
+        // Si la nueva posición es igual a la actual, no hacer nada
+       // if (posicionActual == nuevaPosicion) {
+         //   return modulo;
+        //}
+
+        // Si la nueva posición es mayor que la actual (mover hacia abajo)
+        if (nuevaPosicion > posicionActual) {
+            // Decrementar posiciones en el rango entre la posición actual + 1 y la nueva posición
+            moduloRepository.decrementarPosiciones(idProyecto, posicionActual , nuevaPosicion);
+        }
+         else if (nuevaPosicion < posicionActual) {
+        // Si la nueva posición es menor que la actual (mover hacia arriba)
+
+            // Incrementar posiciones en el rango entre la nueva posición y la posición actual - 1
+            moduloRepository.incrementarPosiciones(idProyecto, nuevaPosicion, posicionActual );
+        }
+
+        // Actualizar la posición del módulo
+        moduloRepository.actualizarPosicionModulo(idModulo, nuevaPosicion);
+
+        // Retornar el módulo actualizado
+        return moduloRepository.findById(idModulo)
+                .orElseThrow(() -> new EntityNotFoundException("Error inesperado: módulo no encontrado después de actualizar."));
+    }
+
+
+//    @Transactional
+//    public Modulo moverProyectoAPosicion(Long idProyecto, Long idModulo, int nuevaPosicion) {
+//        // Verificar si el proyecto existe y no está eliminado ni archivado
+//        Proyecto proyecto = proyectoRepository.findByIdAndEliminadoAndEstadoNot(
+//                idProyecto, false, EstadoProyecto.ARCHIVADO
+//        ).orElseThrow(() -> new EntityNotFoundException("Proyecto no encontrado o no cumple las condiciones."));
+//
+//        // Verificar si el módulo existe
+//        Modulo modulo = moduloRepository.findById(idModulo)
+//                .orElseThrow(() -> new EntityNotFoundException("Módulo no encontrado."));
+//
+//        // Verificar que el módulo pertenece al proyecto
+//        if (!modulo.getProyecto().getId().equals(proyecto.getId())) {
+//            throw new IllegalArgumentException("El módulo no pertenece al proyecto especificado.");
+//        }
+//
+//        // Obtener la posición actual del módulo
+//        Long posicionActual = modulo.getIdModuloOrden();
+//
+//        // Si la nueva posición es igual a la actual, no hacer nada
+//        if (posicionActual == nuevaPosicion) {
+//            return modulo;
+//        }
+//
+//        // Actualizar las posiciones de los demás módulos en el rango afectado
+//        if (nuevaPosicion > posicionActual) {
+//            // Mover hacia abajo: disminuir las posiciones de los módulos entre la posición actual + 1 y la nueva posición
+//            moduloRepository.decrementarPosiciones(idProyecto, posicionActual + 1, nuevaPosicion);
+//        } else {
+//            // Mover hacia arriba: aumentar las posiciones de los módulos entre la nueva posición y la posición actual - 1
+//            moduloRepository.incrementarPosiciones(idProyecto, nuevaPosicion, posicionActual - 1);
+//        }
+//
+//
+//
+//        // Actualizar la posición del módulo
+//        moduloRepository.actualizarPosicionModulo(idModulo, nuevaPosicion);
+//
+//        // Retornar el módulo actualizado
+//        return moduloRepository.findById(idModulo)
+//                .orElseThrow(() -> new EntityNotFoundException("Error inesperado: módulo no encontrado después de actualizar."));
+//    }
+//
+
 
     // Actualizar una tarea
     public Modulo actualizarTarea(Modulo tarea) {
@@ -111,10 +203,18 @@ public class ModuloService {
             return "El proyecto con ID " + idProyecto + " no existe.";
         }
 
+        Long idProyectoId=proyectoOpt.get().getId();
+
         // Verifica si el módulo existe
         Optional<Modulo> moduloOpt = moduloRepository.findById(idModulo);
+        Modulo modulo = moduloOpt.get();
+        Long idModuloOrdenActual = modulo.getIdModuloOrden();
+
         if (moduloOpt.isPresent()) {
             // Elimina el módulo si existe
+            // Reorganizar las posiciones de los proyectos restantes para cubrir el hueco
+            moduloRepository.decrementarPosiciones(idProyectoId,idModuloOrdenActual + 1, Integer.MAX_VALUE);
+
             moduloRepository.deleteById(idModulo);
             return "Módulo con ID " + idModulo + " eliminado correctamente.";
         } else {
@@ -165,6 +265,24 @@ public class ModuloService {
         modulo.setEstado(EstadoModulo.PENDIENTE);
         modulo.setUserCreate(authService.obtenerNombreYApellido());
         modulo.setCreateAt(new Date());
+
+
+        // Obtener todos los módulos ordenados por idModuloOrden para el proyecto
+        List<Modulo> modulos = moduloRepository.findByProyectoIdOrderByIdModuloOrdenDesc(proyecto.getId());
+
+        // Calcular el siguiente idModuloOrden
+        long siguienteId = 1L; // Valor por defecto en caso de que no haya módulos
+
+        if (!modulos.isEmpty()) {
+
+            Modulo ultimoModulo = modulos.get(0);  // Ya que están ordenados en orden descendente
+            siguienteId = ultimoModulo.getIdModuloOrden() + 1;  // El siguiente valor será el inmediato después del mayor
+
+        }
+
+        // Asignar el siguiente idModuloOrden al nuevo módulo
+        modulo.setIdModuloOrden(siguienteId);
+
         return moduloRepository.save(modulo);
     }
 

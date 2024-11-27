@@ -125,7 +125,7 @@ function HomeProyectos() {
 
     // Este useEffect se ejecutará cuando 'usuarioActivo' cambie
     useEffect(() => {
-        console.log("usuario autenticado", usuarioActivo);
+
     }, [usuarioActivo]);
     useEffect(() => {
         setProyectosState(proyectos);
@@ -294,8 +294,6 @@ function HomeProyectos() {
                 }
             );
 
-            console.log("Datos recibidos autenticado:", JSON.stringify(response.data.usuario, null, 2));
-
 
             if (response.data.usuario) {
                 setUsuarioActivo(response.data.usuario);
@@ -367,7 +365,7 @@ function HomeProyectos() {
                 withCredentials: true  // Esto asegura que las cookies y las credenciales se envíen si es necesario
             });
 
-            console.log("prioridades que hay"+response.data)
+
             if (Array.isArray(response.data)) {
                 const usuarioValor = response.data.map(prioridad => ({
                     label: prioridad.nombre,
@@ -377,7 +375,7 @@ function HomeProyectos() {
                 }));
                 setPrioridad(usuarioValor);
             }
-            console.log("prioridades aquiii"+prioridad)
+
         } catch (error) {
             console.error("Error al obtener prioridades:", error);
             // Puedes mostrar un mensaje de error si es necesario
